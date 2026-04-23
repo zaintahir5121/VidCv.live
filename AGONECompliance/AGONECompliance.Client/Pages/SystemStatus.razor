@@ -1,0 +1,35 @@
+@page "/system-status"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@inject PortalContext Portal
+
+<PageTitle>System Status - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Integration Status</h2>
+    <p class="module-subtitle">Runtime status for Azure dependencies and platform readiness.</p>
+
+    @if (Portal.SystemConfig is null)
+    {
+        <p>Loading configuration...</p>
+    }
+    else
+    {
+        <ul class="status-list">
+            <li><strong>Azure Blob Storage:</strong> @OnOff(Portal.SystemConfig.AzureBlobConfigured)</li>
+            <li><strong>Azure Document Intelligence:</strong> @OnOff(Portal.SystemConfig.DocumentIntelligenceConfigured)</li>
+            <li><strong>Document Intelligence Model:</strong> @Portal.SystemConfig.DocumentIntelligenceModelId</li>
+            <li><strong>Azure OpenAI (GPT-4.1):</strong> @OnOff(Portal.SystemConfig.OpenAiConfigured) (@Portal.SystemConfig.OpenAiDeployment)</li>
+            <li><strong>Azure AI Search:</strong> @OnOff(Portal.SystemConfig.AiSearchConfigured)</li>
+        </ul>
+    }
+</section>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+
+    private static string OnOff(bool value) => value ? "Configured" : "Fallback mode";
+}

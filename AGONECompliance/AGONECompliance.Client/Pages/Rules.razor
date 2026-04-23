@@ -1,0 +1,78 @@
+@page "/rules"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@using AGONECompliance.Shared
+@inject PortalContext Portal
+
+<PageTitle>Rules - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Rule Builder</h2>
+    <p class="module-subtitle">Generate rules from Guide + Appendix, then choose checks to include in evaluation runs.</p>
+    @if (Portal.State.SelectedEvaluationWorkspaceId is null)
+    {
+        <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
+    }
+    <div class="row-actions">
+        <button class="btn btn-gradient" @onclick="Portal.GenerateRulesAsync" disabled="@Portal.IsBusy">
+            Generate Rules
+        </button>
+        <button class="btn btn-light" @onclick="Portal.SelectAllRules">Select All Active</button>
+        <button class="btn btn-light" @onclick="Portal.ClearRuleSelection">Clear Selection</button>
+    </div>
+    <div class="status-banner">@Portal.StatusMessage</div>
+</section>
+
+<section class="module-card">
+    <h2>Compliance Checks</h2>
+    <div class="table-wrap">
+        <table class="table rule-table">
+            <thead>
+            <tr>
+                <th>Select</th>
+                <th>Code</th>
+                <th>Reference</th>
+                <th>Requirement</th>
+                <th>Active</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Portal.State.Rules.Count == 0)
+            {
+                <tr><td colspan="5">No rules available.</td></tr>
+            }
+            else
+            {
+                @foreach (var rule in Portal.State.Rules.OrderBy(x => x.Code))
+                {
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   checked="@Portal.State.SelectedRuleIds.Contains(rule.Id)"
+                                   @onchange="@((ChangeEventArgs e) => Portal.ToggleRuleSelection(rule.Id, e.Value as bool? == true))" />
+                        </td>
+                        <td>
+                            <strong>@rule.Code</strong>
+                            <div class="small-muted">@rule.Title</div>
+                        </td>
+                        <td>@rule.Reference</td>
+                        <td>@rule.RequirementText</td>
+                        <td>
+                            <input type="checkbox"
+                                   checked="@rule.IsActive"
+                                   @onchange="@((ChangeEventArgs e) => Portal.ToggleRuleActiveAsync(rule, e.Value as bool? == true))" />
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+}

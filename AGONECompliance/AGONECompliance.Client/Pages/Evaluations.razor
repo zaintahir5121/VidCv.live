@@ -1,0 +1,140 @@
+@page "/evaluations"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@using AGONECompliance.Shared
+@inject PortalContext Portal
+
+<PageTitle>Evaluations - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Prospectus Evaluation</h2>
+    <p class="module-subtitle">Run selected checks against uploaded prospectus documents.</p>
+    @if (Portal.State.SelectedEvaluationWorkspaceId is null)
+    {
+        <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
+    }
+    <div class="row-actions">
+        <select class="form-select select-input" @bind="Portal.State.SelectedProspectusDocumentId">
+            <option value="">Select prospectus document</option>
+            @foreach (var item in Portal.State.Documents.Where(x => x.Type == DocumentType.Prospectus))
+            {
+                <option value="@item.Id">@item.OriginalFileName (@(Math.Round(item.SizeBytes / 1024.0, 1)) KB)</option>
+            }
+        </select>
+        <button class="btn btn-gradient"
+                @onclick="Portal.StartEvaluationAsync"
+                disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null || Portal.IsBusy || Portal.State.SelectedProspectusDocumentId is null || Portal.State.SelectedRuleIds.Count == 0)">
+            Start Evaluation
+        </button>
+    </div>
+    <div class="status-banner">@Portal.StatusMessage</div>
+</section>
+
+<section class="module-card">
+    <h2>Evaluation Runs</h2>
+    @if (Portal.State.Runs.Count == 0)
+    {
+        <p>No runs yet.</p>
+    }
+    else
+    {
+        @foreach (var run in Portal.State.Runs.OrderByDescending(x => x.CreatedAtUtc))
+        {
+            <div class="run-card">
+                <div class="run-head">
+                    <div>
+                        <strong>Run @run.Id.ToString("N")[..8]</strong>
+                        <div class="small-muted">@run.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</div>
+                    </div>
+                    <span class="@($"pill {GetStatusClass(run.Status)}")">@run.Status</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(run.FailureReason))
+                {
+                    <p class="error-text">Failure: @run.FailureReason</p>
+                }
+
+                @if (run.Results.Count > 0)
+                {
+                    <div class="table-wrap">
+                        <table class="table result-table">
+                            <thead>
+                            <tr>
+                                <th>Rule</th>
+                                <th>Guide Ref</th>
+                                <th>Status</th>
+                                <th>Confidence</th>
+                                <th>Reason</th>
+                                <th>Evidence Location</th>
+                                <th>Evidence / PDF Link</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var result in run.Results)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@result.RuleCode</strong>
+                                        <div class="small-muted">@result.RuleTitle</div>
+                                    </td>
+                                    <td>@result.GuideReference</td>
+                                    <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
+                                    <td>@(Math.Round(result.ConfidenceScore * 100, 1))%</td>
+                                    <td>@result.Reason</td>
+                                    <td>@result.EvidenceLocation</td>
+                                    <td>
+                                        <div>@result.EvidenceExcerpt</div>
+                                        @if (!string.IsNullOrWhiteSpace(result.EvidenceLink))
+                                        {
+                                            <a href="@result.EvidenceLink" target="_blank">
+                                                Open matched location
+                                            </a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    }
+</section>
+
+@if (Portal.LatestReport is not null)
+{
+    <section class="module-card">
+        <h2>Latest Compliance Report</h2>
+        <p class="module-subtitle">
+            Total: @Portal.LatestReport.TotalRules · Compliant: @Portal.LatestReport.CompliantCount ·
+            Non-Compliant: @Portal.LatestReport.NonCompliantCount · Needs Review: @Portal.LatestReport.NeedsReviewCount
+        </p>
+        <div class="status-banner">
+            Report maps each guide rule reference to specific evidence location in the selected prospectus.
+        </div>
+    </section>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+
+    private static string GetStatusClass(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "pill-ok",
+        "failed" => "pill-bad",
+        "processing" => "pill-warning",
+        _ => "pill-neutral"
+    };
+
+    private static string GetResultClass(ComplianceStatus status) => status switch
+    {
+        ComplianceStatus.Compliant => "pill-ok",
+        ComplianceStatus.NonCompliant => "pill-bad",
+        ComplianceStatus.NeedsReview => "pill-warning",
+        _ => "pill-neutral"
+    };
+}

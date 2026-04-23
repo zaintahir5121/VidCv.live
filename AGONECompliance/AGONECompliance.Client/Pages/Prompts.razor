@@ -1,0 +1,49 @@
+@page "/prompts"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@using AGONECompliance.Shared
+@inject PortalContext Portal
+
+<PageTitle>Prompts - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Prompt Template Management</h2>
+    <p class="module-subtitle">Stored prompts for rule extraction and prospectus evaluation (editable and versioned in DB).</p>
+    <div class="status-banner">@Portal.StatusMessage</div>
+</section>
+
+<section class="module-card">
+    @if (Portal.State.PromptTemplates.Count == 0)
+    {
+        <p>No prompt templates available.</p>
+    }
+    else
+    {
+        @foreach (var item in Portal.State.PromptTemplates.OrderBy(x => x.TemplateType).ThenByDescending(x => x.Version))
+        {
+            <div class="prompt-card">
+                <div class="run-head">
+                    <strong>@item.TemplateType (v@item.Version)</strong>
+                    <span class="@($"pill {(item.IsActive ? "pill-ok" : "pill-warning")}")">@(item.IsActive ? "Active" : "Inactive")</span>
+                </div>
+
+                <div class="form-grid">
+                    <input class="form-control" @bind="item.Name" />
+                    <input class="form-control" @bind="item.Description" />
+                    <label class="check-line"><input type="checkbox" @bind="item.IsActive" /> Active</label>
+                    <textarea class="form-control area" @bind="item.SystemPrompt"></textarea>
+                    <textarea class="form-control area" @bind="item.UserPromptFormat"></textarea>
+                </div>
+
+                <button class="btn btn-light" @onclick="() => Portal.SavePromptAsync(item)">Save Template</button>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+}

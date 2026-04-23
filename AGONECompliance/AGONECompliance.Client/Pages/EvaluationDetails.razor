@@ -1,0 +1,135 @@
+@page "/evaluations/{RunKey}"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@using AGONECompliance.Shared
+@inject PortalContext Portal
+@inject ApiClient Api
+
+<PageTitle>Evaluation Details - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Evaluation Run Details</h2>
+    @if (Portal.State.SelectedEvaluationWorkspaceId is null)
+    {
+        <div class="status-banner">Select an Evaluation Workspace on the Dashboard first.</div>
+    }
+    else if (!isLoaded)
+    {
+        <p>Loading evaluation run...</p>
+    }
+    else if (run is null)
+    {
+        <div class="status-banner">Run not found for this workspace.</div>
+    }
+    else
+    {
+        <div class="run-head">
+            <div>
+                <strong>Run @run.Id.ToString("N")[..8]</strong>
+                <div class="small-muted">@run.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</div>
+            </div>
+            <span class="@($"pill {GetStatusClass(run.Status)}")">@run.Status</span>
+        </div>
+
+        @if (run.Results.Count == 0)
+        {
+            <p>No results available for this run yet.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="table result-table">
+                    <thead>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Guide Ref</th>
+                        <th>Status</th>
+                        <th>Confidence</th>
+                        <th>Reason</th>
+                        <th>Evidence Location</th>
+                        <th>Evidence / PDF Link</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var result in run.Results)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@result.RuleCode</strong>
+                                <div class="small-muted">@result.RuleTitle</div>
+                            </td>
+                            <td>@result.GuideReference</td>
+                            <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
+                            <td>@(Math.Round(result.ConfidenceScore * 100, 1))%</td>
+                            <td>@result.Reason</td>
+                            <td>@result.EvidenceLocation</td>
+                            <td>
+                                <div>@result.EvidenceExcerpt</div>
+                                @if (!string.IsNullOrWhiteSpace(result.EvidenceLink))
+                                {
+                                    <a href="@result.EvidenceLink" target="_blank">Open matched location</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter] public string RunKey { get; set; } = string.Empty;
+
+    private EvaluationRunDto? run;
+    private bool isLoaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Portal.RefreshAllAsync();
+        isLoaded = false;
+        run = null;
+
+        if (Portal.State.SelectedEvaluationWorkspaceId is null || string.IsNullOrWhiteSpace(RunKey))
+        {
+            isLoaded = true;
+            return;
+        }
+
+        var workspaceId = Portal.State.SelectedEvaluationWorkspaceId.Value;
+        if (Guid.TryParse(RunKey, out var fullGuid))
+        {
+            run = await Api.GetEvaluationAsync(workspaceId, fullGuid);
+        }
+        else
+        {
+            var runs = await Api.GetEvaluationsAsync(workspaceId);
+            run = runs.FirstOrDefault(x =>
+                x.Id.ToString("N").StartsWith(RunKey, StringComparison.OrdinalIgnoreCase)
+                || x.Id.ToString().StartsWith(RunKey, StringComparison.OrdinalIgnoreCase));
+            if (run is not null)
+            {
+                run = await Api.GetEvaluationAsync(workspaceId, run.Id);
+            }
+        }
+
+        isLoaded = true;
+    }
+
+    private static string GetStatusClass(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "pill-ok",
+        "failed" => "pill-bad",
+        "processing" => "pill-warning",
+        _ => "pill-neutral"
+    };
+
+    private static string GetResultClass(ComplianceStatus status) => status switch
+    {
+        ComplianceStatus.Compliant => "pill-ok",
+        ComplianceStatus.NonCompliant => "pill-bad",
+        ComplianceStatus.NeedsReview => "pill-warning",
+        _ => "pill-neutral"
+    };
+}

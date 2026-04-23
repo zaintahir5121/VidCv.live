@@ -1,0 +1,84 @@
+@page "/documents"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@using AGONECompliance.Shared
+@inject PortalContext Portal
+
+<PageTitle>Documents - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Document Intake</h2>
+    <p class="module-subtitle">Upload PDF-only Guide, Appendix, and Prospectus files (up to 500 MB each). Scanned/image PDFs are extracted through Azure Document Intelligence OCR.</p>
+    @if (Portal.State.SelectedEvaluationWorkspaceId is null)
+    {
+        <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
+    }
+
+    <div class="upload-grid">
+        <div class="upload-block">
+            <label>Guide Document</label>
+            <InputFile accept=".pdf,application/pdf" OnChange="@(args => UploadAsync(DocumentType.Guide, args))" />
+        </div>
+        <div class="upload-block">
+            <label>Appendix Document</label>
+            <InputFile accept=".pdf,application/pdf" OnChange="@(args => UploadAsync(DocumentType.Appendix, args))" />
+        </div>
+        <div class="upload-block">
+            <label>Prospectus Document</label>
+            <InputFile accept=".pdf,application/pdf" OnChange="@(args => UploadAsync(DocumentType.Prospectus, args))" />
+        </div>
+    </div>
+
+    <div class="status-banner">@Portal.StatusMessage</div>
+</section>
+
+<section class="module-card">
+    <h2>Uploaded Documents</h2>
+    <div class="table-wrap">
+        <table class="table doc-table">
+            <thead>
+            <tr>
+                <th>Type</th>
+                <th>File Name</th>
+                <th>Size (KB)</th>
+                <th>Uploaded</th>
+                <th>Processed</th>
+                <th>Preview</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Portal.State.Documents.Count == 0)
+            {
+                <tr><td colspan="6">No files uploaded yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Portal.State.Documents.OrderByDescending(x => x.UploadedAtUtc))
+                {
+                    <tr>
+                        <td>@item.Type</td>
+                        <td>@item.OriginalFileName</td>
+                        <td>@item.ContentType</td>
+                        <td>@Math.Round(item.SizeBytes / 1024.0, 1)</td>
+                        <td>@item.UploadedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@(item.IsProcessed ? "Yes" : "No")</td>
+                        <td><a href="@($"api/documents/{item.Id}/content")" target="_blank">Open</a></td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+
+    private async Task UploadAsync(DocumentType type, InputFileChangeEventArgs args)
+    {
+        await Portal.UploadDocumentAsync(type, args.File);
+    }
+}

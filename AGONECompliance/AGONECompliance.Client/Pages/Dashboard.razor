@@ -1,0 +1,119 @@
+@page "/"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@using AGONECompliance.Shared
+@inject PortalContext Portal
+
+<PageTitle>Dashboard - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>AGONECompliance Control Center</h2>
+    <p class="module-subtitle">Production-ready demo portal to validate prospectus compliance against guide and appendix requirements.</p>
+    <div class="row-actions">
+        <select class="form-select select-input"
+                value="@Portal.State.SelectedEvaluationWorkspaceId"
+                @onchange="OnWorkspaceChanged">
+            <option value="">Select evaluation workspace</option>
+            @foreach (var workspace in Portal.State.Workspaces.OrderByDescending(x => x.CreatedAtUtc))
+            {
+                <option value="@workspace.Id">@workspace.Name (@workspace.Status)</option>
+            }
+        </select>
+    </div>
+    <div class="form-grid" style="margin-bottom: 0.8rem;">
+        <input class="form-control" placeholder="New Evaluation Workspace Name" @bind="newWorkspaceName" />
+        <input class="form-control" placeholder="Description (optional)" @bind="newWorkspaceDescription" />
+        <button class="btn btn-gradient"
+                @onclick="CreateWorkspaceAsync"
+                disabled="@Portal.IsBusy">
+            New Evaluation Workspace
+        </button>
+    </div>
+    <div class="status-banner">@Portal.StatusMessage</div>
+</section>
+
+<section class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Guide Files</div>
+        <div class="kpi-value">@Portal.State.Documents.Count(x => x.Type == DocumentType.Guide)</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Appendix Files</div>
+        <div class="kpi-value">@Portal.State.Documents.Count(x => x.Type == DocumentType.Appendix)</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Prospectus Files</div>
+        <div class="kpi-value">@Portal.State.Documents.Count(x => x.Type == DocumentType.Prospectus)</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Active Rules</div>
+        <div class="kpi-value">@Portal.State.Rules.Count(x => x.IsActive)</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Selected Rules</div>
+        <div class="kpi-value">@Portal.State.SelectedRuleIds.Count</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Completed Runs</div>
+        <div class="kpi-value">@Portal.State.Runs.Count(x => x.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase))</div>
+    </div>
+</section>
+
+<section class="module-card">
+    <h2>Workflow</h2>
+    <div class="steps-grid">
+        <a class="step-card" href="/documents">
+            <span class="step-index">1</span>
+            <div>
+                <strong>Upload Documents</strong>
+                <p>Ingest guide, appendix, and prospectus files.</p>
+            </div>
+        </a>
+        <a class="step-card" href="/rules">
+            <span class="step-index">2</span>
+            <div>
+                <strong>Generate Rules</strong>
+                <p>Extract and curate checks before evaluation.</p>
+            </div>
+        </a>
+        <a class="step-card" href="/evaluations">
+            <span class="step-index">3</span>
+            <div>
+                <strong>Run Evaluation</strong>
+                <p>Inspect compliant and non-compliant outcomes.</p>
+            </div>
+        </a>
+    </div>
+</section>
+
+@code {
+    private string newWorkspaceName = string.Empty;
+    private string newWorkspaceDescription = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+
+    private async Task CreateWorkspaceAsync()
+    {
+        await Portal.CreateEvaluationWorkspaceAsync(newWorkspaceName, newWorkspaceDescription);
+        if (!string.IsNullOrWhiteSpace(newWorkspaceName))
+        {
+            newWorkspaceName = string.Empty;
+            newWorkspaceDescription = string.Empty;
+        }
+    }
+
+    private async Task OnWorkspaceChanged(ChangeEventArgs args)
+    {
+        if (Guid.TryParse(args.Value?.ToString(), out var workspaceId))
+        {
+            await Portal.ChangeEvaluationWorkspaceAsync(workspaceId);
+        }
+        else
+        {
+            await Portal.ChangeEvaluationWorkspaceAsync(null);
+        }
+    }
+}
