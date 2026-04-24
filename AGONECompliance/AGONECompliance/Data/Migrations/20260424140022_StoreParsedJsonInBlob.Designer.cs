@@ -4,6 +4,7 @@ using AGONECompliance.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AGONECompliance.Data.Migrations
 {
     [DbContext(typeof(ComplianceDbContext))]
-    partial class ComplianceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424140022_StoreParsedJsonInBlob")]
+    partial class StoreParsedJsonInBlob
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -308,6 +311,9 @@ namespace AGONECompliance.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("ParsedJson")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ParsedJsonBlobPath")
                         .HasMaxLength(1024)

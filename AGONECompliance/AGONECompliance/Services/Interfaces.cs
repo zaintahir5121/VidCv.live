@@ -23,7 +23,12 @@ public sealed class RuleAssessment
 
 public interface IBlobStorageService
 {
-    Task<string> UploadAsync(Stream stream, string contentType, string fileName, CancellationToken cancellationToken);
+    Task<string> UploadAsync(
+        Stream stream,
+        string contentType,
+        string fileName,
+        CancellationToken cancellationToken,
+        string? folderPath = null);
     Task<(Stream Stream, string ContentType)> DownloadAsync(
         string blobPath,
         string fallbackContentType,

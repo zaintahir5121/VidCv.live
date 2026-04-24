@@ -29,7 +29,7 @@ public sealed class UploadedDocument : BaseEntity
     public long SizeBytes { get; set; }
     public string BlobPath { get; set; } = string.Empty;
     public string? FullText { get; set; }
-    public string? ParsedJson { get; set; }
+    public string? ParsedJsonBlobPath { get; set; }
     public bool IsProcessed { get; set; }
     public string? ProcessingError { get; set; }
 }

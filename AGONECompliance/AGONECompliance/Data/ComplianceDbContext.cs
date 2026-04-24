@@ -34,6 +34,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
             entity.Property(x => x.OriginalFileName).HasMaxLength(512);
             entity.Property(x => x.ContentType).HasMaxLength(256);
             entity.Property(x => x.BlobPath).HasMaxLength(1024);
+            entity.Property(x => x.ParsedJsonBlobPath).HasMaxLength(1024);
             entity.HasOne(x => x.EvaluationWorkspace)
                 .WithMany(x => x.Documents)
                 .HasForeignKey(x => x.EvaluationWorkspaceId)

@@ -9,14 +9,27 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
     private readonly AzureOptions _options = azureOptions.Value;
     private readonly string _localUploadsRoot = Path.Combine(AppContext.BaseDirectory, "local-uploads");
 
-    public async Task<string> UploadAsync(Stream stream, string contentType, string fileName, CancellationToken cancellationToken)
+    public async Task<string> UploadAsync(
+        Stream stream,
+        string contentType,
+        string fileName,
+        CancellationToken cancellationToken,
+        string? folderPath = null)
     {
         var safeName = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}-{fileName}";
+        var blobName = string.IsNullOrWhiteSpace(folderPath)
+            ? safeName
+            : $"{folderPath.Trim('/').Replace("\\", "/")}/{safeName}";
 
         if (string.IsNullOrWhiteSpace(_options.BlobStorage.ConnectionString))
         {
             Directory.CreateDirectory(_localUploadsRoot);
-            var filePath = Path.Combine(_localUploadsRoot, safeName);
+            var filePath = Path.Combine(_localUploadsRoot, blobName.Replace('/', Path.DirectorySeparatorChar));
+            var parent = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrWhiteSpace(parent))
+            {
+                Directory.CreateDirectory(parent);
+            }
 
             await using var output = File.Create(filePath);
             await stream.CopyToAsync(output, cancellationToken);
@@ -28,7 +41,7 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
         var containerClient = serviceClient.GetBlobContainerClient(_options.BlobStorage.ContainerName);
         await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
-        var blobClient = containerClient.GetBlobClient(safeName);
+        var blobClient = containerClient.GetBlobClient(blobName);
         await blobClient.UploadAsync(stream, overwrite: true, cancellationToken);
         await blobClient.SetHttpHeadersAsync(new Azure.Storage.Blobs.Models.BlobHttpHeaders
         {
@@ -45,8 +58,15 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
     {
         if (string.IsNullOrWhiteSpace(_options.BlobStorage.ConnectionString))
         {
-            var fileName = Path.GetFileName(blobPath);
-            var localPath = Path.Combine(_localUploadsRoot, fileName);
+            var normalizedRelativePath = blobPath;
+            if (Path.IsPathRooted(normalizedRelativePath))
+            {
+                normalizedRelativePath = Path.GetRelativePath(_localUploadsRoot, normalizedRelativePath);
+            }
+
+            var localPath = Path.Combine(
+                _localUploadsRoot,
+                normalizedRelativePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(localPath))
             {
                 throw new FileNotFoundException("Local blob fallback file not found.", localPath);
@@ -58,7 +78,7 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
 
         var serviceClient = new BlobServiceClient(_options.BlobStorage.ConnectionString);
         var blobUri = new Uri(blobPath);
-        var blobName = blobUri.Segments.Last();
+        var blobName = string.Concat(blobUri.Segments.Skip(2));
         var containerClient = serviceClient.GetBlobContainerClient(_options.BlobStorage.ContainerName);
         var blobClient = containerClient.GetBlobClient(blobName);
         var response = await blobClient.DownloadContentAsync(cancellationToken);

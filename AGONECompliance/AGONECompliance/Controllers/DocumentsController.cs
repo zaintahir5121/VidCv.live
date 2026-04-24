@@ -4,6 +4,7 @@ using AGONECompliance.Services;
 using AGONECompliance.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace AGONECompliance.Controllers;
 
@@ -104,6 +105,18 @@ public sealed class DocumentsController(
             effectiveContentType,
             cancellationToken);
 
+        var parsedJsonBlobPath = string.Empty;
+        if (!string.IsNullOrWhiteSpace(processed.ParsedJson))
+        {
+            await using var parsedJsonStream = new MemoryStream(Encoding.UTF8.GetBytes(processed.ParsedJson));
+            parsedJsonBlobPath = await blobStorageService.UploadAsync(
+                parsedJsonStream,
+                "application/json",
+                $"{Path.GetFileNameWithoutExtension(file.FileName)}-parsed.json",
+                cancellationToken,
+                folderPath: $"parsed-json/{evaluationWorkspaceId:N}");
+        }
+
         var document = new UploadedDocument
         {
             EvaluationWorkspaceId = evaluationWorkspaceId,
@@ -113,7 +126,7 @@ public sealed class DocumentsController(
             SizeBytes = file.Length,
             BlobPath = blobPath,
             FullText = processed.FullText,
-            ParsedJson = processed.ParsedJson,
+            ParsedJsonBlobPath = parsedJsonBlobPath,
             IsProcessed = true
         };
 

@@ -5,12 +5,14 @@ using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
 using Microsoft.Extensions.Options;
+using System.IO;
 using System.Text.Json;
 
 namespace AGONECompliance.Services;
 
 public sealed class ComplianceSearchService(
     IOptions<AzureOptions> azureOptions,
+    IBlobStorageService blobStorageService,
     ILogger<ComplianceSearchService> logger) : IComplianceSearchService
 {
     private readonly AzureOptions _options = azureOptions.Value;
@@ -75,7 +77,7 @@ public sealed class ComplianceSearchService(
             var credential = new AzureKeyCredential(_options.AiSearch.ApiKey);
             var searchClient = new Azure.Search.Documents.SearchClient(endpoint, _options.AiSearch.IndexName, credential);
 
-            var documents = BuildSearchDocuments(document);
+            var documents = await BuildSearchDocumentsAsync(document, cancellationToken);
             if (documents.Count == 0)
             {
                 return;
@@ -96,10 +98,31 @@ public sealed class ComplianceSearchService(
                && !string.IsNullOrWhiteSpace(_options.AiSearch.IndexName);
     }
 
-    private static List<object> BuildSearchDocuments(UploadedDocument document)
+    private async Task<List<object>> BuildSearchDocumentsAsync(UploadedDocument document, CancellationToken cancellationToken)
     {
         var items = new List<object>();
-        var parsedPages = TryExtractPages(document.ParsedJson);
+        string? parsedJson = null;
+        if (string.IsNullOrWhiteSpace(parsedJson) && !string.IsNullOrWhiteSpace(document.ParsedJsonBlobPath))
+        {
+            try
+            {
+                var (stream, _) = await blobStorageService.DownloadAsync(
+                    document.ParsedJsonBlobPath,
+                    "application/json",
+                    cancellationToken);
+                using (stream)
+                {
+                    using var reader = new StreamReader(stream);
+                    parsedJson = await reader.ReadToEndAsync(cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to read parsed JSON blob for document {DocumentId}.", document.Id);
+            }
+        }
+
+        var parsedPages = TryExtractPages(parsedJson);
         if (parsedPages.Count == 0)
         {
             items.Add(new
