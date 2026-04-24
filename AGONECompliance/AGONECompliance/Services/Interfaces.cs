@@ -68,3 +68,12 @@ public interface IEvaluationOrchestrator
     Task ProcessNextPendingRunAsync(CancellationToken cancellationToken);
 }
 
+public interface IDocumentProcessingOrchestrator
+{
+    Task<Guid> QueueDocumentProcessingAsync(
+        Guid evaluationWorkspaceId,
+        Guid documentId,
+        CancellationToken cancellationToken);
+    Task ProcessNextPendingJobAsync(CancellationToken cancellationToken);
+}
+

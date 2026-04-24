@@ -22,6 +22,7 @@ public sealed class PortalContext(ApiClient apiClient)
             State.Documents = [];
             State.Rules = [];
             State.Runs = [];
+            State.BackgroundJobs = [];
             State.SelectedGuideDocumentId = null;
             State.SelectedAppendixDocumentId = null;
             State.SelectedProspectusDocumentId = null;
@@ -35,6 +36,7 @@ public sealed class PortalContext(ApiClient apiClient)
         State.Documents = await apiClient.GetDocumentsAsync(workspaceId);
         State.Rules = await apiClient.GetRulesAsync(workspaceId);
         State.Runs = await apiClient.GetEvaluationsAsync(workspaceId);
+        State.BackgroundJobs = await apiClient.GetBackgroundJobsAsync(workspaceId);
         State.PromptTemplates = await apiClient.GetPromptTemplatesAsync();
         SystemConfig = await apiClient.GetSystemConfigurationAsync();
 

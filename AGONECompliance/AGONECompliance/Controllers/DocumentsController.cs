@@ -1,4 +1,3 @@
-using System.Text;
 using AGONECompliance.Data;
 using AGONECompliance.Domain;
 using AGONECompliance.Services;
@@ -13,8 +12,7 @@ namespace AGONECompliance.Controllers;
 public sealed class DocumentsController(
     ComplianceDbContext dbContext,
     IBlobStorageService blobStorageService,
-    IDocumentIntelligenceService documentIntelligenceService,
-    IComplianceSearchService searchService) : ControllerBase
+    IDocumentProcessingOrchestrator documentProcessingOrchestrator) : ControllerBase
 {
     private static readonly HashSet<string> AllowedPdfContentTypes =
     [
@@ -45,6 +43,8 @@ public sealed class DocumentsController(
                 SizeBytes = x.SizeBytes,
                 UploadedAtUtc = x.CreatedAtUtc,
                 IsProcessed = x.IsProcessed,
+                ProcessingStatus = x.IsProcessed ? "Completed" : "Queued",
+                ProcessingError = x.ProcessingError,
                 BlobPath = x.BlobPath
             })
             .ToListAsync(cancellationToken);
@@ -99,36 +99,6 @@ public sealed class DocumentsController(
             file.FileName,
             cancellationToken);
 
-        storageStream.Position = 0;
-        var processed = await documentIntelligenceService.ExtractTextAsync(
-            storageStream,
-            effectiveContentType,
-            cancellationToken);
-
-        var fullTextBlobPath = string.Empty;
-        if (!string.IsNullOrWhiteSpace(processed.FullText))
-        {
-            await using var fullTextStream = new MemoryStream(Encoding.UTF8.GetBytes(processed.FullText));
-            fullTextBlobPath = await blobStorageService.UploadAsync(
-                fullTextStream,
-                "text/plain",
-                $"{Path.GetFileNameWithoutExtension(file.FileName)}-fulltext.txt",
-                cancellationToken,
-                folderPath: $"processed-text/{evaluationWorkspaceId:N}");
-        }
-
-        var parsedJsonBlobPath = string.Empty;
-        if (!string.IsNullOrWhiteSpace(processed.ParsedJson))
-        {
-            await using var parsedJsonStream = new MemoryStream(Encoding.UTF8.GetBytes(processed.ParsedJson));
-            parsedJsonBlobPath = await blobStorageService.UploadAsync(
-                parsedJsonStream,
-                "application/json",
-                $"{Path.GetFileNameWithoutExtension(file.FileName)}-parsed.json",
-                cancellationToken,
-                folderPath: $"parsed-json/{evaluationWorkspaceId:N}");
-        }
-
         var document = new UploadedDocument
         {
             EvaluationWorkspaceId = evaluationWorkspaceId,
@@ -137,21 +107,23 @@ public sealed class DocumentsController(
             ContentType = effectiveContentType,
             SizeBytes = file.Length,
             BlobPath = blobPath,
-            FullTextBlobPath = fullTextBlobPath,
-            ParsedJsonBlobPath = parsedJsonBlobPath,
-            IsProcessed = true
+            IsProcessed = false,
+            ProcessingError = null
         };
 
         dbContext.UploadedDocuments.Add(document);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        await searchService.IndexDocumentAsync(document, cancellationToken);
+        await documentProcessingOrchestrator.QueueDocumentProcessingAsync(
+            evaluationWorkspaceId,
+            document.Id,
+            cancellationToken);
 
         return Ok(new UploadDocumentResponse
         {
             DocumentId = document.Id,
             EvaluationWorkspaceId = document.EvaluationWorkspaceId,
-            Message = $"{type} document uploaded and parsed successfully."
+            Message = $"{type} document uploaded and queued for background parsing."
         });
     }
 

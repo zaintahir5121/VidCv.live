@@ -176,6 +176,31 @@ h1:focus {
     background: #fcfdff;
 }
 
+.job-grid {
+    display: grid;
+    gap: 0.7rem;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    margin-bottom: 0.9rem;
+}
+
+.job-kpi {
+    background: #fbfcff;
+    border: 1px solid #dce4ff;
+    border-radius: 0.75rem;
+    padding: 0.7rem;
+}
+
+.job-kpi-label {
+    color: #6a75a8;
+    font-size: 0.8rem;
+}
+
+.job-kpi-value {
+    color: #1f2654;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
 .run-head {
     display: flex;
     justify-content: space-between;

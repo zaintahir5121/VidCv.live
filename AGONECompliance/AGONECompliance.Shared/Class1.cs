@@ -40,6 +40,8 @@ public sealed class DocumentDto
     public long SizeBytes { get; set; }
     public DateTimeOffset UploadedAtUtc { get; set; }
     public bool IsProcessed { get; set; }
+    public string ProcessingStatus { get; set; } = string.Empty;
+    public string? ProcessingError { get; set; }
     public string BlobPath { get; set; } = string.Empty;
 }
 
@@ -117,6 +119,21 @@ public sealed class ComplianceReportDto
     public int NonCompliantCount { get; set; }
     public int NeedsReviewCount { get; set; }
     public List<EvaluationResultItemDto> Items { get; set; } = [];
+}
+
+public sealed class BackgroundJobDto
+{
+    public Guid Id { get; set; }
+    public Guid? EvaluationWorkspaceId { get; set; }
+    public string JobType { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public Guid? RelatedDocumentId { get; set; }
+    public Guid? RelatedEvaluationRunId { get; set; }
+    public string? Message { get; set; }
+    public string? FailureReason { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset? StartedAtUtc { get; set; }
+    public DateTimeOffset? CompletedAtUtc { get; set; }
 }
 
 public sealed class PromptTemplateDto

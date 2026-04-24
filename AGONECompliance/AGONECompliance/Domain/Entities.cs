@@ -34,6 +34,20 @@ public sealed class UploadedDocument : BaseEntity
     public string? ProcessingError { get; set; }
 }
 
+public sealed class BackgroundJobRun : BaseEntity
+{
+    public Guid EvaluationWorkspaceId { get; set; }
+    public EvaluationWorkspace EvaluationWorkspace { get; set; } = null!;
+    public string JobType { get; set; } = string.Empty;
+    public string Status { get; set; } = "Queued";
+    public Guid? RelatedDocumentId { get; set; }
+    public Guid? RelatedEvaluationRunId { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string? FailureReason { get; set; }
+    public DateTimeOffset? StartedAtUtc { get; set; }
+    public DateTimeOffset? CompletedAtUtc { get; set; }
+}
+
 public sealed class ComplianceRule : BaseEntity
 {
     public Guid EvaluationWorkspaceId { get; set; }

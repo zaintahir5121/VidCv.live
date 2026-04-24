@@ -6,6 +6,16 @@ namespace AGONECompliance.Client.Services;
 
 public sealed class ApiClient(HttpClient httpClient)
 {
+    public async Task<List<BackgroundJobDto>> GetBackgroundJobsAsync(
+        Guid evaluationWorkspaceId,
+        CancellationToken cancellationToken = default)
+    {
+        return await httpClient.GetFromJsonAsync<List<BackgroundJobDto>>(
+                   $"api/background-jobs?evaluationWorkspaceId={evaluationWorkspaceId}",
+                   cancellationToken)
+               ?? [];
+    }
+
     public async Task<List<EvaluationWorkspaceDto>> GetEvaluationWorkspacesAsync(CancellationToken cancellationToken = default)
     {
         return await httpClient.GetFromJsonAsync<List<EvaluationWorkspaceDto>>("api/evaluation-workspaces", cancellationToken) ?? [];

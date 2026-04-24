@@ -7,6 +7,7 @@ public sealed class PortalState
     public List<EvaluationWorkspaceDto> Workspaces { get; set; } = [];
     public Guid? SelectedEvaluationWorkspaceId { get; set; }
     public List<DocumentDto> Documents { get; set; } = [];
+    public List<BackgroundJobDto> BackgroundJobs { get; set; } = [];
     public List<ComplianceRuleDto> Rules { get; set; } = [];
     public List<EvaluationRunDto> Runs { get; set; } = [];
     public List<PromptTemplateDto> PromptTemplates { get; set; } = [];

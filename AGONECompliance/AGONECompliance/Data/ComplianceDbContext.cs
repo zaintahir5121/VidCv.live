@@ -12,6 +12,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
     public DbSet<EvaluationRun> EvaluationRuns => Set<EvaluationRun>();
     public DbSet<EvaluationResult> EvaluationResults => Set<EvaluationResult>();
     public DbSet<EvaluationRunRule> EvaluationRunRules => Set<EvaluationRunRule>();
+    public DbSet<BackgroundJobRun> BackgroundJobRuns => Set<BackgroundJobRun>();
     public DbSet<PromptTemplate> PromptTemplates => Set<PromptTemplate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -84,6 +85,20 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
             entity.HasOne(x => x.EvaluationRun)
                 .WithMany()
                 .HasForeignKey(x => x.EvaluationRunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<BackgroundJobRun>(entity =>
+        {
+            entity.HasIndex(x => new { x.EvaluationWorkspaceId, x.Status, x.JobType });
+            entity.HasIndex(x => x.Status);
+            entity.Property(x => x.JobType).HasMaxLength(64);
+            entity.Property(x => x.Status).HasMaxLength(32);
+            entity.Property(x => x.Message).HasMaxLength(1024);
+            entity.Property(x => x.FailureReason).HasMaxLength(2048);
+            entity.HasOne(x => x.EvaluationWorkspace)
+                .WithMany()
+                .HasForeignKey(x => x.EvaluationWorkspaceId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -64,6 +64,16 @@ public sealed class EvaluationOrchestrator(
         }));
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        dbContext.BackgroundJobRuns.Add(new BackgroundJobRun
+        {
+            EvaluationWorkspaceId = evaluationWorkspaceId,
+            JobType = "Evaluation",
+            Status = "Queued",
+            RelatedEvaluationRunId = run.Id,
+            Message = $"Evaluation queued for run {run.Id:N}"
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         return run.Id;
     }
 
@@ -84,6 +94,19 @@ public sealed class EvaluationOrchestrator(
             run.Status = "Processing";
             run.UpdatedAtUtc = DateTimeOffset.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            var runJob = await dbContext.BackgroundJobRuns
+                .Where(x => x.JobType == "Evaluation" && x.RelatedEvaluationRunId == run.Id)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (runJob is not null)
+            {
+                runJob.Status = "Running";
+                runJob.StartedAtUtc = DateTimeOffset.UtcNow;
+                runJob.Message = $"Evaluating run {run.Id:N}";
+                runJob.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
 
             var prospectus = await dbContext.UploadedDocuments
                 .FirstOrDefaultAsync(
@@ -131,6 +154,19 @@ public sealed class EvaluationOrchestrator(
 
             await dbContext.SaveChangesAsync(cancellationToken);
             await searchService.IndexDocumentAsync(prospectus, cancellationToken);
+
+            var completedJob = await dbContext.BackgroundJobRuns
+                .Where(x => x.JobType == "Evaluation" && x.RelatedEvaluationRunId == run.Id)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (completedJob is not null)
+            {
+                completedJob.Status = "Completed";
+                completedJob.CompletedAtUtc = DateTimeOffset.UtcNow;
+                completedJob.Message = "Evaluation completed successfully.";
+                completedJob.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
         catch (Exception ex)
         {
@@ -140,6 +176,20 @@ public sealed class EvaluationOrchestrator(
             run.CompletedAtUtc = DateTimeOffset.UtcNow;
             run.UpdatedAtUtc = DateTimeOffset.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            var failedJob = await dbContext.BackgroundJobRuns
+                .Where(x => x.JobType == "Evaluation" && x.RelatedEvaluationRunId == run.Id)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (failedJob is not null)
+            {
+                failedJob.Status = "Failed";
+                failedJob.CompletedAtUtc = DateTimeOffset.UtcNow;
+                failedJob.FailureReason = ex.Message;
+                failedJob.Message = $"Evaluation failed for run {run.Id:N}";
+                failedJob.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 }

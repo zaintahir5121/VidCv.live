@@ -44,6 +44,7 @@ builder.Services.AddScoped<IDocumentIntelligenceService, DocumentIntelligenceSer
 builder.Services.AddScoped<IComplianceAiService, ComplianceAiService>();
 builder.Services.AddScoped<IComplianceSearchService, ComplianceSearchService>();
 builder.Services.AddScoped<IEvaluationOrchestrator, EvaluationOrchestrator>();
+builder.Services.AddScoped<IDocumentProcessingOrchestrator, DocumentProcessingOrchestrator>();
 
 builder.Services.AddQuartz(options =>
 {
@@ -54,6 +55,15 @@ builder.Services.AddQuartz(options =>
         .WithIdentity($"{nameof(EvaluationWorkerJob)}-trigger")
         .WithSimpleSchedule(schedule => schedule
             .WithInterval(TimeSpan.FromSeconds(10))
+            .RepeatForever()));
+
+    var documentJobKey = new JobKey(nameof(DocumentProcessingWorkerJob));
+    options.AddJob<DocumentProcessingWorkerJob>(config => config.WithIdentity(documentJobKey));
+    options.AddTrigger(trigger => trigger
+        .ForJob(documentJobKey)
+        .WithIdentity($"{nameof(DocumentProcessingWorkerJob)}-trigger")
+        .WithSimpleSchedule(schedule => schedule
+            .WithInterval(TimeSpan.FromSeconds(5))
             .RepeatForever()));
 });
 builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
