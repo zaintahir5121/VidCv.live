@@ -17,6 +17,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasDefaultSchema("compliance");
 
         modelBuilder.Entity<EvaluationWorkspace>(entity =>
         {
