@@ -101,20 +101,16 @@ public sealed class ComplianceSearchService(
     private async Task<List<object>> BuildSearchDocumentsAsync(UploadedDocument document, CancellationToken cancellationToken)
     {
         var items = new List<object>();
-        string? parsedJson = null;
-        if (string.IsNullOrWhiteSpace(parsedJson) && !string.IsNullOrWhiteSpace(document.ParsedJsonBlobPath))
+        var fullText = await ResolveFullTextAsync(document, cancellationToken);
+        var parsedJson = string.Empty;
+        if (!string.IsNullOrWhiteSpace(document.ParsedJsonBlobPath))
         {
             try
             {
-                var (stream, _) = await blobStorageService.DownloadAsync(
-                    document.ParsedJsonBlobPath,
-                    "application/json",
-                    cancellationToken);
-                using (stream)
-                {
-                    using var reader = new StreamReader(stream);
-                    parsedJson = await reader.ReadToEndAsync(cancellationToken);
-                }
+                parsedJson = await blobStorageService.DownloadTextAsync(
+                                 document.ParsedJsonBlobPath,
+                                 cancellationToken)
+                             ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -133,7 +129,7 @@ public sealed class ComplianceSearchService(
                 type = document.Type.ToString(),
                 fileName = document.OriginalFileName,
                 ruleReference = string.Empty,
-                fullText = document.FullText ?? string.Empty,
+                fullText = fullText,
                 uploadedAtUtc = document.CreatedAtUtc
             });
             return items;
@@ -189,6 +185,24 @@ public sealed class ComplianceSearchService(
         catch
         {
             return [];
+        }
+    }
+
+    private async Task<string> ResolveFullTextAsync(UploadedDocument document, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(document.FullTextBlobPath))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return await blobStorageService.DownloadTextAsync(document.FullTextBlobPath, cancellationToken) ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to read full text blob for document {DocumentId}.", document.Id);
+            return string.Empty;
         }
     }
 

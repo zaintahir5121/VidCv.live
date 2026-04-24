@@ -33,6 +33,9 @@ public interface IBlobStorageService
         string blobPath,
         string fallbackContentType,
         CancellationToken cancellationToken);
+    Task<string?> DownloadTextAsync(
+        string? blobPath,
+        CancellationToken cancellationToken);
 }
 
 public interface IDocumentIntelligenceService

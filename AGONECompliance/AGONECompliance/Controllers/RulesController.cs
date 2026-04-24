@@ -11,6 +11,7 @@ namespace AGONECompliance.Controllers;
 [Route("api/[controller]")]
 public sealed class RulesController(
     ComplianceDbContext dbContext,
+    IBlobStorageService blobStorageService,
     IComplianceAiService aiService) : ControllerBase
 {
     [HttpGet]
@@ -58,28 +59,30 @@ public sealed class RulesController(
             return NotFound("Evaluation workspace not found.");
         }
 
-        var guideText = string.Empty;
+        string? guideText = null;
         if (request.GuideDocumentId.HasValue)
         {
-            guideText = await dbContext.UploadedDocuments
+            var guideTextBlobPath = await dbContext.UploadedDocuments
                 .Where(x =>
                     x.Id == request.GuideDocumentId.Value
                     && x.EvaluationWorkspaceId == request.EvaluationWorkspaceId
                     && x.Type == DocumentType.Guide)
-                .Select(x => x.FullText ?? string.Empty)
+                .Select(x => x.FullTextBlobPath)
                 .FirstOrDefaultAsync(cancellationToken);
+            guideText = await blobStorageService.DownloadTextAsync(guideTextBlobPath, cancellationToken);
         }
 
-        var appendixText = string.Empty;
+        string? appendixText = null;
         if (request.AppendixDocumentId.HasValue)
         {
-            appendixText = await dbContext.UploadedDocuments
+            var appendixTextBlobPath = await dbContext.UploadedDocuments
                 .Where(x =>
                     x.Id == request.AppendixDocumentId.Value
                     && x.EvaluationWorkspaceId == request.EvaluationWorkspaceId
                     && x.Type == DocumentType.Appendix)
-                .Select(x => x.FullText ?? string.Empty)
+                .Select(x => x.FullTextBlobPath)
                 .FirstOrDefaultAsync(cancellationToken);
+            appendixText = await blobStorageService.DownloadTextAsync(appendixTextBlobPath, cancellationToken);
         }
 
         var generated = await aiService.GenerateRulesAsync(

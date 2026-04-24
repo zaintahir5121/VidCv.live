@@ -1,10 +1,10 @@
+using System.Text;
 using AGONECompliance.Data;
 using AGONECompliance.Domain;
 using AGONECompliance.Services;
 using AGONECompliance.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
 
 namespace AGONECompliance.Controllers;
 
@@ -105,6 +105,18 @@ public sealed class DocumentsController(
             effectiveContentType,
             cancellationToken);
 
+        var fullTextBlobPath = string.Empty;
+        if (!string.IsNullOrWhiteSpace(processed.FullText))
+        {
+            await using var fullTextStream = new MemoryStream(Encoding.UTF8.GetBytes(processed.FullText));
+            fullTextBlobPath = await blobStorageService.UploadAsync(
+                fullTextStream,
+                "text/plain",
+                $"{Path.GetFileNameWithoutExtension(file.FileName)}-fulltext.txt",
+                cancellationToken,
+                folderPath: $"processed-text/{evaluationWorkspaceId:N}");
+        }
+
         var parsedJsonBlobPath = string.Empty;
         if (!string.IsNullOrWhiteSpace(processed.ParsedJson))
         {
@@ -125,7 +137,7 @@ public sealed class DocumentsController(
             ContentType = effectiveContentType,
             SizeBytes = file.Length,
             BlobPath = blobPath,
-            FullText = processed.FullText,
+            FullTextBlobPath = fullTextBlobPath,
             ParsedJsonBlobPath = parsedJsonBlobPath,
             IsProcessed = true
         };

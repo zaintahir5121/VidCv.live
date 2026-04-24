@@ -7,6 +7,7 @@ namespace AGONECompliance.Services;
 
 public sealed class EvaluationOrchestrator(
     ComplianceDbContext dbContext,
+    IBlobStorageService blobStorageService,
     IComplianceAiService aiService,
     IComplianceSearchService searchService,
     ILogger<EvaluationOrchestrator> logger) : IEvaluationOrchestrator
@@ -88,7 +89,8 @@ public sealed class EvaluationOrchestrator(
                 .FirstOrDefaultAsync(
                     x => x.Id == run.ProspectusDocumentId && x.EvaluationWorkspaceId == run.EvaluationWorkspaceId,
                     cancellationToken);
-            if (prospectus is null || string.IsNullOrWhiteSpace(prospectus.FullText))
+            var prospectusText = await blobStorageService.DownloadTextAsync(prospectus?.FullTextBlobPath, cancellationToken);
+            if (prospectus is null || string.IsNullOrWhiteSpace(prospectusText))
             {
                 throw new InvalidOperationException("Prospectus text is not available for evaluation.");
             }
@@ -102,7 +104,7 @@ public sealed class EvaluationOrchestrator(
                 .Where(x => x.EvaluationWorkspaceId == run.EvaluationWorkspaceId && selectedRuleIds.Contains(x.Id))
                 .ToListAsync(cancellationToken);
 
-            var assessments = await aiService.EvaluateProspectusAsync(prospectus.FullText, rules, cancellationToken);
+            var assessments = await aiService.EvaluateProspectusAsync(prospectusText, rules, cancellationToken);
 
             var existing = await dbContext.EvaluationResults
                 .Where(x => x.EvaluationRunId == run.Id)

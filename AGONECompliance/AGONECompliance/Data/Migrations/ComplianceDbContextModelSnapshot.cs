@@ -298,8 +298,9 @@ namespace AGONECompliance.Data.Migrations
                     b.Property<Guid>("EvaluationWorkspaceId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("FullText")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("FullTextBlobPath")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<bool>("IsProcessed")
                         .HasColumnType("bit");

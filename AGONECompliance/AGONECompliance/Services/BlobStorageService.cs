@@ -87,4 +87,21 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
         var contentType = response.Value.Details.ContentType ?? fallbackContentType;
         return (streamOut, contentType);
     }
+
+    public async Task<string?> DownloadTextAsync(
+        string? blobPath,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(blobPath))
+        {
+            return null;
+        }
+
+        var (stream, _) = await DownloadAsync(blobPath, "text/plain", cancellationToken);
+        using (stream)
+        {
+            using var reader = new StreamReader(stream);
+            return await reader.ReadToEndAsync(cancellationToken);
+        }
+    }
 }
