@@ -42,6 +42,7 @@ public sealed class BackgroundJobRun : BaseEntity
     public string Status { get; set; } = "Queued";
     public Guid? RelatedDocumentId { get; set; }
     public Guid? RelatedEvaluationRunId { get; set; }
+    public Guid? RelatedRuleGenerationRequestId { get; set; }
     public string Message { get; set; } = string.Empty;
     public string? FailureReason { get; set; }
     public DateTimeOffset? StartedAtUtc { get; set; }

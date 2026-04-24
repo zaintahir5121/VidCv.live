@@ -77,3 +77,11 @@ public interface IDocumentProcessingOrchestrator
     Task ProcessNextPendingJobAsync(CancellationToken cancellationToken);
 }
 
+public interface IRuleGenerationOrchestrator
+{
+    Task<Guid> QueueRuleGenerationAsync(
+        GenerateRulesRequest request,
+        CancellationToken cancellationToken);
+    Task ProcessNextPendingJobAsync(CancellationToken cancellationToken);
+}
+

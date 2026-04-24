@@ -6,6 +6,39 @@ namespace AGONECompliance.Client.Services;
 
 public sealed class ApiClient(HttpClient httpClient)
 {
+
+    public async Task<byte[]> DownloadEvaluationReportPdfAsync(
+        Guid evaluationWorkspaceId,
+        Guid runId,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await httpClient.GetAsync(
+            $"api/evaluations/{runId}/report/pdf?evaluationWorkspaceId={evaluationWorkspaceId}",
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
+    public async Task<GenerateRulesResponse> QueueRuleGenerationAsync(
+        Guid evaluationWorkspaceId,
+        Guid? guideId,
+        Guid? appendixId,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = new GenerateRulesRequest
+        {
+            EvaluationWorkspaceId = evaluationWorkspaceId,
+            GuideDocumentId = guideId,
+            AppendixDocumentId = appendixId,
+            ReplaceExistingRules = false
+        };
+
+        var response = await httpClient.PostAsJsonAsync("api/rules/generate", payload, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<GenerateRulesResponse>(cancellationToken: cancellationToken)
+               ?? throw new InvalidOperationException("Could not queue rule generation.");
+    }
+
     public async Task<List<BackgroundJobDto>> GetBackgroundJobsAsync(
         Guid evaluationWorkspaceId,
         CancellationToken cancellationToken = default)
@@ -66,25 +99,6 @@ public sealed class ApiClient(HttpClient httpClient)
                    $"api/rules?evaluationWorkspaceId={evaluationWorkspaceId}",
                    cancellationToken)
                ?? [];
-    }
-
-    public async Task<List<ComplianceRuleDto>> GenerateRulesAsync(
-        Guid evaluationWorkspaceId,
-        Guid? guideId,
-        Guid? appendixId,
-        CancellationToken cancellationToken = default)
-    {
-        var payload = new GenerateRulesRequest
-        {
-            EvaluationWorkspaceId = evaluationWorkspaceId,
-            GuideDocumentId = guideId,
-            AppendixDocumentId = appendixId,
-            ReplaceExistingRules = false
-        };
-
-        var response = await httpClient.PostAsJsonAsync("api/rules/generate", payload, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<List<ComplianceRuleDto>>(cancellationToken: cancellationToken) ?? [];
     }
 
     public async Task<ComplianceRuleDto> SetRuleActiveAsync(

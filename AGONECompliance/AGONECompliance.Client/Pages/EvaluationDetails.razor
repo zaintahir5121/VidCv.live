@@ -30,6 +30,13 @@
             </div>
             <span class="@($"pill {GetStatusClass(run.Status)}")">@run.Status</span>
         </div>
+        <div class="row-actions">
+            <a class="btn btn-gradient"
+               href="@($"api/evaluations/{run.Id}/report/pdf?evaluationWorkspaceId={run.EvaluationWorkspaceId}")"
+               target="_blank">
+                Export PDF Report
+            </a>
+        </div>
 
         @if (run.Results.Count == 0)
         {

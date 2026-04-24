@@ -11,8 +11,7 @@ namespace AGONECompliance.Controllers;
 [Route("api/[controller]")]
 public sealed class RulesController(
     ComplianceDbContext dbContext,
-    IBlobStorageService blobStorageService,
-    IComplianceAiService aiService) : ControllerBase
+    IRuleGenerationOrchestrator ruleGenerationOrchestrator) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ComplianceRuleDto>>> GetAll(
@@ -59,86 +58,14 @@ public sealed class RulesController(
             return NotFound("Evaluation workspace not found.");
         }
 
-        string? guideText = null;
-        if (request.GuideDocumentId.HasValue)
-        {
-            var guideTextBlobPath = await dbContext.UploadedDocuments
-                .Where(x =>
-                    x.Id == request.GuideDocumentId.Value
-                    && x.EvaluationWorkspaceId == request.EvaluationWorkspaceId
-                    && x.Type == DocumentType.Guide)
-                .Select(x => x.FullTextBlobPath)
-                .FirstOrDefaultAsync(cancellationToken);
-            guideText = await blobStorageService.DownloadTextAsync(guideTextBlobPath, cancellationToken);
-        }
-
-        string? appendixText = null;
-        if (request.AppendixDocumentId.HasValue)
-        {
-            var appendixTextBlobPath = await dbContext.UploadedDocuments
-                .Where(x =>
-                    x.Id == request.AppendixDocumentId.Value
-                    && x.EvaluationWorkspaceId == request.EvaluationWorkspaceId
-                    && x.Type == DocumentType.Appendix)
-                .Select(x => x.FullTextBlobPath)
-                .FirstOrDefaultAsync(cancellationToken);
-            appendixText = await blobStorageService.DownloadTextAsync(appendixTextBlobPath, cancellationToken);
-        }
-
-        var generated = await aiService.GenerateRulesAsync(
-            guideText ?? string.Empty,
-            appendixText ?? string.Empty,
+        var jobId = await ruleGenerationOrchestrator.QueueRuleGenerationAsync(
+            request,
             cancellationToken);
-        if (generated.Count == 0)
+        return Accepted(new GenerateRulesResponse
         {
-            return BadRequest("No rules were generated from the supplied documents.");
-        }
-
-        if (request.ReplaceExistingRules)
-        {
-            var existingRules = await dbContext.ComplianceRules
-                .Where(x => x.EvaluationWorkspaceId == request.EvaluationWorkspaceId)
-                .ToListAsync(cancellationToken);
-            dbContext.ComplianceRules.RemoveRange(existingRules);
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        var existingCodes = await dbContext.ComplianceRules
-            .Where(x => x.EvaluationWorkspaceId == request.EvaluationWorkspaceId)
-            .Select(x => x.Code)
-            .ToListAsync(cancellationToken);
-        var existingSet = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var rule in generated)
-        {
-            var baseCode = rule.Code;
-            var counter = 1;
-            while (existingSet.Contains(rule.Code))
-            {
-                rule.Code = $"{baseCode}-{counter++}";
-            }
-
-            rule.EvaluationWorkspaceId = request.EvaluationWorkspaceId;
-            existingSet.Add(rule.Code);
-            dbContext.ComplianceRules.Add(rule);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        var output = generated.Select(x => new ComplianceRuleDto
-        {
-            Id = x.Id,
-            EvaluationWorkspaceId = x.EvaluationWorkspaceId,
-            Code = x.Code,
-            Title = x.Title,
-            Reference = x.Reference,
-            RequirementText = x.RequirementText,
-            ClassificationCategory = x.ClassificationCategory,
-            ActionParty = x.ActionParty,
-            IsActive = x.IsActive
-        }).ToList();
-
-        return Ok(output);
+            Message = "Rule generation queued in background job.",
+            BackgroundJobId = jobId
+        });
     }
 
     [HttpPut("{id:guid}/active")]

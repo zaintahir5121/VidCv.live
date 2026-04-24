@@ -8,7 +8,7 @@
 
 <section class="module-card">
     <h2>Rule Builder</h2>
-    <p class="module-subtitle">Generate rules from Guide + Appendix in the active workspace, then choose checks to include in evaluation runs.</p>
+    <p class="module-subtitle">Generate compliance checks from Guide + Appendix in the active workspace.</p>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
@@ -45,7 +45,7 @@
         <button class="btn btn-gradient"
                 @onclick="Portal.GenerateRulesAsync"
                 disabled="@(Portal.IsBusy || Portal.State.SelectedEvaluationWorkspaceId is null)">
-            Generate Rules
+            Queue Rule Generation
         </button>
         <button class="btn btn-light" @onclick="Portal.SelectAllRules">Select All Active</button>
         <button class="btn btn-light" @onclick="Portal.ClearRuleSelection">Clear Selection</button>

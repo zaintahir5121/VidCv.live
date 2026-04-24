@@ -134,13 +134,13 @@ public sealed class PortalContext(ApiClient apiClient)
         try
         {
             IsBusy = true;
-            StatusMessage = "Generating rules from Guide + Appendix...";
-            await apiClient.GenerateRulesAsync(
+            StatusMessage = "Rule generation queued. Track progress in Evaluations jobs panel.";
+            var result = await apiClient.QueueRuleGenerationAsync(
                 State.SelectedEvaluationWorkspaceId.Value,
                 State.SelectedGuideDocumentId,
                 State.SelectedAppendixDocumentId);
             await RefreshAllAsync();
-            StatusMessage = "Rules generated successfully. Select checks to evaluate.";
+            StatusMessage = result.Message;
         }
         catch (Exception ex)
         {

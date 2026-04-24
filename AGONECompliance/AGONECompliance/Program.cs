@@ -45,6 +45,8 @@ builder.Services.AddScoped<IComplianceAiService, ComplianceAiService>();
 builder.Services.AddScoped<IComplianceSearchService, ComplianceSearchService>();
 builder.Services.AddScoped<IEvaluationOrchestrator, EvaluationOrchestrator>();
 builder.Services.AddScoped<IDocumentProcessingOrchestrator, DocumentProcessingOrchestrator>();
+builder.Services.AddScoped<IRuleGenerationOrchestrator, RuleGenerationOrchestrator>();
+builder.Services.AddSingleton<IEvaluationReportPdfBuilder, EvaluationReportPdfBuilder>();
 
 builder.Services.AddQuartz(options =>
 {
@@ -64,6 +66,15 @@ builder.Services.AddQuartz(options =>
         .WithIdentity($"{nameof(DocumentProcessingWorkerJob)}-trigger")
         .WithSimpleSchedule(schedule => schedule
             .WithInterval(TimeSpan.FromSeconds(5))
+            .RepeatForever()));
+
+    var rulesJobKey = new JobKey(nameof(RuleGenerationWorkerJob));
+    options.AddJob<RuleGenerationWorkerJob>(config => config.WithIdentity(rulesJobKey));
+    options.AddTrigger(trigger => trigger
+        .ForJob(rulesJobKey)
+        .WithIdentity($"{nameof(RuleGenerationWorkerJob)}-trigger")
+        .WithSimpleSchedule(schedule => schedule
+            .WithInterval(TimeSpan.FromSeconds(7))
             .RepeatForever()));
 });
 builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);

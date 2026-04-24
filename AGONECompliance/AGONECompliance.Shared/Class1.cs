@@ -73,6 +73,12 @@ public sealed class GenerateRulesRequest
     public bool ReplaceExistingRules { get; set; }
 }
 
+public sealed class GenerateRulesResponse
+{
+    public Guid BackgroundJobId { get; set; }
+    public string Message { get; set; } = string.Empty;
+}
+
 public sealed class StartEvaluationRequest
 {
     public Guid EvaluationWorkspaceId { get; set; }
