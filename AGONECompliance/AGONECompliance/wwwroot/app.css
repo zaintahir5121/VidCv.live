@@ -235,6 +235,64 @@ h1:focus {
     font-weight: 700;
 }
 
+.eval-kpi-grid {
+    display: grid;
+    gap: 0.7rem;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    margin-bottom: 1rem;
+}
+
+.eval-kpi-card {
+    background: #fbfcff;
+    border: 1px solid #dce4ff;
+    border-radius: 0.75rem;
+    padding: 0.7rem;
+}
+
+.eval-kpi-label {
+    color: #6a75a8;
+    font-size: 0.8rem;
+}
+
+.eval-kpi-value {
+    color: #1f2654;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.eval-run-count {
+    color: #4b578c;
+    font-size: 0.86rem;
+    margin-bottom: 0.65rem;
+}
+
+.start-eval-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: minmax(280px, 1.2fr) minmax(260px, 1fr);
+    align-items: start;
+}
+
+.check-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+}
+
+.checks-table-wrap {
+    max-height: 460px;
+    overflow: auto;
+    border: 1px solid #e5ebff;
+    border-radius: 0.7rem;
+}
+
+@media (max-width: 1000px) {
+    .start-eval-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .run-head {
     display: flex;
     justify-content: space-between;

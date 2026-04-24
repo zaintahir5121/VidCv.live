@@ -134,7 +134,7 @@ public sealed class PortalContext(ApiClient apiClient)
         try
         {
             IsBusy = true;
-            StatusMessage = "Rule generation queued. Track progress in Evaluations jobs panel.";
+            StatusMessage = "Rule generation queued. Track progress in Jobs Monitoring.";
             var result = await apiClient.QueueRuleGenerationAsync(
                 State.SelectedEvaluationWorkspaceId.Value,
                 State.SelectedGuideDocumentId,

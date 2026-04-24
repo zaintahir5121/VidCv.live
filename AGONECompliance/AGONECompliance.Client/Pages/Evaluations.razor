@@ -6,9 +6,28 @@
 
 <PageTitle>Evaluations - AGONECompliance</PageTitle>
 
+<section class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Total Runs</div>
+        <div class="kpi-value">@Portal.State.Runs.Count</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-value">@Portal.State.Runs.Count(x => x.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase))</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Failed</div>
+        <div class="kpi-value">@Portal.State.Runs.Count(x => x.Status.Equals("Failed", StringComparison.OrdinalIgnoreCase))</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Checks Selected</div>
+        <div class="kpi-value">@Portal.State.SelectedRuleIds.Count</div>
+    </div>
+</section>
+
 <section class="module-card">
-    <h2>Start Evaluation</h2>
-    <p class="module-subtitle">Choose prospectus and checks to validate, then queue a run.</p>
+    <h2>Start New Evaluation</h2>
+    <p class="module-subtitle">Select the target prospectus and the checks to validate, then start a run.</p>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
@@ -83,43 +102,10 @@
 </section>
 
 <section class="module-card">
-    <h2>Run Jobs (inside Evaluations)</h2>
-    <div class="table-wrap">
-        <table class="table result-table">
-            <thead>
-            <tr>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Completed</th>
-                <th>Message</th>
-            </tr>
-            </thead>
-            <tbody>
-            @if (Portal.State.BackgroundJobs.Count == 0)
-            {
-                <tr><td colspan="5">No background jobs yet.</td></tr>
-            }
-            else
-            {
-                @foreach (var job in Portal.State.BackgroundJobs.OrderByDescending(x => x.CreatedAtUtc).Take(20))
-                {
-                    <tr>
-                        <td>@job.JobType</td>
-                        <td><span class="@($"pill {GetStatusClass(job.Status)}")">@job.Status</span></td>
-                        <td>@job.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
-                        <td>@(job.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</td>
-                        <td>@(string.IsNullOrWhiteSpace(job.Message) ? "-" : job.Message)</td>
-                    </tr>
-                }
-            }
-            </tbody>
-        </table>
+    <div class="row-actions" style="justify-content: space-between; margin-bottom: 0.4rem;">
+        <h2 style="margin: 0;">Evaluation Runs</h2>
+        <a class="btn btn-light" href="/jobs">Open Jobs Monitoring</a>
     </div>
-</section>
-
-<section class="module-card">
-    <h2>Evaluation Runs</h2>
     @if (Portal.State.Runs.Count == 0)
     {
         <p>No runs yet.</p>

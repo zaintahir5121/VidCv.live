@@ -1,0 +1,101 @@
+@page "/jobs"
+@attribute [StreamRendering]
+@using AGONECompliance.Client.Services
+@inject PortalContext Portal
+
+<PageTitle>Jobs Monitoring - AGONECompliance</PageTitle>
+
+<section class="module-card">
+    <h2>Jobs Monitoring</h2>
+    <p class="module-subtitle">Track parsing, rule generation, and evaluation background runs.</p>
+    @if (Portal.State.SelectedEvaluationWorkspaceId is null)
+    {
+        <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
+    }
+    <div class="job-grid">
+        <div class="job-kpi">
+            <div class="job-kpi-label">Total Jobs</div>
+            <div class="job-kpi-value">@Portal.State.BackgroundJobs.Count</div>
+        </div>
+        <div class="job-kpi">
+            <div class="job-kpi-label">Queued</div>
+            <div class="job-kpi-value">@Portal.State.BackgroundJobs.Count(x => string.Equals(x.Status, "Queued", StringComparison.OrdinalIgnoreCase))</div>
+        </div>
+        <div class="job-kpi">
+            <div class="job-kpi-label">Running</div>
+            <div class="job-kpi-value">@Portal.State.BackgroundJobs.Count(x => string.Equals(x.Status, "Running", StringComparison.OrdinalIgnoreCase))</div>
+        </div>
+        <div class="job-kpi">
+            <div class="job-kpi-label">Completed</div>
+            <div class="job-kpi-value">@Portal.State.BackgroundJobs.Count(x => string.Equals(x.Status, "Completed", StringComparison.OrdinalIgnoreCase))</div>
+        </div>
+        <div class="job-kpi">
+            <div class="job-kpi-label">Failed</div>
+            <div class="job-kpi-value">@Portal.State.BackgroundJobs.Count(x => string.Equals(x.Status, "Failed", StringComparison.OrdinalIgnoreCase))</div>
+        </div>
+    </div>
+    <div class="row-actions">
+        <button class="btn btn-light" @onclick="RefreshJobsAsync" disabled="@Portal.IsBusy">Refresh Jobs</button>
+    </div>
+</section>
+
+<section class="module-card">
+    <h2>Recent Jobs</h2>
+    <div class="table-wrap">
+        <table class="table result-table">
+            <thead>
+            <tr>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Started</th>
+                <th>Completed</th>
+                <th>Message</th>
+                <th>Failure</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (Portal.State.BackgroundJobs.Count == 0)
+            {
+                <tr><td colspan="7">No background jobs yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var job in Portal.State.BackgroundJobs.OrderByDescending(x => x.CreatedAtUtc))
+                {
+                    <tr>
+                        <td>@job.JobType</td>
+                        <td><span class="@($"pill {GetStatusClass(job.Status)}")">@job.Status</span></td>
+                        <td>@job.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@(job.StartedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</td>
+                        <td>@(job.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</td>
+                        <td>@(string.IsNullOrWhiteSpace(job.Message) ? "-" : job.Message)</td>
+                        <td>@(string.IsNullOrWhiteSpace(job.FailureReason) ? "-" : job.FailureReason)</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+
+    private async Task RefreshJobsAsync()
+    {
+        await Portal.RefreshAllAsync();
+    }
+
+    private static string GetStatusClass(string status) => status.ToLowerInvariant() switch
+    {
+        "completed" => "pill-ok",
+        "failed" => "pill-bad",
+        "running" => "pill-warning",
+        "queued" => "pill-neutral",
+        _ => "pill-neutral"
+    };
+}

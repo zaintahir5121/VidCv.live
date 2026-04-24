@@ -1,6 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@using AGONECompliance.Client.Services
-@inject AuthState Auth
 
 <div class="page">
     <div class="sidebar">
@@ -11,14 +9,6 @@
         <div class="top-row px-4">
             <div>
                 <div class="header-title">AGONECompliance</div>
-            </div>
-            <div class="header-user">
-                <div class="user-avatar">@Auth.Initials</div>
-                <div class="user-meta">
-                    <strong>@Auth.DisplayName</strong>
-                    <small>@Auth.Email</small>
-                </div>
-                <button class="btn btn-sm btn-light" @onclick="Logout">Logout</button>
             </div>
         </div>
 
@@ -37,10 +27,3 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
-
-@code {
-    private void Logout()
-    {
-        Auth.Logout();
-    }
-}

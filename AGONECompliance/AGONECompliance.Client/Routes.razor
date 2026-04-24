@@ -1,19 +1,6 @@
-﻿@using AGONECompliance.Client.Services
-@using AGONECompliance.Client.Shared
-@inject AuthState Auth
-
-<Router AppAssembly="typeof(Program).Assembly">
+﻿<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        @if (!Auth.IsAuthenticated && !string.Equals(routeData.PageType.Name, "Login", StringComparison.Ordinal))
-        {
-            <LayoutView Layout="typeof(Layout.MainLayout)">
-                <RedirectToLogin />
-            </LayoutView>
-        }
-        else
-        {
-            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-            <FocusOnNavigate RouteData="routeData" Selector="h1" />
-        }
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
