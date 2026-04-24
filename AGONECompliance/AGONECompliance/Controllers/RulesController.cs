@@ -34,6 +34,8 @@ public sealed class RulesController(
                 Title = x.Title,
                 Reference = x.Reference,
                 RequirementText = x.RequirementText,
+                ClassificationCategory = x.ClassificationCategory,
+                ActionParty = x.ActionParty,
                 IsActive = x.IsActive
             })
             .ToListAsync(cancellationToken);
@@ -128,6 +130,8 @@ public sealed class RulesController(
             Title = x.Title,
             Reference = x.Reference,
             RequirementText = x.RequirementText,
+            ClassificationCategory = x.ClassificationCategory,
+            ActionParty = x.ActionParty,
             IsActive = x.IsActive
         }).ToList();
 
@@ -166,6 +170,8 @@ public sealed class RulesController(
             Title = rule.Title,
             Reference = rule.Reference,
             RequirementText = rule.RequirementText,
+            ClassificationCategory = rule.ClassificationCategory,
+            ActionParty = rule.ActionParty,
             IsActive = rule.IsActive
         });
     }

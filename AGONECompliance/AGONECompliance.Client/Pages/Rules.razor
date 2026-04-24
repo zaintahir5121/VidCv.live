@@ -8,13 +8,43 @@
 
 <section class="module-card">
     <h2>Rule Builder</h2>
-    <p class="module-subtitle">Generate rules from Guide + Appendix, then choose checks to include in evaluation runs.</p>
+    <p class="module-subtitle">Generate rules from Guide + Appendix in the active workspace, then choose checks to include in evaluation runs.</p>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
     }
+    else
+    {
+        <div class="workspace-context">
+            <span class="pill pill-neutral">Active Workspace</span>
+            <strong>@(ActiveWorkspace?.Name ?? "Unknown workspace")</strong>
+            <span class="small-muted">Rules generated here stay isolated to this workspace.</span>
+        </div>
+    }
+    <div class="form-grid">
+        <select class="form-select select-input"
+                @bind="Portal.State.SelectedGuideDocumentId"
+                disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null)">
+            <option value="">Select Guide source</option>
+            @foreach (var item in GuideDocuments)
+            {
+                <option value="@item.Id">@item.OriginalFileName</option>
+            }
+        </select>
+        <select class="form-select select-input"
+                @bind="Portal.State.SelectedAppendixDocumentId"
+                disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null)">
+            <option value="">Select Appendix source</option>
+            @foreach (var item in AppendixDocuments)
+            {
+                <option value="@item.Id">@item.OriginalFileName</option>
+            }
+        </select>
+    </div>
     <div class="row-actions">
-        <button class="btn btn-gradient" @onclick="Portal.GenerateRulesAsync" disabled="@Portal.IsBusy">
+        <button class="btn btn-gradient"
+                @onclick="Portal.GenerateRulesAsync"
+                disabled="@(Portal.IsBusy || Portal.State.SelectedEvaluationWorkspaceId is null)">
             Generate Rules
         </button>
         <button class="btn btn-light" @onclick="Portal.SelectAllRules">Select All Active</button>
@@ -25,12 +55,25 @@
 
 <section class="module-card">
     <h2>Compliance Checks</h2>
+    @if (Portal.State.Rules.Count > 0)
+    {
+        <div class="row-actions">
+            <span class="pill pill-neutral">Total @Portal.State.Rules.Count</span>
+            <span class="pill pill-ok">Requirement @CountByCategory("Requirement")</span>
+            <span class="pill pill-warning">Info @CountByCategory("Info")</span>
+            <span class="pill pill-neutral">Onsite @CountByActionParty("Onsite")</span>
+            <span class="pill pill-neutral">Management @CountByActionParty("Management")</span>
+            <span class="pill pill-neutral">None @CountByActionParty("None")</span>
+        </div>
+    }
     <div class="table-wrap">
         <table class="table rule-table">
             <thead>
             <tr>
                 <th>Select</th>
                 <th>Code</th>
+                <th>Category</th>
+                <th>Action Party</th>
                 <th>Reference</th>
                 <th>Requirement</th>
                 <th>Active</th>
@@ -39,7 +82,7 @@
             <tbody>
             @if (Portal.State.Rules.Count == 0)
             {
-                <tr><td colspan="5">No rules available.</td></tr>
+                <tr><td colspan="7">No rules available.</td></tr>
             }
             else
             {
@@ -55,6 +98,8 @@
                             <strong>@rule.Code</strong>
                             <div class="small-muted">@rule.Title</div>
                         </td>
+                        <td><span class="@($"pill {GetCategoryClass(rule.ClassificationCategory)}")">@rule.ClassificationCategory</span></td>
+                        <td><span class="@($"pill {GetActionPartyClass(rule.ActionParty)}")">@rule.ActionParty</span></td>
                         <td>@rule.Reference</td>
                         <td>@rule.RequirementText</td>
                         <td>
@@ -71,8 +116,52 @@
 </section>
 
 @code {
+    private EvaluationWorkspaceDto? ActiveWorkspace =>
+        Portal.State.Workspaces.FirstOrDefault(x => x.Id == Portal.State.SelectedEvaluationWorkspaceId);
+
+    private IEnumerable<DocumentDto> GuideDocuments =>
+        Portal.State.Documents
+            .Where(x => x.Type == DocumentType.Guide)
+            .OrderByDescending(x => x.UploadedAtUtc);
+
+    private IEnumerable<DocumentDto> AppendixDocuments =>
+        Portal.State.Documents
+            .Where(x => x.Type == DocumentType.Appendix)
+            .OrderByDescending(x => x.UploadedAtUtc);
+
     protected override async Task OnInitializedAsync()
     {
         await Portal.RefreshAllAsync();
+    }
+
+    private int CountByCategory(string category)
+    {
+        return Portal.State.Rules.Count(x => string.Equals(x.ClassificationCategory, category, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private int CountByActionParty(string actionParty)
+    {
+        return Portal.State.Rules.Count(x => string.Equals(x.ActionParty, actionParty, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string GetCategoryClass(string category)
+    {
+        return category.ToLowerInvariant() switch
+        {
+            "requirement" => "pill-ok",
+            "info" => "pill-warning",
+            _ => "pill-neutral"
+        };
+    }
+
+    private static string GetActionPartyClass(string actionParty)
+    {
+        return actionParty.ToLowerInvariant() switch
+        {
+            "onsite" => "pill-ok",
+            "management" => "pill-warning",
+            "none" => "pill-neutral",
+            _ => "pill-neutral"
+        };
     }
 }

@@ -42,6 +42,8 @@ public sealed class ComplianceRule : BaseEntity
     public string Title { get; set; } = string.Empty;
     public string Reference { get; set; } = string.Empty;
     public string RequirementText { get; set; } = string.Empty;
+    public string ClassificationCategory { get; set; } = "Requirement";
+    public string ActionParty { get; set; } = "Onsite";
     public bool IsActive { get; set; } = true;
 }
 

@@ -61,6 +61,8 @@
                             <thead>
                             <tr>
                                 <th>Rule</th>
+                                <th>Category</th>
+                                <th>Action Party</th>
                                 <th>Guide Ref</th>
                                 <th>Status</th>
                                 <th>Confidence</th>
@@ -77,6 +79,8 @@
                                         <strong>@result.RuleCode</strong>
                                         <div class="small-muted">@result.RuleTitle</div>
                                     </td>
+                                    <td>@result.RuleCategory</td>
+                                    <td>@result.RuleActionParty</td>
                                     <td>@result.GuideReference</td>
                                     <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
                                     <td>@(Math.Round(result.ConfidenceScore * 100, 1))%</td>

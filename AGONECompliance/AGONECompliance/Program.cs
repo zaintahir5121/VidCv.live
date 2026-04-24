@@ -27,21 +27,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 
 var sqlConnection = builder.Configuration.GetConnectionString("SqlServer");
-if (!string.IsNullOrWhiteSpace(sqlConnection))
+if (string.IsNullOrWhiteSpace(sqlConnection))
 {
-    builder.Services.AddDbContext<ComplianceDbContext>(options =>
-        options.UseSqlServer(sqlConnection, sql =>
-        {
-            sql.EnableRetryOnFailure(5);
-            sql.CommandTimeout(60);
-        }));
+    throw new InvalidOperationException(
+        "SQL Server connection string is required. Configure ConnectionStrings:SqlServer.");
 }
-else
-{
-    var sqlitePath = builder.Configuration.GetConnectionString("Sqlite")
-        ?? "Data Source=agonecompliance.db";
-    builder.Services.AddDbContext<ComplianceDbContext>(options => options.UseSqlite(sqlitePath));
-}
+builder.Services.AddDbContext<ComplianceDbContext>(options =>
+    options.UseSqlServer(sqlConnection, sql =>
+    {
+        sql.EnableRetryOnFailure(5);
+        sql.CommandTimeout(60);
+    }));
 
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IDocumentIntelligenceService, DocumentIntelligenceService>();

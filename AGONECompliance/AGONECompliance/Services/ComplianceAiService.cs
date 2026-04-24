@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using AGONECompliance.Data;
 using AGONECompliance.Domain;
@@ -39,7 +40,7 @@ public sealed class ComplianceAiService(
             .Replace("{{appendix_text}}", TrimForModel(appendixText));
 
         var json = await CallAzureOpenAiAsync(template.SystemPrompt, userPrompt, cancellationToken);
-        var parsed = TryDeserialize<List<RuleGenerationPayload>>(json);
+        var parsed = TryDeserializeCollection<RuleGenerationPayload>(json);
         if (parsed is null || parsed.Count == 0)
         {
             logger.LogWarning("AI rule generation returned no structured rules. Using fallback rules.");
@@ -47,13 +48,16 @@ public sealed class ComplianceAiService(
         }
 
         return parsed
-            .Where(x => !string.IsNullOrWhiteSpace(x.Code) && !string.IsNullOrWhiteSpace(x.RequirementText))
+            .Select((x, index) => new { Item = x, Index = index })
+            .Where(x => !string.IsNullOrWhiteSpace(GetRequirementText(x.Item)))
             .Select(x => new ComplianceRule
             {
-                Code = SanitizeCode(x.Code ?? "GENERATED-RULE"),
-                Title = x.Title?.Trim() ?? "Generated Rule",
-                Reference = x.Reference?.Trim() ?? "Generated",
-                RequirementText = x.RequirementText?.Trim() ?? string.Empty,
+                Code = SanitizeCode(string.IsNullOrWhiteSpace(x.Item.Code) ? $"GENERATED-RULE-{x.Index + 1}" : x.Item.Code!),
+                Title = ResolveTitle(x.Item, x.Index + 1),
+                Reference = x.Item.Reference?.Trim() ?? "Generated",
+                RequirementText = GetRequirementText(x.Item),
+                ClassificationCategory = NormalizeClassificationCategory(GetCategory(x.Item)),
+                ActionParty = NormalizeActionParty(GetActionParty(x.Item), GetCategory(x.Item)),
                 IsActive = true
             })
             .ToList();
@@ -93,7 +97,7 @@ public sealed class ComplianceAiService(
             .Replace("{{rules_json}}", JsonSerializer.Serialize(rulesPayload));
 
         var responseContent = await CallAzureOpenAiAsync(template.SystemPrompt, userPrompt, cancellationToken);
-        var parsed = TryDeserialize<List<EvaluationPayload>>(responseContent);
+        var parsed = TryDeserializeCollection<EvaluationPayload>(responseContent);
         if (parsed is null || parsed.Count == 0)
         {
             logger.LogWarning("AI evaluation returned no structured data. Using heuristics.");
@@ -149,8 +153,7 @@ public sealed class ComplianceAiService(
                 new { role = "system", content = systemPrompt },
                 new { role = "user", content = userPrompt }
             },
-            temperature = 0.1,
-            response_format = new { type = "json_object" }
+            temperature = 0.1
         };
 
         var request = new HttpRequestMessage(HttpMethod.Post, uri);
@@ -356,6 +359,49 @@ public sealed class ComplianceAiService(
         }
     }
 
+    private static List<T>? TryDeserializeCollection<T>(string json)
+    {
+        var extracted = ExtractJsonBlock(json);
+        if (string.IsNullOrWhiteSpace(extracted))
+        {
+            return null;
+        }
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        try
+        {
+            using var doc = JsonDocument.Parse(extracted);
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                return JsonSerializer.Deserialize<List<T>>(extracted, options);
+            }
+
+            if (doc.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var collectionKeys = new[] { "items", "rules", "requirements", "results", "data" };
+            foreach (var key in collectionKeys)
+            {
+                if (doc.RootElement.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.Array)
+                {
+                    return JsonSerializer.Deserialize<List<T>>(value.GetRawText(), options);
+                }
+            }
+        }
+        catch
+        {
+            return null;
+        }
+
+        return null;
+    }
+
     private static string ExtractJsonBlock(string source)
     {
         var fencedMatch = Regex.Match(source, "```json\\s*(?<json>[\\s\\S]*?)```", RegexOptions.IgnoreCase);
@@ -428,12 +474,83 @@ public sealed class ComplianceAiService(
         return normalized.Trim('-');
     }
 
+    private static string NormalizeClassificationCategory(string? source)
+    {
+        return source?.Trim().ToLowerInvariant() switch
+        {
+            "info" => "Info",
+            _ => "Requirement"
+        };
+    }
+
+    private static string NormalizeActionParty(string? actionParty, string? classificationCategory)
+    {
+        var category = NormalizeClassificationCategory(classificationCategory);
+        if (category == "Info")
+        {
+            return "None";
+        }
+
+        return actionParty?.Trim().ToLowerInvariant() switch
+        {
+            "management" => "Management",
+            "onsite" => "Onsite",
+            _ => "Onsite"
+        };
+    }
+
+    private static string GetRequirementText(RuleGenerationPayload payload)
+    {
+        return payload.RequirementText?.Trim()
+               ?? payload.Requirement?.Trim()
+               ?? string.Empty;
+    }
+
+    private static string? GetCategory(RuleGenerationPayload payload)
+    {
+        return payload.ClassificationCategory?.Trim()
+               ?? payload.Category?.Trim();
+    }
+
+    private static string? GetActionParty(RuleGenerationPayload payload)
+    {
+        return payload.ActionParty?.Trim()
+               ?? payload.ActionPartySnakeCase?.Trim();
+    }
+
+    private static string ResolveTitle(RuleGenerationPayload payload, int ordinal)
+    {
+        if (!string.IsNullOrWhiteSpace(payload.Title))
+        {
+            return payload.Title.Trim();
+        }
+
+        var requirementText = GetRequirementText(payload);
+        if (string.IsNullOrWhiteSpace(requirementText))
+        {
+            return $"Generated Rule {ordinal}";
+        }
+
+        const int maxTitleLength = 72;
+        return requirementText.Length <= maxTitleLength
+            ? requirementText
+            : $"{requirementText[..maxTitleLength]}...";
+    }
+
     private sealed class RuleGenerationPayload
     {
         public string? Code { get; set; }
         public string? Title { get; set; }
         public string? Reference { get; set; }
         public string? RequirementText { get; set; }
+        [JsonPropertyName("requirement")]
+        public string? Requirement { get; set; }
+        public string? ClassificationCategory { get; set; }
+        [JsonPropertyName("category")]
+        public string? Category { get; set; }
+        public string? ActionParty { get; set; }
+        [JsonPropertyName("action_party")]
+        public string? ActionPartySnakeCase { get; set; }
     }
 
     private sealed class EvaluationPayload

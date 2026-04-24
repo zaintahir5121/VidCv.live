@@ -35,7 +35,9 @@ public static class DataSeeder
                     Title = "Prospectus Exposure Redaction",
                     Reference = "Part B 1.09, Part E 1.18",
                     RequirementText =
-                        "For prospectus exposure, the electronic copy may redact pricing of securities and related disclosures, indicative listing timetable, and salient terms of underwriting/cornerstone agreements."
+                        "For prospectus exposure, the electronic copy may redact pricing of securities and related disclosures, indicative listing timetable, and salient terms of underwriting/cornerstone agreements.",
+                    ClassificationCategory = "Requirement",
+                    ActionParty = "Management"
                 },
                 new ComplianceRule
                 {
@@ -44,7 +46,9 @@ public static class DataSeeder
                     Title = "Promoter/Director/Key Personnel Disclosures",
                     Reference = "PG 4.11",
                     RequirementText =
-                        "Disclose involvement of each promoter, director, key senior management, or key technical personnel in bankruptcy, disqualification, criminal cases, judgments, civil allegations, injunctions, reprimands, and unsatisfied judgments over the last 10 years."
+                        "Disclose involvement of each promoter, director, key senior management, or key technical personnel in bankruptcy, disqualification, criminal cases, judgments, civil allegations, injunctions, reprimands, and unsatisfied judgments over the last 10 years.",
+                    ClassificationCategory = "Requirement",
+                    ActionParty = "Management"
                 },
                 new ComplianceRule
                 {
@@ -53,7 +57,9 @@ public static class DataSeeder
                     Title = "Directory Completeness",
                     Reference = "PG 1.06",
                     RequirementText =
-                        "Directory must include details for directors, company secretary qualifications, office contact channels, key advisers, reporting accountant, experts, and stock exchange listing details where applicable."
+                        "Directory must include details for directors, company secretary qualifications, office contact channels, key advisers, reporting accountant, experts, and stock exchange listing details where applicable.",
+                    ClassificationCategory = "Requirement",
+                    ActionParty = "Management"
                 });
         }
 
@@ -68,9 +74,24 @@ public static class DataSeeder
                     Version = 1,
                     IsActive = true,
                     SystemPrompt =
-                        "You are a compliance extraction assistant. Convert guideline content into concise actionable checks.",
+                        "You are an intelligent assistant that classifies guide and appendix paragraphs into compliance checklist items. " +
+                        "Classify each extracted item using: category = Info or Requirement, and action_party = Onsite, Management, or None (None only when category is Info). " +
+                        "If requirement references multiple sections and context exists, provide the full requirement text instead of partial quotes. " +
+                        "Return only a valid JSON array.",
                     UserPromptFormat =
-                        "Guide Text:\n{{guide_text}}\n\nAppendix Text:\n{{appendix_text}}\n\nReturn JSON array with code,title,reference,requirementText."
+                        "Guide Text:\n{{guide_text}}\n\nAppendix Text:\n{{appendix_text}}\n\n" +
+                        "Use this exact classification rubric:\n" +
+                        "Category = Info or Requirement.\n" +
+                        "Action Party = Onsite or Management; if Category is Info set Action Party to None.\n" +
+                        "Info includes headings/titles, definitions/concepts, non-compliance implication statements, and reporting structure descriptions.\n" +
+                        "Requirement includes explicit obligations/actions that shall be complied.\n" +
+                        "Onsite includes physical/skilled workplace execution actions.\n" +
+                        "Management includes documentation/notification/filing/reporting obligations.\n" +
+                        "If requirement references multiple sections and context is available, provide full requirement text.\n" +
+                        "Return JSON array items with fields: code, title, reference, requirementText, classificationCategory, actionParty.\n" +
+                        "Allowed values:\n" +
+                        "- classificationCategory: Info | Requirement\n" +
+                        "- actionParty: Onsite | Management | None"
                 },
                 new PromptTemplate
                 {
@@ -80,9 +101,11 @@ public static class DataSeeder
                     Version = 1,
                     IsActive = true,
                     SystemPrompt =
-                        "You are a strict compliance evaluator. Determine if each rule is Compliant, NonCompliant, or NeedsReview based only on evidence in the prospectus text.",
+                        "You are a strict compliance evaluator. Determine if each rule is Compliant, NonCompliant, or NeedsReview based only on evidence in the prospectus text. " +
+                        "Always identify page-level location for matched evidence when available.",
                     UserPromptFormat =
-                        "Prospectus Text:\n{{prospectus_text}}\n\nRules:\n{{rules_json}}\n\nReturn JSON array with ruleCode,status,reason,evidenceExcerpt,pageNumber,confidenceScore."
+                        "Prospectus Text:\n{{prospectus_text}}\n\nRules:\n{{rules_json}}\n\n" +
+                        "Return JSON array with fields: ruleCode,status,reason,evidenceExcerpt,pageNumber,confidenceScore."
                 });
         }
 

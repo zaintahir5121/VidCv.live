@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AGONECompliance.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialSqlServerCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,12 +15,12 @@ namespace AGONECompliance.Data.Migrations
                 name: "EvaluationWorkspaces",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 2048, nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,16 +31,16 @@ namespace AGONECompliance.Data.Migrations
                 name: "PromptTemplates",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TemplateType = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    SystemPrompt = table.Column<string>(type: "TEXT", nullable: false),
-                    UserPromptFormat = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TemplateType = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Version = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    SystemPrompt = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserPromptFormat = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -51,15 +51,17 @@ namespace AGONECompliance.Data.Migrations
                 name: "ComplianceRules",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EvaluationWorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Code = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
-                    Reference = table.Column<string>(type: "TEXT", maxLength: 512, nullable: false),
-                    RequirementText = table.Column<string>(type: "TEXT", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EvaluationWorkspaceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
+                    Reference = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    RequirementText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ClassificationCategory = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    ActionParty = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -76,19 +78,19 @@ namespace AGONECompliance.Data.Migrations
                 name: "UploadedDocuments",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EvaluationWorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    OriginalFileName = table.Column<string>(type: "TEXT", maxLength: 512, nullable: false),
-                    ContentType = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    SizeBytes = table.Column<long>(type: "INTEGER", nullable: false),
-                    BlobPath = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
-                    FullText = table.Column<string>(type: "TEXT", nullable: true),
-                    ParsedJson = table.Column<string>(type: "TEXT", nullable: true),
-                    IsProcessed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ProcessingError = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EvaluationWorkspaceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    OriginalFileName = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    SizeBytes = table.Column<long>(type: "bigint", nullable: false),
+                    BlobPath = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
+                    FullText = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ParsedJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsProcessed = table.Column<bool>(type: "bit", nullable: false),
+                    ProcessingError = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -105,14 +107,14 @@ namespace AGONECompliance.Data.Migrations
                 name: "EvaluationRuns",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EvaluationWorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ProspectusDocumentId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false),
-                    FailureReason = table.Column<string>(type: "TEXT", nullable: true),
-                    CompletedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EvaluationWorkspaceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProspectusDocumentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FailureReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompletedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -135,17 +137,17 @@ namespace AGONECompliance.Data.Migrations
                 name: "EvaluationResults",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EvaluationRunId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RuleId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    Reason = table.Column<string>(type: "TEXT", nullable: false),
-                    EvidenceExcerpt = table.Column<string>(type: "TEXT", nullable: false),
-                    EvidenceLocation = table.Column<string>(type: "TEXT", nullable: false),
-                    PageNumber = table.Column<int>(type: "INTEGER", nullable: true),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EvaluationRunId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RuleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EvidenceExcerpt = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EvidenceLocation = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PageNumber = table.Column<int>(type: "int", nullable: true),
                     ConfidenceScore = table.Column<decimal>(type: "decimal(5,4)", nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -168,11 +170,11 @@ namespace AGONECompliance.Data.Migrations
                 name: "EvaluationRunRules",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EvaluationRunId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    RuleId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EvaluationRunId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RuleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {

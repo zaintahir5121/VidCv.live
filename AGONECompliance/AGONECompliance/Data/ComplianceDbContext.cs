@@ -46,6 +46,8 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
             entity.Property(x => x.Code).HasMaxLength(128);
             entity.Property(x => x.Title).HasMaxLength(1024);
             entity.Property(x => x.Reference).HasMaxLength(512);
+            entity.Property(x => x.ClassificationCategory).HasMaxLength(64);
+            entity.Property(x => x.ActionParty).HasMaxLength(64);
             entity.HasOne(x => x.EvaluationWorkspace)
                 .WithMany(x => x.Rules)
                 .HasForeignKey(x => x.EvaluationWorkspaceId)

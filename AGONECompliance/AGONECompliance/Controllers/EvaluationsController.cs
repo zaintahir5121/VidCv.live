@@ -151,6 +151,8 @@ public sealed class EvaluationsController(
                     RuleId = x.RuleId,
                     RuleCode = x.Rule.Code,
                     RuleTitle = x.Rule.Title,
+                    RuleCategory = x.Rule.ClassificationCategory,
+                    RuleActionParty = x.Rule.ActionParty,
                     GuideReference = x.Rule.Reference,
                     Status = x.Status,
                     Reason = x.Reason,

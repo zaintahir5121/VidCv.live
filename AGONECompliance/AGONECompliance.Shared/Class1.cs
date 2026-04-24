@@ -58,6 +58,8 @@ public sealed class ComplianceRuleDto
     public string Title { get; set; } = string.Empty;
     public string Reference { get; set; } = string.Empty;
     public string RequirementText { get; set; } = string.Empty;
+    public string ClassificationCategory { get; set; } = string.Empty;
+    public string ActionParty { get; set; } = string.Empty;
     public bool IsActive { get; set; }
 }
 
@@ -81,6 +83,8 @@ public sealed class EvaluationResultItemDto
     public Guid RuleId { get; set; }
     public string RuleCode { get; set; } = string.Empty;
     public string RuleTitle { get; set; } = string.Empty;
+    public string RuleCategory { get; set; } = string.Empty;
+    public string RuleActionParty { get; set; } = string.Empty;
     public string GuideReference { get; set; } = string.Empty;
     public ComplianceStatus Status { get; set; }
     public string Reason { get; set; } = string.Empty;

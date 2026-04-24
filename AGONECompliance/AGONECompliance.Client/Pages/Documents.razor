@@ -40,6 +40,7 @@
             <tr>
                 <th>Type</th>
                 <th>File Name</th>
+                <th>Content Type</th>
                 <th>Size (KB)</th>
                 <th>Uploaded</th>
                 <th>Processed</th>
@@ -49,7 +50,7 @@
             <tbody>
             @if (Portal.State.Documents.Count == 0)
             {
-                <tr><td colspan="6">No files uploaded yet.</td></tr>
+                <tr><td colspan="7">No files uploaded yet.</td></tr>
             }
             else
             {

@@ -5,6 +5,7 @@ using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 
 namespace AGONECompliance.Services;
 
@@ -42,8 +43,11 @@ public sealed class ComplianceSearchService(
                 Fields =
                 [
                     new SimpleField("id", SearchFieldDataType.String) { IsKey = true, IsFilterable = true },
+                    new SimpleField("workspaceId", SearchFieldDataType.String) { IsFilterable = true, IsSortable = true },
+                    new SimpleField("pageNumber", SearchFieldDataType.Int32) { IsFilterable = true, IsSortable = true },
                     new SimpleField("type", SearchFieldDataType.String) { IsFilterable = true, IsSortable = true },
                     new SearchableField("fileName") { IsFilterable = true, IsSortable = true },
+                    new SearchableField("ruleReference") { IsFilterable = true, IsSortable = true },
                     new SearchableField("fullText") { AnalyzerName = LexicalAnalyzerName.StandardLucene },
                     new SimpleField("uploadedAtUtc", SearchFieldDataType.DateTimeOffset) { IsFilterable = true, IsSortable = true }
                 ]
@@ -71,19 +75,13 @@ public sealed class ComplianceSearchService(
             var credential = new AzureKeyCredential(_options.AiSearch.ApiKey);
             var searchClient = new Azure.Search.Documents.SearchClient(endpoint, _options.AiSearch.IndexName, credential);
 
-            var payload = new[]
+            var documents = BuildSearchDocuments(document);
+            if (documents.Count == 0)
             {
-                new
-                {
-                    id = document.Id.ToString(),
-                    type = document.Type.ToString(),
-                    fileName = document.OriginalFileName,
-                    fullText = document.FullText ?? string.Empty,
-                    uploadedAtUtc = document.CreatedAtUtc
-                }
-            };
+                return;
+            }
 
-            await searchClient.UploadDocumentsAsync(payload, cancellationToken: cancellationToken);
+            await searchClient.UploadDocumentsAsync(documents, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -97,4 +95,79 @@ public sealed class ComplianceSearchService(
                && !string.IsNullOrWhiteSpace(_options.AiSearch.ApiKey)
                && !string.IsNullOrWhiteSpace(_options.AiSearch.IndexName);
     }
+
+    private static List<object> BuildSearchDocuments(UploadedDocument document)
+    {
+        var items = new List<object>();
+        var parsedPages = TryExtractPages(document.ParsedJson);
+        if (parsedPages.Count == 0)
+        {
+            items.Add(new
+            {
+                id = document.Id.ToString(),
+                workspaceId = document.EvaluationWorkspaceId.ToString(),
+                pageNumber = 1,
+                type = document.Type.ToString(),
+                fileName = document.OriginalFileName,
+                ruleReference = string.Empty,
+                fullText = document.FullText ?? string.Empty,
+                uploadedAtUtc = document.CreatedAtUtc
+            });
+            return items;
+        }
+
+        foreach (var page in parsedPages)
+        {
+            items.Add(new
+            {
+                id = $"{document.Id:N}-p{page.PageNumber}",
+                workspaceId = document.EvaluationWorkspaceId.ToString(),
+                pageNumber = page.PageNumber,
+                type = document.Type.ToString(),
+                fileName = document.OriginalFileName,
+                ruleReference = string.Empty,
+                fullText = page.Content,
+                uploadedAtUtc = document.CreatedAtUtc
+            });
+        }
+
+        return items;
+    }
+
+    private static List<ParsedPage> TryExtractPages(string? parsedJson)
+    {
+        if (string.IsNullOrWhiteSpace(parsedJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(parsedJson);
+            if (!doc.RootElement.TryGetProperty("pages", out var pages) || pages.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var items = new List<ParsedPage>();
+            foreach (var page in pages.EnumerateArray())
+            {
+                var pageNumber = page.TryGetProperty("pageNumber", out var numberElement) && numberElement.TryGetInt32(out var n)
+                    ? n
+                    : 1;
+                var content = page.TryGetProperty("content", out var contentElement)
+                    ? contentElement.GetString() ?? string.Empty
+                    : string.Empty;
+                items.Add(new ParsedPage(pageNumber, content));
+            }
+
+            return items;
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private sealed record ParsedPage(int PageNumber, string Content);
 }

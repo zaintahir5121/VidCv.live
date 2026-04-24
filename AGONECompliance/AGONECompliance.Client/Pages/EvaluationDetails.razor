@@ -42,6 +42,8 @@
                     <thead>
                     <tr>
                         <th>Rule</th>
+                        <th>Category</th>
+                        <th>Action Party</th>
                         <th>Guide Ref</th>
                         <th>Status</th>
                         <th>Confidence</th>
@@ -58,6 +60,8 @@
                                 <strong>@result.RuleCode</strong>
                                 <div class="small-muted">@result.RuleTitle</div>
                             </td>
+                            <td><span class="@($"pill {GetCategoryClass(result.RuleCategory)}")">@result.RuleCategory</span></td>
+                            <td><span class="@($"pill {GetActionPartyClass(result.RuleActionParty)}")">@result.RuleActionParty</span></td>
                             <td>@result.GuideReference</td>
                             <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
                             <td>@(Math.Round(result.ConfidenceScore * 100, 1))%</td>
@@ -130,6 +134,21 @@
         ComplianceStatus.Compliant => "pill-ok",
         ComplianceStatus.NonCompliant => "pill-bad",
         ComplianceStatus.NeedsReview => "pill-warning",
+        _ => "pill-neutral"
+    };
+
+    private static string GetCategoryClass(string category) => category.ToLowerInvariant() switch
+    {
+        "requirement" => "pill-ok",
+        "info" => "pill-warning",
+        _ => "pill-neutral"
+    };
+
+    private static string GetActionPartyClass(string actionParty) => actionParty.ToLowerInvariant() switch
+    {
+        "onsite" => "pill-ok",
+        "management" => "pill-warning",
+        "none" => "pill-neutral",
         _ => "pill-neutral"
     };
 }
