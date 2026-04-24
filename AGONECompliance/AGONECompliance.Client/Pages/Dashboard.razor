@@ -6,8 +6,13 @@
 
 <PageTitle>Dashboard - AGONECompliance</PageTitle>
 
+<section class="hero-banner">
+    <div class="hero-title">Compliance Evaluation Workspace</div>
+    <div class="hero-subtitle">Create a workspace, ingest documents, generate checks, and run evidence-backed evaluations from one guided flow.</div>
+</section>
+
 <section class="module-card">
-    <h2>AGONECompliance Control Center</h2>
+    <h2>Workspace Control Center</h2>
     <div class="row-actions">
         <select class="form-select select-input"
                 value="@Portal.State.SelectedEvaluationWorkspaceId"
@@ -59,7 +64,7 @@
 </section>
 
 <section class="module-card">
-    <h2>Workflow</h2>
+    <h2>Recommended Workflow</h2>
     <div class="steps-grid">
         <a class="step-card" href="/documents">
             <span class="step-index">1</span>
@@ -80,6 +85,13 @@
             <div>
                 <strong>Run Evaluation</strong>
                 <p>Inspect compliant and non-compliant outcomes.</p>
+            </div>
+        </a>
+        <a class="step-card" href="/jobs">
+            <span class="step-index">4</span>
+            <div>
+                <strong>Monitor Jobs</strong>
+                <p>Track parsing, rule generation, and evaluation queues.</p>
             </div>
         </a>
     </div>

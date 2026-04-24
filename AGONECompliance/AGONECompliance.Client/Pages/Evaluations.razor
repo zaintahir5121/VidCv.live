@@ -6,6 +6,11 @@
 
 <PageTitle>Evaluations - AGONECompliance</PageTitle>
 
+<section class="page-hero">
+    <h1>Evaluations</h1>
+    <p>Launch validation runs, inspect outcomes, and export formal PDF reports.</p>
+</section>
+
 <section class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-label">Total Runs</div>
@@ -27,17 +32,19 @@
 
 <section class="module-card">
     <h2>Start New Evaluation</h2>
-    <p class="module-subtitle">Select the target prospectus and the checks to validate, then start a run.</p>
+    <p class="module-subtitle">Step 1: choose a prospectus. Step 2: pick checks. Step 3: run evaluation.</p>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
     }
-    <div class="workspace-context">
+    <div class="workspace-context run-toolbar">
         <span class="pill pill-neutral">Selected checks</span>
         <strong>@Portal.State.SelectedRuleIds.Count</strong>
-        <span class="small-muted">Pick checks below before starting.</span>
+        <span class="small-muted">Choose active checks below before starting.</span>
+        <span class="pill pill-neutral">Prospectus</span>
+        <strong>@(Portal.State.SelectedProspectusDocumentId is null ? "Not selected" : "Selected")</strong>
     </div>
-    <div class="row-actions">
+    <div class="row-actions compact-actions">
         <select class="form-select select-input" @bind="Portal.State.SelectedProspectusDocumentId">
             <option value="">Select prospectus document</option>
             @foreach (var item in Portal.State.Documents.Where(x => x.Type == DocumentType.Prospectus))
@@ -45,19 +52,19 @@
                 <option value="@item.Id">@item.OriginalFileName (@(Math.Round(item.SizeBytes / 1024.0, 1)) KB)</option>
             }
         </select>
+        <button class="btn btn-light" @onclick="Portal.SelectAllRules">Select All Checks</button>
+        <button class="btn btn-light" @onclick="Portal.ClearRuleSelection">Clear Checks</button>
         <button class="btn btn-gradient"
                 @onclick="Portal.StartEvaluationAsync"
                 disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null || Portal.IsBusy || Portal.State.SelectedProspectusDocumentId is null || Portal.State.SelectedRuleIds.Count == 0)">
             Start Evaluation
         </button>
-        <button class="btn btn-light" @onclick="Portal.SelectAllRules">Select All Checks</button>
-        <button class="btn btn-light" @onclick="Portal.ClearRuleSelection">Clear Checks</button>
     </div>
     <div class="status-banner">@Portal.StatusMessage</div>
 </section>
 
 <section class="module-card">
-    <h2>Choose Checks</h2>
+    <h2>Step 2: Choose Checks</h2>
     <div class="table-wrap">
         <table class="table rule-table">
             <thead>
@@ -102,13 +109,13 @@
 </section>
 
 <section class="module-card">
-    <div class="row-actions" style="justify-content: space-between; margin-bottom: 0.4rem;">
-        <h2 style="margin: 0;">Evaluation Runs</h2>
+    <div class="module-header-row">
+        <h2>Evaluation Runs</h2>
         <a class="btn btn-light" href="/jobs">Open Jobs Monitoring</a>
     </div>
     @if (Portal.State.Runs.Count == 0)
     {
-        <p>No runs yet.</p>
+        <p class="empty-state">No runs yet. Start your first evaluation above.</p>
     }
     else
     {

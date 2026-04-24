@@ -7,28 +7,36 @@
 <PageTitle>Documents - AGONECompliance</PageTitle>
 
 <section class="module-card">
-    <h2>Document Intake</h2>
-    <p class="module-subtitle">Upload PDF-only Guide, Appendix, and Prospectus files (up to 500 MB each). Scanned/image PDFs are extracted through Azure Document Intelligence OCR.</p>
+    <div class="section-head">
+        <div>
+            <h2>Document Intake</h2>
+            <p class="module-subtitle">Upload PDF-only Guide, Appendix, and Prospectus files (up to 500 MB each). Scanned/image PDFs are extracted through Azure Document Intelligence OCR.</p>
+        </div>
+        <span class="soft-chip">Step 1 of 3</span>
+    </div>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
     }
 
-    <div class="upload-grid">
-        <div class="upload-block">
+    <div class="upload-grid flow-card-grid">
+        <div class="upload-block flow-card">
             <label>Guide Document</label>
+            <p class="small-muted">Primary standards and requirements source.</p>
             <InputFile accept=".pdf,application/pdf"
                        @key="@($"guide-{inputKey}")"
                        OnChange="@(args => UploadAsync(DocumentType.Guide, args))" />
         </div>
-        <div class="upload-block">
+        <div class="upload-block flow-card">
             <label>Appendix Document</label>
+            <p class="small-muted">Supplementary checks and annex obligations.</p>
             <InputFile accept=".pdf,application/pdf"
                        @key="@($"appendix-{inputKey}")"
                        OnChange="@(args => UploadAsync(DocumentType.Appendix, args))" />
         </div>
-        <div class="upload-block">
+        <div class="upload-block flow-card">
             <label>Prospectus Document</label>
+            <p class="small-muted">Target document to validate for compliance.</p>
             <InputFile accept=".pdf,application/pdf"
                        @key="@($"prospectus-{inputKey}")"
                        OnChange="@(args => UploadAsync(DocumentType.Prospectus, args))" />

@@ -1,6 +1,6 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: #eef1f7;
+    background: #f4f6fc;
     color: #202650;
 }
 
@@ -19,7 +19,8 @@ a, .btn-link {
 }
 
 .content {
-    padding-top: 1.1rem;
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
 }
 
 h1:focus {
@@ -54,21 +55,21 @@ h1:focus {
 
 .module-card {
     background: #fff;
-    border-radius: 0.9rem;
-    border: 1px solid #e8ecff;
-    box-shadow: 0 6px 22px rgba(56, 67, 130, 0.06);
-    padding: 1rem;
-    margin-bottom: 1rem;
+    border-radius: 1rem;
+    border: 1px solid #e5eaff;
+    box-shadow: 0 8px 26px rgba(56, 67, 130, 0.07);
+    padding: 1.1rem;
+    margin-bottom: 1.1rem;
 }
 
 .module-card h2 {
-    color: #202650;
-    font-size: 1.1rem;
-    margin-bottom: 0.2rem;
+    color: #1f2550;
+    font-size: 1.12rem;
+    margin-bottom: 0.3rem;
 }
 
 .module-subtitle {
-    color: #5d6899;
+    color: #5f6998;
     margin-bottom: 0.9rem;
 }
 
@@ -86,11 +87,64 @@ h1:focus {
 
 .status-banner {
     margin-top: 0.8rem;
-    padding: 0.65rem 0.8rem;
+    padding: 0.7rem 0.85rem;
     border-radius: 0.6rem;
-    background: #f3f6ff;
+    background: #eef3ff;
     color: #314074;
+    font-size: 0.9rem;
+    border: 1px solid #dce6ff;
+}
+
+.page-title-wrap {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin-bottom: 0.75rem;
+}
+
+.page-title-wrap h1 {
+    margin: 0;
+    color: #1f2550;
+    font-size: 1.45rem;
+    font-weight: 700;
+}
+
+.page-title-wrap p {
+    margin: 0.18rem 0 0;
+    color: #6873a7;
     font-size: 0.92rem;
+}
+
+.page-title-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.flow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.8rem;
+}
+
+.flow-card {
+    border: 1px solid #e0e7ff;
+    border-radius: 0.85rem;
+    padding: 0.9rem;
+    background: #fbfcff;
+}
+
+.flow-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.98rem;
+    color: #253064;
+}
+
+.flow-card p {
+    margin: 0;
+    color: #6f79ab;
+    font-size: 0.85rem;
 }
 
 .upload-grid {
@@ -102,7 +156,7 @@ h1:focus {
 .upload-block {
     border: 1px dashed #c9d4ff;
     border-radius: 0.7rem;
-    padding: 0.75rem;
+    padding: 0.8rem;
     background: #fbfcff;
 }
 
@@ -159,8 +213,9 @@ h1:focus {
     background: linear-gradient(135deg, #4779F7 0%, #6C3AED 100%);
     border: none;
     color: #fff;
-    border-radius: 0.4rem;
-    min-width: 200px;
+    border-radius: 0.45rem;
+    min-width: 190px;
+    font-weight: 600;
 }
 
 .btn-gradient:disabled {
@@ -171,6 +226,7 @@ h1:focus {
     border: 1px solid #d8dff9;
     background: #fff;
     color: #2a315f;
+    border-radius: 0.45rem;
 }
 
 .select-input {
@@ -197,6 +253,12 @@ h1:focus {
     font-size: 0.9rem;
 }
 
+.rule-table tbody tr:hover,
+.result-table tbody tr:hover,
+.doc-table tbody tr:hover {
+    background: #f8faff;
+}
+
 .small-muted {
     color: #6a75a8;
     font-size: 0.78rem;
@@ -205,7 +267,7 @@ h1:focus {
 .run-card {
     border: 1px solid #e6ebff;
     border-radius: 0.75rem;
-    padding: 0.85rem;
+    padding: 0.9rem;
     margin-bottom: 0.8rem;
     background: #fcfdff;
 }
@@ -221,7 +283,7 @@ h1:focus {
     background: #fbfcff;
     border: 1px solid #dce4ff;
     border-radius: 0.75rem;
-    padding: 0.7rem;
+    padding: 0.75rem;
 }
 
 .job-kpi-label {
@@ -246,7 +308,7 @@ h1:focus {
     background: #fbfcff;
     border: 1px solid #dce4ff;
     border-radius: 0.75rem;
-    padding: 0.7rem;
+    padding: 0.75rem;
 }
 
 .eval-kpi-label {
@@ -287,8 +349,40 @@ h1:focus {
     border-radius: 0.7rem;
 }
 
+.split-layout {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: 1.45fr 1fr;
+}
+
+.summary-panel {
+    border: 1px solid #e0e7ff;
+    background: #fbfcff;
+    border-radius: 0.8rem;
+    padding: 0.85rem;
+}
+
+.summary-panel h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+    color: #273164;
+}
+
+.summary-list {
+    margin: 0;
+    padding-left: 1rem;
+    color: #495589;
+    font-size: 0.87rem;
+    display: grid;
+    gap: 0.35rem;
+}
+
 @media (max-width: 1000px) {
     .start-eval-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .split-layout {
         grid-template-columns: 1fr;
     }
 }

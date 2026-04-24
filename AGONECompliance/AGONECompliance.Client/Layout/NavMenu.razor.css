@@ -160,3 +160,18 @@
         overflow-y: auto;
     }
 }
+
+.nav-section-title {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0.8rem 0 0.45rem;
+    padding-left: 0.3rem;
+}
+
+.nav-spacer {
+    height: 1px;
+    margin: 0.65rem 0.3rem;
+    background: rgba(255, 255, 255, 0.14);
+}

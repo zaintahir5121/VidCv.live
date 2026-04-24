@@ -7,11 +7,16 @@
 
 <section class="module-card">
     <h2>Jobs Monitoring</h2>
-    <p class="module-subtitle">Track parsing, rule generation, and evaluation background runs.</p>
+    <p class="module-subtitle">Track parsing, rule generation, and evaluation workers with clear status and timestamps.</p>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
     }
+    <div class="workspace-context">
+        <span class="pill pill-neutral">Scope</span>
+        <strong>@(Portal.State.SelectedEvaluationWorkspaceId is null ? "All workspaces" : "Current workspace")</strong>
+        <span class="small-muted">Use this screen to confirm queue health before running large batches.</span>
+    </div>
     <div class="job-grid">
         <div class="job-kpi">
             <div class="job-kpi-label">Total Jobs</div>
@@ -34,8 +39,9 @@
             <div class="job-kpi-value">@Portal.State.BackgroundJobs.Count(x => string.Equals(x.Status, "Failed", StringComparison.OrdinalIgnoreCase))</div>
         </div>
     </div>
-    <div class="row-actions">
+    <div class="page-toolbar">
         <button class="btn btn-light" @onclick="RefreshJobsAsync" disabled="@Portal.IsBusy">Refresh Jobs</button>
+        <a class="btn btn-light" href="/evaluations">Go to Evaluations</a>
     </div>
 </section>
 
@@ -61,7 +67,7 @@
             }
             else
             {
-                @foreach (var job in Portal.State.BackgroundJobs.OrderByDescending(x => x.CreatedAtUtc))
+                @foreach (var job in Portal.State.BackgroundJobs.OrderByDescending(x => x.CreatedAtUtc).Take(100))
                 {
                     <tr>
                         <td>@job.JobType</td>
