@@ -1,6 +1,8 @@
 using AGONECompliance.Options;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AGONECompliance.Services;
 
@@ -8,6 +10,7 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
 {
     private readonly AzureOptions _options = azureOptions.Value;
     private readonly string _localUploadsRoot = Path.Combine(AppContext.BaseDirectory, "local-uploads");
+    private static readonly Regex SafeTokenRegex = new("[^a-z0-9-]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public async Task<string> UploadAsync(
         Stream stream,
@@ -16,10 +19,10 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
         CancellationToken cancellationToken,
         string? folderPath = null)
     {
-        var safeName = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}-{fileName}";
+        var safeName = BuildSafeFileName(fileName, contentType);
         var blobName = string.IsNullOrWhiteSpace(folderPath)
             ? safeName
-            : $"{folderPath.Trim('/').Replace("\\", "/")}/{safeName}";
+            : $"{NormalizeFolderPath(folderPath)}/{safeName}";
 
         if (string.IsNullOrWhiteSpace(_options.BlobStorage.ConnectionString))
         {
@@ -49,6 +52,97 @@ public sealed class BlobStorageService(IOptions<AzureOptions> azureOptions, ILog
         }, cancellationToken: cancellationToken);
 
         return blobClient.Uri.ToString();
+    }
+
+    private static string BuildSafeFileName(string logicalName, string contentType)
+    {
+        var rawBaseName = Path.GetFileNameWithoutExtension(logicalName);
+        var normalizedBaseName = NormalizeToken(rawBaseName, 24, "file");
+        var extension = ResolveExtension(logicalName, contentType);
+        var uniqueSuffix = $"{DateTimeOffset.UtcNow:yyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..8]}";
+        return $"{normalizedBaseName}-{uniqueSuffix}{extension}";
+    }
+
+    private static string NormalizeFolderPath(string folderPath)
+    {
+        var segments = folderPath
+            .Replace("\\", "/", StringComparison.Ordinal)
+            .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(segment => NormalizeToken(segment, 32, "folder"));
+
+        return string.Join('/', segments);
+    }
+
+    private static string NormalizeToken(string value, int maxLength, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        var ascii = new string(value
+            .ToLowerInvariant()
+            .Select(ch => ch <= 127 ? ch : '-')
+            .ToArray());
+
+        var replaced = ascii
+            .Replace("_", "-", StringComparison.Ordinal)
+            .Replace(" ", "-", StringComparison.Ordinal);
+        var safe = SafeTokenRegex.Replace(replaced, "-");
+
+        var sb = new StringBuilder(safe.Length);
+        var previousDash = false;
+        foreach (var ch in safe)
+        {
+            if (ch == '-')
+            {
+                if (!previousDash)
+                {
+                    sb.Append(ch);
+                }
+
+                previousDash = true;
+                continue;
+            }
+
+            sb.Append(ch);
+            previousDash = false;
+        }
+
+        var compact = sb.ToString().Trim('-');
+        if (string.IsNullOrWhiteSpace(compact))
+        {
+            compact = fallback;
+        }
+
+        if (compact.Length <= maxLength)
+        {
+            return compact;
+        }
+
+        var shortened = compact[..maxLength].Trim('-');
+        return string.IsNullOrWhiteSpace(shortened) ? fallback : shortened;
+    }
+
+    private static string ResolveExtension(string logicalName, string contentType)
+    {
+        var extension = Path.GetExtension(logicalName);
+        if (!string.IsNullOrWhiteSpace(extension))
+        {
+            var safe = Regex.Replace(extension.ToLowerInvariant(), "[^a-z0-9.]", string.Empty);
+            if (safe.StartsWith(".", StringComparison.Ordinal) && safe.Length is > 1 and <= 10)
+            {
+                return safe;
+            }
+        }
+
+        return contentType.ToLowerInvariant() switch
+        {
+            "application/pdf" => ".pdf",
+            "application/json" => ".json",
+            "text/plain" => ".txt",
+            _ => ".bin"
+        };
     }
 
     public async Task<(Stream Stream, string ContentType)> DownloadAsync(

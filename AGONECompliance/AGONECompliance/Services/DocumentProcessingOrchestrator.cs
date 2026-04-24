@@ -93,24 +93,26 @@ public sealed class DocumentProcessingOrchestrator(
                 if (!string.IsNullOrWhiteSpace(processed.FullText))
                 {
                     await using var fullTextStream = new MemoryStream(Encoding.UTF8.GetBytes(processed.FullText));
+                    var fullTextLogicalName = $"doc-{document.Id.ToString("N")[..8]}-fulltext.txt";
                     fullTextBlobPath = await blobStorageService.UploadAsync(
                         fullTextStream,
                         "text/plain",
-                        $"{Path.GetFileNameWithoutExtension(document.OriginalFileName)}-fulltext.txt",
+                        fullTextLogicalName,
                         cancellationToken,
-                        folderPath: $"processed-text/{document.EvaluationWorkspaceId:N}");
+                        folderPath: $"processed-text/ws-{document.EvaluationWorkspaceId:N}");
                 }
 
                 var parsedJsonBlobPath = string.Empty;
                 if (!string.IsNullOrWhiteSpace(processed.ParsedJson))
                 {
                     await using var parsedJsonStream = new MemoryStream(Encoding.UTF8.GetBytes(processed.ParsedJson));
+                    var parsedJsonLogicalName = $"doc-{document.Id.ToString("N")[..8]}-layout.json";
                     parsedJsonBlobPath = await blobStorageService.UploadAsync(
                         parsedJsonStream,
                         "application/json",
-                        $"{Path.GetFileNameWithoutExtension(document.OriginalFileName)}-parsed.json",
+                        parsedJsonLogicalName,
                         cancellationToken,
-                        folderPath: $"parsed-json/{document.EvaluationWorkspaceId:N}");
+                        folderPath: $"parsed-json/ws-{document.EvaluationWorkspaceId:N}");
                 }
 
                 document.FullTextBlobPath = fullTextBlobPath;

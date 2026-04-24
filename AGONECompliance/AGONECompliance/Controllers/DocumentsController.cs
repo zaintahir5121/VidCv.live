@@ -20,6 +20,14 @@ public sealed class DocumentsController(
         "application/x-pdf"
     ];
 
+    private static string GetDocumentTypeToken(DocumentType type) => type switch
+    {
+        DocumentType.Guide => "guide",
+        DocumentType.Appendix => "appendix",
+        DocumentType.Prospectus => "prospectus",
+        _ => "doc"
+    };
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<DocumentDto>>> GetAll(
         [FromQuery] Guid evaluationWorkspaceId,
@@ -93,11 +101,15 @@ public sealed class DocumentsController(
         storageStream.Position = 0;
 
         var effectiveContentType = "application/pdf";
+        var typeToken = GetDocumentTypeToken(type);
+        var workspaceShortToken = evaluationWorkspaceId.ToString("N")[..8];
+        var blobLogicalName = $"{typeToken}-{workspaceShortToken}";
         var blobPath = await blobStorageService.UploadAsync(
             storageStream,
             effectiveContentType,
-            file.FileName,
-            cancellationToken);
+            blobLogicalName,
+            cancellationToken,
+            folderPath: $"docs/{evaluationWorkspaceId:N}/{typeToken}");
 
         var document = new UploadedDocument
         {
