@@ -30,6 +30,32 @@ public sealed class RuleGenerationOrchestrator(
             throw new InvalidOperationException("Evaluation workspace not found.");
         }
 
+        if (!request.AppendixDocumentId.HasValue || request.AppendixDocumentId.Value == Guid.Empty)
+        {
+            throw new InvalidOperationException("Appendix document is required for rule generation.");
+        }
+
+        var appendixInfo = await dbContext.UploadedDocuments
+            .Where(x => x.Id == request.AppendixDocumentId.Value
+                        && x.EvaluationWorkspaceId == request.EvaluationWorkspaceId
+                        && x.Type == DocumentType.Appendix)
+            .Select(x => new
+            {
+                x.Id,
+                x.IsProcessed,
+                x.FullTextBlobPath
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (appendixInfo is null)
+        {
+            throw new InvalidOperationException("Selected appendix document was not found in this workspace.");
+        }
+
+        if (!appendixInfo.IsProcessed || string.IsNullOrWhiteSpace(appendixInfo.FullTextBlobPath))
+        {
+            throw new InvalidOperationException("Appendix document is still processing. Wait until parsing is completed.");
+        }
+
         var job = new BackgroundJobRun
         {
             EvaluationWorkspaceId = request.EvaluationWorkspaceId,
@@ -37,7 +63,7 @@ public sealed class RuleGenerationOrchestrator(
             Status = "Queued",
             Message = $"Rule generation queued for workspace {request.EvaluationWorkspaceId:N}",
             RelatedDocumentId = null,
-            RelatedRuleGenerationRequestId = request.AppendixDocumentId
+            RelatedRuleGenerationRequestId = appendixInfo.Id
         };
 
         dbContext.BackgroundJobRuns.Add(job);

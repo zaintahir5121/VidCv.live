@@ -30,6 +30,12 @@ public sealed class ComplianceAiService(
         string appendixText,
         CancellationToken cancellationToken)
     {
+        var deterministicRules = ExtractRulesFromAppendixText(appendixText);
+        if (deterministicRules.Count > 0)
+        {
+            return deterministicRules;
+        }
+
         var template = await dbContext.PromptTemplates
             .Where(x => x.TemplateType == "rule-extraction" && x.IsActive)
             .OrderByDescending(x => x.Version)
@@ -217,27 +223,23 @@ public sealed class ComplianceAiService(
         [
             new ComplianceRule
             {
-                Code = "PG-1.09-1.18-REDACTION",
-                Title = "Prospectus Exposure Redaction",
-                Reference = "Part B 1.09, Part E 1.18",
-                RequirementText =
-                    "The prospectus exposure copy may redact pricing, indicative timetable, and salient underwriting/cornerstone terms."
+                Code = "APPX-DEFAULT-0001",
+                Title = "Appendix Requirement 1",
+                Reference = "Appendix",
+                RequirementText = "Requirement text was not parsed from appendix source. Review appendix formatting and rerun generation.",
+                ClassificationCategory = "Requirement",
+                ActionParty = "Management",
+                IsActive = true
             },
             new ComplianceRule
             {
-                Code = "PG-4.11-DISCLOSURES",
-                Title = "Management Legal and Regulatory Disclosures",
-                Reference = "PG 4.11",
-                RequirementText =
-                    "The prospectus must disclose bankruptcy, criminal, civil, regulatory and unsatisfied judgment matters for key persons in the last 10 years."
-            },
-            new ComplianceRule
-            {
-                Code = "PG-1.06-DIRECTORY",
-                Title = "Directory and Adviser Details Completeness",
-                Reference = "PG 1.06",
-                RequirementText =
-                    "The prospectus directory should list directors, secretary qualifications, office contacts, advisers, experts and stock exchange details."
+                Code = "APPX-DEFAULT-0002",
+                Title = "Appendix Requirement 2",
+                Reference = "Appendix",
+                RequirementText = "Requirement text was not parsed from appendix source. Ensure requirement rows are OCR-readable and rerun generation.",
+                ClassificationCategory = "Requirement",
+                ActionParty = "Management",
+                IsActive = true
             }
         ];
     }
@@ -566,6 +568,259 @@ public sealed class ComplianceAiService(
         return requirementText.Length <= maxTitleLength
             ? requirementText
             : $"{requirementText[..maxTitleLength]}...";
+    }
+
+    private static List<ComplianceRule> ExtractRulesFromAppendixText(string appendixText)
+    {
+        if (string.IsNullOrWhiteSpace(appendixText))
+        {
+            return [];
+        }
+
+        var normalized = appendixText.Replace("\r\n", "\n", StringComparison.Ordinal);
+        var lines = normalized
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(CompressWhitespace)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Where(x => !x.StartsWith("[Page ", StringComparison.OrdinalIgnoreCase))
+            .Where(x => !IsAppendixNoiseLine(x))
+            .ToList();
+
+        if (lines.Count == 0)
+        {
+            return [];
+        }
+
+        var extracted = new List<ComplianceRule>();
+        var ordinal = 1;
+
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i];
+            if (IsLikelyReferenceRow(line))
+            {
+                var requirementLines = new List<string>();
+                var j = i + 1;
+                while (j < lines.Count && requirementLines.Count < 16)
+                {
+                    var next = lines[j];
+                    if (IsLikelyReferenceRow(next))
+                    {
+                        break;
+                    }
+
+                    if (IsLikelySectionHeader(next) && requirementLines.Count > 0)
+                    {
+                        break;
+                    }
+
+                    if (!IsAppendixNoiseLine(next))
+                    {
+                        requirementLines.Add(next);
+                    }
+
+                    j++;
+                }
+
+                var requirement = NormalizeAppendixRequirementText(string.Join(" ", requirementLines));
+                if (LooksLikeRequirementSentence(requirement))
+                {
+                    extracted.Add(CreateRuleFromAppendix(requirement, line, ordinal++));
+                }
+
+                if (j > i + 1)
+                {
+                    i = j - 1;
+                }
+
+                continue;
+            }
+
+            if (!LooksLikeRequirementSentence(line))
+            {
+                continue;
+            }
+
+            extracted.Add(CreateRuleFromAppendix(line, line, ordinal++));
+        }
+
+        return DeduplicateRulesPreservingRequirementText(extracted);
+    }
+
+    private static ComplianceRule CreateRuleFromAppendix(string requirementText, string referenceSeed, int ordinal)
+    {
+        var normalizedRequirement = NormalizeAppendixRequirementText(requirementText);
+        var reference = NormalizeReference(
+            ExtractReferenceFromLine(referenceSeed),
+            normalizedRequirement,
+            null);
+
+        var codeReferenceSeed = string.IsNullOrWhiteSpace(reference) ? $"APPX-{ordinal:0000}" : reference;
+        var code = SanitizeCode($"APPX-{codeReferenceSeed}-{ordinal:0000}");
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            code = $"APPX-RULE-{ordinal:0000}";
+        }
+
+        var category = InferCategoryFromRequirement(normalizedRequirement);
+        return new ComplianceRule
+        {
+            Code = code,
+            Title = BuildTitleFromRequirement(normalizedRequirement, ordinal),
+            Reference = reference,
+            RequirementText = normalizedRequirement,
+            ClassificationCategory = category,
+            ActionParty = InferActionPartyFromRequirement(normalizedRequirement, category),
+            IsActive = true
+        };
+    }
+
+    private static bool LooksLikeRequirementSentence(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        if (text.Length < 60)
+        {
+            return false;
+        }
+
+        if (IsLikelySectionHeader(text))
+        {
+            return false;
+        }
+
+        var lower = text.ToLowerInvariant();
+        return lower.Contains(" shall ", StringComparison.Ordinal)
+               || lower.Contains(" must ", StringComparison.Ordinal)
+               || lower.Contains(" should ", StringComparison.Ordinal)
+               || lower.Contains(" may ", StringComparison.Ordinal)
+               || lower.Contains(" required ", StringComparison.Ordinal)
+               || lower.Contains(" disclose", StringComparison.Ordinal)
+               || lower.Contains(" include", StringComparison.Ordinal)
+               || lower.Contains(" submit", StringComparison.Ordinal)
+               || lower.Contains(" provide", StringComparison.Ordinal)
+               || lower.Contains(" maintain", StringComparison.Ordinal)
+               || lower.Contains(" redacted", StringComparison.Ordinal)
+               || text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length >= 14;
+    }
+
+    private static bool IsLikelyReferenceRow(string line)
+    {
+        if (string.IsNullOrWhiteSpace(line) || line.Length > 280)
+        {
+            return false;
+        }
+
+        var hasToken = ExtractReferenceTokens(line).Count > 0;
+        if (!hasToken)
+        {
+            return false;
+        }
+
+        var lower = line.ToLowerInvariant();
+        return lower.Contains("paragraph", StringComparison.Ordinal)
+               || lower.Contains("part ", StringComparison.Ordinal)
+               || lower.Contains("pg ", StringComparison.Ordinal)
+               || lower.Contains("guideline", StringComparison.Ordinal)
+               || Regex.IsMatch(lower, @"\b\d+\.\d{2}\b");
+    }
+
+    private static bool IsLikelySectionHeader(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || text.Length > 120)
+        {
+            return false;
+        }
+
+        var lower = text.ToLowerInvariant();
+        if (Regex.IsMatch(lower, @"^(ipo|utf|urg)\b"))
+        {
+            return true;
+        }
+
+        if (Regex.IsMatch(lower, @"^(part|section|chapter)\b"))
+        {
+            return true;
+        }
+
+        var letters = text.Where(char.IsLetter).ToArray();
+        return letters.Length > 0 && letters.All(char.IsUpper);
+    }
+
+    private static bool IsAppendixNoiseLine(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return true;
+        }
+
+        var lower = text.ToLowerInvariant();
+        return lower == "check / requirement"
+               || lower == "guideline paragraph / reference"
+               || lower == "complexity guideline paragraph / reference check / requirement"
+               || lower == "complexity"
+               || lower == "guideline paragraph / reference"
+               || lower.StartsWith("table ", StringComparison.Ordinal);
+    }
+
+    private static string ExtractReferenceFromLine(string text)
+    {
+        var tokens = ExtractReferenceTokens(text);
+        if (tokens.Count == 0)
+        {
+            return "Appendix";
+        }
+
+        return string.Join(", ", tokens.Take(5));
+    }
+
+    private static string BuildTitleFromRequirement(string requirementText, int ordinal)
+    {
+        if (string.IsNullOrWhiteSpace(requirementText))
+        {
+            return $"Appendix Rule {ordinal}";
+        }
+
+        const int maxTitleLength = 72;
+        return requirementText.Length <= maxTitleLength
+            ? requirementText
+            : $"{requirementText[..maxTitleLength]}...";
+    }
+
+    private static string InferCategoryFromRequirement(string requirementText)
+    {
+        var lower = requirementText.ToLowerInvariant();
+        if (lower.StartsWith("definition", StringComparison.Ordinal)
+            || lower.StartsWith("note", StringComparison.Ordinal)
+            || lower.Contains("for information", StringComparison.Ordinal))
+        {
+            return "Info";
+        }
+
+        return "Requirement";
+    }
+
+    private static string InferActionPartyFromRequirement(string requirementText, string category)
+    {
+        if (string.Equals(category, "Info", StringComparison.OrdinalIgnoreCase))
+        {
+            return "None";
+        }
+
+        var lower = requirementText.ToLowerInvariant();
+        if (lower.Contains("submit", StringComparison.Ordinal)
+            || lower.Contains("disclose", StringComparison.Ordinal)
+            || lower.Contains("file", StringComparison.Ordinal)
+            || lower.Contains("report", StringComparison.Ordinal)
+            || lower.Contains("notify", StringComparison.Ordinal))
+        {
+            return "Management";
+        }
+
+        return "Onsite";
     }
 
     private static IReadOnlyList<string> BuildAppendixChunksForRuleGeneration(string appendixText)
