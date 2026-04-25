@@ -1,6 +1,8 @@
 using System.Text;
+using System.Text.Json;
 using AGONECompliance.Data;
 using AGONECompliance.Domain;
+using AGONECompliance.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace AGONECompliance.Services;
@@ -120,6 +122,8 @@ public sealed class DocumentProcessingOrchestrator(
                 document.IsProcessed = true;
                 document.ProcessingError = null;
                 document.UpdatedAtUtc = DateTimeOffset.UtcNow;
+
+                await PersistPageBlobsAsync(document, processed, cancellationToken);
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -158,4 +162,97 @@ public sealed class DocumentProcessingOrchestrator(
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
+
+    private async Task PersistPageBlobsAsync(
+        UploadedDocument document,
+        ProcessedDocument processed,
+        CancellationToken cancellationToken)
+    {
+        if (document.Type != DocumentType.Prospectus)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(processed.ParsedJson))
+        {
+            return;
+        }
+
+        var pageItems = ParsePages(processed.ParsedJson);
+        if (pageItems.Count == 0)
+        {
+            return;
+        }
+
+        var existingPageBlobs = await dbContext.DocumentPageBlobs
+            .Where(x => x.DocumentId == document.Id)
+            .ToListAsync(cancellationToken);
+        if (existingPageBlobs.Count > 0)
+        {
+            dbContext.DocumentPageBlobs.RemoveRange(existingPageBlobs);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        foreach (var page in pageItems)
+        {
+            if (string.IsNullOrWhiteSpace(page.Content))
+            {
+                continue;
+            }
+
+            await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(page.Content));
+            var logicalName = $"doc-{document.Id:N}-p{page.PageNumber:D4}.txt";
+            var blobPath = await blobStorageService.UploadAsync(
+                stream,
+                "text/plain",
+                logicalName,
+                cancellationToken,
+                folderPath: $"processed-pages/ws-{document.EvaluationWorkspaceId:N}/doc-{document.Id:N}");
+
+            dbContext.DocumentPageBlobs.Add(new DocumentPageBlob
+            {
+                EvaluationWorkspaceId = document.EvaluationWorkspaceId,
+                DocumentId = document.Id,
+                PageNumber = page.PageNumber,
+                BlobPath = blobPath,
+                ExtractedText = page.Content
+            });
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static List<PageTextItem> ParsePages(string parsedJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(parsedJson);
+            if (!doc.RootElement.TryGetProperty("pages", out var pages)
+                || pages.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var output = new List<PageTextItem>();
+            foreach (var page in pages.EnumerateArray())
+            {
+                var pageNumber = page.TryGetProperty("pageNumber", out var numberElement)
+                    && numberElement.TryGetInt32(out var parsed)
+                    ? parsed
+                    : 1;
+                var content = page.TryGetProperty("content", out var contentElement)
+                    ? contentElement.GetString() ?? string.Empty
+                    : string.Empty;
+                output.Add(new PageTextItem(pageNumber, content));
+            }
+
+            return output;
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    private sealed record PageTextItem(int PageNumber, string Content);
 }

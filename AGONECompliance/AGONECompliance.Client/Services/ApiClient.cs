@@ -6,6 +6,15 @@ namespace AGONECompliance.Client.Services;
 
 public sealed class ApiClient(HttpClient httpClient)
 {
+    public async Task<DocumentPageEvidenceDto?> GetDocumentPageEvidenceAsync(
+        Guid documentId,
+        int pageNumber,
+        CancellationToken cancellationToken = default)
+    {
+        return await httpClient.GetFromJsonAsync<DocumentPageEvidenceDto>(
+            $"api/documents/{documentId}/pages/{pageNumber}",
+            cancellationToken);
+    }
 
     public async Task<byte[]> DownloadEvaluationReportPdfAsync(
         Guid evaluationWorkspaceId,

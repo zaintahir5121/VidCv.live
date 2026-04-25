@@ -1,8 +1,10 @@
 @page "/evaluations"
 @attribute [StreamRendering]
+@using System.Text.RegularExpressions
 @using AGONECompliance.Client.Services
 @using AGONECompliance.Shared
 @inject PortalContext Portal
+@inject ApiClient Api
 
 <PageTitle>Evaluations - AGONECompliance</PageTitle>
 
@@ -203,12 +205,18 @@
                                     <td>@result.EvidenceLocation</td>
                                     <td>
                                         <div>@result.EvidenceExcerpt</div>
-                                        @if (!string.IsNullOrWhiteSpace(result.EvidenceLink))
-                                        {
-                                            <a href="@result.EvidenceLink" target="_blank">
-                                                Open matched location
-                                            </a>
-                                        }
+                                        <div class="row-actions" style="margin-top:0.35rem;">
+                                            <button class="btn btn-light btn-sm"
+                                                    @onclick="@(() => OpenEvidencePopupAsync(run.ProspectusDocumentId, result))">
+                                                View evidence popup
+                                            </button>
+                                            @if (!string.IsNullOrWhiteSpace(result.EvidenceLink))
+                                            {
+                                                <a href="@result.EvidenceLink" target="_blank">
+                                                    Open matched location
+                                                </a>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -220,6 +228,37 @@
         }
     }
 </section>
+
+@if (isEvidencePopupOpen)
+{
+    <div class="evidence-modal-backdrop" @onclick="CloseEvidencePopup">
+        <div class="evidence-modal" @onclick:stopPropagation="true">
+            <div class="evidence-modal-head">
+                <h3>Prospectus Evidence Viewer</h3>
+                <button class="btn btn-light btn-sm" @onclick="CloseEvidencePopup">Close</button>
+            </div>
+            @if (isEvidencePopupLoading)
+            {
+                <p>Loading evidence...</p>
+            }
+            else if (!string.IsNullOrWhiteSpace(evidencePopupError))
+            {
+                <p class="error-text">@evidencePopupError</p>
+            }
+            else if (selectedEvidence is not null)
+            {
+                <div class="evidence-modal-body">
+                    <div class="small-muted"><strong>Page:</strong> @selectedEvidence.PageNumber</div>
+                    <div class="small-muted"><strong>File:</strong> @selectedEvidence.OriginalFileName</div>
+                    <div class="row-actions" style="margin:0.45rem 0;">
+                        <a class="btn btn-light btn-sm" href="@selectedEvidence.PdfPageLink" target="_blank">Open exact PDF page</a>
+                    </div>
+                    <div class="evidence-text-box">@selectedEvidence.ExtractedText</div>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 @if (Portal.LatestReport is not null)
 {
@@ -242,6 +281,10 @@
     private List<ComplianceRuleDto> activeRules = [];
     private List<EvaluationRunDto> sortedRuns = [];
     private readonly Dictionary<Guid, int> runResultPages = new();
+    private bool isEvidencePopupOpen;
+    private bool isEvidencePopupLoading;
+    private string? evidencePopupError;
+    private DocumentPageEvidenceDto? selectedEvidence;
     private int checksTotalPages => Math.Max(1, (int)Math.Ceiling(activeRules.Count / (double)PageSize));
     private int runsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedRuns.Count / (double)PageSize));
     private IEnumerable<ComplianceRuleDto> PagedActiveRules =>
@@ -259,6 +302,51 @@
     {
         await Portal.StartEvaluationAsync();
         RefreshPaginationState();
+    }
+
+    private async Task OpenEvidencePopupAsync(Guid documentId, EvaluationResultItemDto result)
+    {
+        isEvidencePopupOpen = true;
+        isEvidencePopupLoading = true;
+        evidencePopupError = null;
+        selectedEvidence = null;
+
+        var pageNumber = result.PageNumber ?? ExtractPageFromEvidenceLocation(result.EvidenceLocation) ?? 1;
+        try
+        {
+            selectedEvidence = await Api.GetDocumentPageEvidenceAsync(documentId, pageNumber);
+            if (selectedEvidence is null)
+            {
+                evidencePopupError = "No evidence page data found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            evidencePopupError = ex.Message;
+        }
+        finally
+        {
+            isEvidencePopupLoading = false;
+        }
+    }
+
+    private void CloseEvidencePopup()
+    {
+        isEvidencePopupOpen = false;
+        isEvidencePopupLoading = false;
+        evidencePopupError = null;
+        selectedEvidence = null;
+    }
+
+    private static int? ExtractPageFromEvidenceLocation(string? location)
+    {
+        if (string.IsNullOrWhiteSpace(location))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(location, @"\bpage\s*(\d+)\b", RegexOptions.IgnoreCase);
+        return match.Success && int.TryParse(match.Groups[1].Value, out var page) ? page : null;
     }
 
     private void RefreshPaginationState()

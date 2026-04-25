@@ -8,6 +8,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
 {
     public DbSet<EvaluationWorkspace> EvaluationWorkspaces => Set<EvaluationWorkspace>();
     public DbSet<UploadedDocument> UploadedDocuments => Set<UploadedDocument>();
+    public DbSet<DocumentPageBlob> DocumentPageBlobs => Set<DocumentPageBlob>();
     public DbSet<ComplianceRule> ComplianceRules => Set<ComplianceRule>();
     public DbSet<EvaluationRun> EvaluationRuns => Set<EvaluationRun>();
     public DbSet<EvaluationResult> EvaluationResults => Set<EvaluationResult>();
@@ -40,6 +41,21 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
             entity.HasOne(x => x.EvaluationWorkspace)
                 .WithMany(x => x.Documents)
                 .HasForeignKey(x => x.EvaluationWorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DocumentPageBlob>(entity =>
+        {
+            entity.HasIndex(x => new { x.DocumentId, x.PageNumber }).IsUnique();
+            entity.Property(x => x.BlobPath).HasMaxLength(1024);
+            entity.Property(x => x.ExtractedText).HasMaxLength(4000);
+            entity.HasOne(x => x.EvaluationWorkspace)
+                .WithMany()
+                .HasForeignKey(x => x.EvaluationWorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Document)
+                .WithMany()
+                .HasForeignKey(x => x.DocumentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -96,6 +96,13 @@
                             <td>@result.EvidenceLocation</td>
                             <td>
                                 <div>@result.EvidenceExcerpt</div>
+                                @if (result.PageNumber is int pageNumber)
+                                {
+                                    <button class="btn btn-sm btn-light evidence-viewer-btn"
+                                            @onclick="() => OpenEvidencePopupAsync(run.ProspectusDocumentId, pageNumber, result.EvidenceExcerpt)">
+                                        View evidence popup
+                                    </button>
+                                }
                                 @if (!string.IsNullOrWhiteSpace(result.EvidenceLink))
                                 {
                                     <a href="@result.EvidenceLink" target="_blank">Open matched location</a>
@@ -110,12 +117,49 @@
     }
 </section>
 
+@if (evidencePopup is not null)
+{
+    <div class="evidence-overlay" @onclick="CloseEvidencePopup">
+        <div class="evidence-modal" @onclick:stopPropagation="true">
+            <div class="evidence-modal-head">
+                <div>
+                    <strong>Prospectus Evidence Viewer</strong>
+                    <div class="small-muted">@evidencePopup.OriginalFileName · Page @evidencePopup.PageNumber</div>
+                </div>
+                <button class="btn btn-sm btn-light" @onclick="CloseEvidencePopup">Close</button>
+            </div>
+            <div class="row-actions" style="margin-top:0.45rem;">
+                <a class="btn btn-sm btn-light" href="@evidencePopup.PdfPageLink" target="_blank">Open PDF page</a>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(popupMatchedExcerpt))
+            {
+                <div class="evidence-match">
+                    <strong>Matched excerpt</strong>
+                    <div>@popupMatchedExcerpt</div>
+                </div>
+            }
+            <div class="evidence-modal-body">
+                @if (string.IsNullOrWhiteSpace(evidencePopup.ExtractedText))
+                {
+                    <p>No extracted text available for this page.</p>
+                }
+                else
+                {
+                    <pre>@evidencePopup.ExtractedText</pre>
+                }
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public string RunKey { get; set; } = string.Empty;
 
     private const int PageSize = 10;
     private int resultsPage = 1;
     private List<EvaluationResultItemDto> sortedResults = [];
+    private DocumentPageEvidenceDto? evidencePopup;
+    private string? popupMatchedExcerpt;
     private int resultsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedResults.Count / (double)PageSize));
     private IEnumerable<EvaluationResultItemDto> PagedResults =>
         sortedResults.Skip((resultsPage - 1) * PageSize).Take(PageSize);
@@ -176,6 +220,29 @@
         }
 
         return Task.CompletedTask;
+    }
+
+    private async Task OpenEvidencePopupAsync(Guid documentId, int pageNumber, string? matchedExcerpt)
+    {
+        if (documentId == Guid.Empty || pageNumber <= 0)
+        {
+            return;
+        }
+
+        var evidence = await Api.GetDocumentPageEvidenceAsync(documentId, pageNumber);
+        if (evidence is null)
+        {
+            return;
+        }
+
+        evidencePopup = evidence;
+        popupMatchedExcerpt = string.IsNullOrWhiteSpace(matchedExcerpt) ? null : matchedExcerpt.Trim();
+    }
+
+    private void CloseEvidencePopup()
+    {
+        evidencePopup = null;
+        popupMatchedExcerpt = null;
     }
 
     private static string GetStatusClass(string status) => status.ToLowerInvariant() switch

@@ -13,6 +13,43 @@ public sealed class DocumentIntelligenceService(
 {
     private readonly AzureOptions _options = azureOptions.Value;
 
+    public List<PageTextItem> ParsePages(string parsedJson)
+    {
+        if (string.IsNullOrWhiteSpace(parsedJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(parsedJson);
+            if (!document.RootElement.TryGetProperty("pages", out var pages)
+                || pages.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var output = new List<PageTextItem>();
+            foreach (var page in pages.EnumerateArray())
+            {
+                var pageNumber = page.TryGetProperty("pageNumber", out var numberElement)
+                    && numberElement.TryGetInt32(out var parsed)
+                    ? parsed
+                    : 1;
+                var content = page.TryGetProperty("content", out var contentElement)
+                    ? contentElement.GetString() ?? string.Empty
+                    : string.Empty;
+                output.Add(new PageTextItem(pageNumber, content));
+            }
+
+            return output;
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
     public async Task<ProcessedDocument> ExtractTextAsync(
         Stream stream,
         string contentType,

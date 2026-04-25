@@ -45,6 +45,16 @@ public sealed class DocumentDto
     public string BlobPath { get; set; } = string.Empty;
 }
 
+public sealed class DocumentPageEvidenceDto
+{
+    public Guid DocumentId { get; set; }
+    public int PageNumber { get; set; }
+    public string OriginalFileName { get; set; } = string.Empty;
+    public string PdfPageLink { get; set; } = string.Empty;
+    public string ExtractedText { get; set; } = string.Empty;
+    public string BlobPath { get; set; } = string.Empty;
+}
+
 public sealed class UploadDocumentResponse
 {
     public Guid DocumentId { get; set; }

@@ -34,6 +34,17 @@ public sealed class UploadedDocument : BaseEntity
     public string? ProcessingError { get; set; }
 }
 
+public sealed class DocumentPageBlob : BaseEntity
+{
+    public Guid EvaluationWorkspaceId { get; set; }
+    public EvaluationWorkspace EvaluationWorkspace { get; set; } = null!;
+    public Guid DocumentId { get; set; }
+    public UploadedDocument Document { get; set; } = null!;
+    public int PageNumber { get; set; }
+    public string BlobPath { get; set; } = string.Empty;
+    public string ExtractedText { get; set; } = string.Empty;
+}
+
 public sealed class BackgroundJobRun : BaseEntity
 {
     public Guid EvaluationWorkspaceId { get; set; }

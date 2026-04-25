@@ -7,6 +7,13 @@ public sealed class ProcessedDocument
 {
     public string FullText { get; set; } = string.Empty;
     public string ParsedJson { get; set; } = string.Empty;
+    public IReadOnlyList<ProcessedDocumentPage> Pages { get; set; } = [];
+}
+
+public sealed class ProcessedDocumentPage
+{
+    public int PageNumber { get; set; }
+    public string Content { get; set; } = string.Empty;
 }
 
 public sealed class RuleAssessment
@@ -38,9 +45,12 @@ public interface IBlobStorageService
         CancellationToken cancellationToken);
 }
 
+public sealed record PageTextItem(int PageNumber, string Content);
+
 public interface IDocumentIntelligenceService
 {
     Task<ProcessedDocument> ExtractTextAsync(Stream stream, string contentType, CancellationToken cancellationToken);
+    List<Services.PageTextItem> ParsePages(string parsedJson);
 }
 
 public interface IComplianceAiService
