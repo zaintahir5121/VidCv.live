@@ -16,6 +16,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
     public DbSet<BackgroundJobRun> BackgroundJobRuns => Set<BackgroundJobRun>();
     public DbSet<PromptTemplate> PromptTemplates => Set<PromptTemplate>();
     public DbSet<ExperionMemoryEntry> ExperionMemoryEntries => Set<ExperionMemoryEntry>();
+    public DbSet<ExperionConversationEntry> ExperionConversationEntries => Set<ExperionConversationEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -143,6 +144,20 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
             entity.Property(x => x.WorkspaceId).HasMaxLength(128);
             entity.Property(x => x.UserPrompt).HasMaxLength(4096);
             entity.Property(x => x.LayerSource).HasMaxLength(64);
+        });
+
+        modelBuilder.Entity<ExperionConversationEntry>(entity =>
+        {
+            entity.HasIndex(x => new { x.UserId, x.ProductCode, x.WorkspaceId, x.OccurredAtUtc });
+            entity.HasIndex(x => new { x.ConversationId, x.OccurredAtUtc });
+            entity.HasIndex(x => x.SessionId);
+            entity.Property(x => x.UserId).HasMaxLength(256);
+            entity.Property(x => x.ProductCode).HasMaxLength(64);
+            entity.Property(x => x.WorkspaceId).HasMaxLength(128);
+            entity.Property(x => x.UserPrompt).HasMaxLength(8000);
+            entity.Property(x => x.AssistantResponse).HasMaxLength(16000);
+            entity.Property(x => x.ResponseLayer).HasMaxLength(128);
+            entity.Property(x => x.CacheKey).HasMaxLength(512);
         });
     }
 }

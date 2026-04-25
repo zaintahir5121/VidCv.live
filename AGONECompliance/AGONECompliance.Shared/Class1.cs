@@ -185,6 +185,7 @@ public sealed class ExperionSessionBootstrapRequest
     public string ScreenContext { get; set; } = string.Empty;
     public string Locale { get; set; } = "en";
     public string UserTimezone { get; set; } = "UTC";
+    public Guid? ConversationId { get; set; }
 }
 
 public sealed class ExperionRequestContext
@@ -241,6 +242,7 @@ public sealed class ExperionContextTriggerResponse
 public sealed class ExperionConversationMessageRequest
 {
     public Guid SessionId { get; set; }
+    public Guid? ConversationId { get; set; }
     public string Message { get; set; } = string.Empty;
     public int ContextVersion { get; set; } = 1;
 }
@@ -254,14 +256,71 @@ public sealed class ExperionProposedActionDto
 
 public sealed class ExperionConversationMessageResponse
 {
+    public Guid ConversationId { get; set; }
     public string AssistantMessage { get; set; } = string.Empty;
     public string Explanation { get; set; } = string.Empty;
     public bool RequiresConfirmation { get; set; }
     public string ResponseLayer { get; set; } = "llm";
     public bool IsCacheHit { get; set; }
     public string CacheKey { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAtUtc { get; set; } = DateTimeOffset.UtcNow;
     public List<string> MissingInputs { get; set; } = [];
     public List<ExperionProposedActionDto> ProposedActions { get; set; } = [];
+}
+
+public sealed class ExperionConversationHistoryRequest
+{
+    public Guid? ConversationId { get; set; }
+    public int ConversationTake { get; set; } = 20;
+    public int MessageTake { get; set; } = 100;
+}
+
+public sealed class ExperionConversationThreadDto
+{
+    public Guid ConversationId { get; set; }
+    public Guid LastSessionId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string LastPromptPreview { get; set; } = string.Empty;
+    public string LastResponsePreview { get; set; } = string.Empty;
+    public int MessageCount { get; set; }
+    public DateTimeOffset LastOccurredAtUtc { get; set; }
+}
+
+public sealed class ExperionConversationHistoryItemDto
+{
+    public Guid Id { get; set; }
+    public Guid ConversationId { get; set; }
+    public Guid SessionId { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string ResponseLayer { get; set; } = string.Empty;
+    public string CacheKey { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAtUtc { get; set; }
+}
+
+public sealed class ExperionConversationHistoryResponse
+{
+    public string UserId { get; set; } = string.Empty;
+    public string ProductCode { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
+    public Guid? ActiveConversationId { get; set; }
+    public List<ExperionConversationThreadDto> Conversations { get; set; } = [];
+    public List<ExperionConversationHistoryItemDto> Messages { get; set; } = [];
+}
+
+public sealed class ExperionConversationIndexDocument
+{
+    public string Id { get; set; } = string.Empty;
+    public string ConversationId { get; set; } = string.Empty;
+    public string SessionId { get; set; } = string.Empty;
+    public string ProductCode { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
+    public string UserId { get; set; } = string.Empty;
+    public string UserPrompt { get; set; } = string.Empty;
+    public string AssistantResponse { get; set; } = string.Empty;
+    public string ResponseLayer { get; set; } = string.Empty;
+    public string CacheKey { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAtUtc { get; set; }
 }
 
 public sealed class ExperionActionExecuteRequest

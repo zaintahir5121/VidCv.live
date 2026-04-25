@@ -1,6 +1,8 @@
 using AGONECompliance.Services;
 using AGONECompliance.Shared;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AGONECompliance.Controllers;
 
@@ -10,14 +12,43 @@ public sealed class ExperionController(IExperionService experionService) : Contr
 {
     private ExperionRequestContext BuildContext()
     {
+        var headerUserId = Request.Headers["X-AGONE-UserId"].FirstOrDefault();
+        var claimUserId = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = User?.Identity?.Name;
+        var hasSourceToken = !string.IsNullOrWhiteSpace(Request.Headers["X-AGONE-SourceToken"].FirstOrDefault());
+        var hasAuthenticatedPrincipal = User?.Identity?.IsAuthenticated == true;
+        var resolvedUserId = hasAuthenticatedPrincipal
+            ? (claimUserId ?? userName ?? string.Empty)
+            : (hasSourceToken ? (headerUserId ?? string.Empty) : string.Empty);
+
         return new ExperionRequestContext
         {
             ProductCode = Request.Headers["X-AGONE-Product"].FirstOrDefault() ?? "unknown",
             WorkspaceId = Request.Headers["X-AGONE-WorkspaceId"].FirstOrDefault() ?? string.Empty,
             Source = Request.Headers["Origin"].FirstOrDefault() ?? Request.Host.Value,
-            UserId = User?.Identity?.Name ?? "anonymous",
+            UserId = resolvedUserId,
             TraceId = HttpContext.TraceIdentifier
         };
+    }
+
+    private bool TryGetAuthenticatedContext(out ExperionRequestContext context, out ActionResult? unauthorizedResult)
+    {
+        context = BuildContext();
+        if (!string.IsNullOrWhiteSpace(context.UserId))
+        {
+            unauthorizedResult = null;
+            return true;
+        }
+
+        unauthorizedResult = Unauthorized(new ExperionErrorResponse
+        {
+            Code = "experion_auth_required",
+            Message = "Experion is available only for logged-in users.",
+            TraceId = HttpContext.TraceIdentifier,
+            IsRetryable = false,
+            ResolutionHint = "Sign in to AG ONE and provide authenticated identity or source token with X-AGONE-UserId."
+        });
+        return false;
     }
 
     [HttpPost("session/bootstrap")]
@@ -25,12 +56,16 @@ public sealed class ExperionController(IExperionService experionService) : Contr
         [FromBody] ExperionSessionBootstrapRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
         if (string.IsNullOrWhiteSpace(request.PageUrl))
         {
             return BadRequest("pageUrl is required.");
         }
 
-        var context = BuildContext();
         var response = await experionService.BootstrapSessionAsync(request, context, cancellationToken);
         return Ok(response);
     }
@@ -40,12 +75,16 @@ public sealed class ExperionController(IExperionService experionService) : Contr
         [FromBody] ExperionContextTriggerRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
         if (request.SessionId == Guid.Empty)
         {
             return BadRequest("sessionId is required.");
         }
 
-        var context = BuildContext();
         var response = await experionService.TriggerContextAsync(request, context, cancellationToken);
         return Ok(response);
     }
@@ -55,6 +94,11 @@ public sealed class ExperionController(IExperionService experionService) : Contr
         [FromBody] ExperionConversationMessageRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
         if (request.SessionId == Guid.Empty)
         {
             return BadRequest("sessionId is required.");
@@ -65,8 +109,31 @@ public sealed class ExperionController(IExperionService experionService) : Contr
             return BadRequest("message is required.");
         }
 
-        var context = BuildContext();
         var response = await experionService.SendMessageAsync(request, context, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpGet("conversation/history")]
+    public async Task<ActionResult<ExperionConversationHistoryResponse>> GetConversationHistory(
+        [FromQuery] Guid? conversationId,
+        [FromQuery] int conversationTake = 20,
+        [FromQuery] int messageTake = 100,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
+        var response = await experionService.GetConversationHistoryAsync(
+            new ExperionConversationHistoryRequest
+            {
+                ConversationId = conversationId,
+                ConversationTake = conversationTake,
+                MessageTake = messageTake
+            },
+            context,
+            cancellationToken);
         return Ok(response);
     }
 
@@ -75,6 +142,11 @@ public sealed class ExperionController(IExperionService experionService) : Contr
         [FromBody] ExperionActionExecuteRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
         if (request.SessionId == Guid.Empty)
         {
             return BadRequest("sessionId is required.");
@@ -85,7 +157,6 @@ public sealed class ExperionController(IExperionService experionService) : Contr
             return BadRequest("actionName is required.");
         }
 
-        var context = BuildContext();
         var response = await experionService.ExecuteActionAsync(request, context, cancellationToken);
         return Ok(response);
     }
@@ -95,12 +166,16 @@ public sealed class ExperionController(IExperionService experionService) : Contr
         string executionId,
         CancellationToken cancellationToken)
     {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
         if (string.IsNullOrWhiteSpace(executionId))
         {
             return BadRequest("executionId is required.");
         }
 
-        var context = BuildContext();
         if (!Guid.TryParse(executionId, out var parsedExecutionId))
         {
             return BadRequest("executionId must be a valid guid.");
@@ -115,12 +190,16 @@ public sealed class ExperionController(IExperionService experionService) : Contr
         [FromQuery] string sessionId,
         CancellationToken cancellationToken)
     {
+        if (!TryGetAuthenticatedContext(out var context, out var unauthorizedResult))
+        {
+            return unauthorizedResult!;
+        }
+
         if (string.IsNullOrWhiteSpace(sessionId))
         {
             return BadRequest("sessionId is required.");
         }
 
-        var context = BuildContext();
         if (!Guid.TryParse(sessionId, out var parsedSessionId))
         {
             return BadRequest("sessionId must be a valid guid.");

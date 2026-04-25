@@ -1,6 +1,6 @@
-/* AG ONE Experion SDK (Phase 0 POC)
- * Central conversational launcher shell for all AG ONE products.
- * This file is intentionally framework-agnostic so it can be embedded in any host app.
+/* AG ONE Experion SDK
+ * Framework-agnostic assistant launcher with contextual circle trigger.
+ * Includes per-user conversation sidebar (new chat + old chats).
  */
 (function (window, document) {
     "use strict";
@@ -9,21 +9,26 @@
         return;
     }
 
+    const styleId = "agone-experion-style";
     const state = {
         initialized: false,
         isOpen: false,
+        authRequired: false,
         config: {
             apiBaseUrl: "/api/experion",
             sourceToken: "",
             productCode: "unknown",
             workspaceId: "",
+            userId: "",
             authTokenProvider: null,
             autoOpen: false
         },
         session: null,
+        currentConversationId: null,
         triggerCooldownUntil: 0,
         currentAnchor: null,
-        lastTriggerResponse: null
+        lastTriggerResponse: null,
+        history: null
     };
 
     const ui = {
@@ -31,16 +36,17 @@
         panel: null,
         headerTitle: null,
         headerSubtitle: null,
+        closeButton: null,
+        status: null,
+        highlight: null,
+        sidebarList: null,
+        newChatButton: null,
         messages: null,
         suggestions: null,
         input: null,
         sendButton: null,
-        closeButton: null,
-        status: null,
-        highlight: null
+        authNotice: null
     };
-
-    const styleId = "agone-experion-style";
 
     function ensureStyles() {
         if (document.getElementById(styleId)) {
@@ -95,9 +101,9 @@
   position: fixed;
   right: 20px;
   bottom: 104px;
-  width: 390px;
+  width: 760px;
   max-width: calc(100vw - 24px);
-  height: 520px;
+  height: 560px;
   max-height: calc(100vh - 110px);
   border-radius: 28px;
   color: #253046;
@@ -154,8 +160,88 @@
   color: #7383a4;
   padding: 0 14px 4px;
 }
+.agone-experion-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.agone-experion-sidebar {
+  width: 240px;
+  border-right: 1px solid #e4eaf8;
+  background: linear-gradient(180deg, #f5f8ff 0%, #f9fbff 100%);
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.agone-experion-new-chat {
+  border: 1px solid #cad8f7;
+  color: #335084;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 9px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+.agone-experion-history-label {
+  font-size: 11px;
+  color: #7082a8;
+  padding: 2px 4px 0;
+}
+.agone-experion-thread-list {
+  overflow: auto;
+  min-height: 0;
+  padding-right: 2px;
+}
+.agone-experion-thread-group {
+  margin-bottom: 10px;
+}
+.agone-experion-thread-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8091b6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 4px 6px;
+}
+.agone-experion-thread-item {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  padding: 8px;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.agone-experion-thread-item:hover {
+  background: #ecf2ff;
+}
+.agone-experion-thread-item.active {
+  border-color: #c9d8ff;
+  background: #eaf1ff;
+}
+.agone-experion-thread-title {
+  color: #334769;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.agone-experion-thread-meta {
+  color: #7688af;
+  font-size: 10px;
+}
+.agone-experion-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
 .agone-experion-robot-hero {
-  margin: 2px 14px 10px;
+  margin: 4px 12px 10px;
   border: 1px solid #e4ebfb;
   border-radius: 18px;
   background: linear-gradient(135deg, #f8fbff 0%, #eef3ff 52%, #f3edff 100%);
@@ -220,21 +306,11 @@
   background: #ffffff;
   border: 1px solid #dce6fb;
 }
-.agone-experion-summary {
-  margin: 0 14px 8px;
-  border: 1px solid #e7ecf9;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 10px 10px;
-  color: #475779;
-  font-size: 12px;
-  line-height: 1.4;
-}
 .agone-experion-suggestions {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  padding: 0 14px 10px;
+  padding: 0 12px 10px;
 }
 .agone-experion-chip {
   border: 1px solid #d8e2fb;
@@ -250,7 +326,7 @@
   background: #e8f0ff;
 }
 .agone-experion-messages {
-  padding: 4px 14px 10px;
+  padding: 4px 12px 10px;
   overflow: auto;
   flex: 1 1 auto;
   min-height: 100px;
@@ -306,6 +382,17 @@
   font-weight: 600;
   background: linear-gradient(135deg, #4a89ff 0%, #6C3AED 100%);
 }
+.agone-experion-auth-notice {
+  display: none;
+  margin: 0 12px 10px;
+  border: 1px solid #f5d7d7;
+  background: #fff6f6;
+  color: #8f2a2a;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 10px;
+  padding: 9px 10px;
+}
 .agone-experion-highlight {
   position: fixed;
   z-index: 2147482990;
@@ -319,14 +406,14 @@
     }
 
     function createElement(tag, className, text) {
-        const el = document.createElement(tag);
+        const element = document.createElement(tag);
         if (className) {
-            el.className = className;
+            element.className = className;
         }
         if (typeof text === "string") {
-            el.textContent = text;
+            element.textContent = text;
         }
-        return el;
+        return element;
     }
 
     function ensureUi() {
@@ -362,19 +449,28 @@
         brand.appendChild(brandText);
         ui.closeButton = createElement("button", "agone-experion-close", "×");
         ui.closeButton.setAttribute("type", "button");
-        ui.closeButton.addEventListener("click", function () {
-            closePanel();
-        });
+        ui.closeButton.addEventListener("click", function () { closePanel(); });
         header.appendChild(brand);
         header.appendChild(ui.closeButton);
 
         ui.status = createElement("div", "agone-experion-status", "Disconnected");
+        const content = createElement("div", "agone-experion-content");
+        const sidebar = createElement("aside", "agone-experion-sidebar");
+        ui.newChatButton = createElement("button", "agone-experion-new-chat", "+ New chat");
+        ui.newChatButton.setAttribute("type", "button");
+        ui.newChatButton.addEventListener("click", function () {
+            startNewChat();
+        });
+        sidebar.appendChild(ui.newChatButton);
+        sidebar.appendChild(createElement("div", "agone-experion-history-label", "Old chats"));
+        ui.sidebarList = createElement("div", "agone-experion-thread-list");
+        sidebar.appendChild(ui.sidebarList);
+
+        const main = createElement("div", "agone-experion-main");
         const robotHero = createElement("div", "agone-experion-robot-hero");
         const robotMeta = createElement("div", "agone-experion-robot-meta");
-        const robotStrong = createElement("strong", "", "Experion AI Assistant");
-        const robotSpan = createElement("span", "", "Action-driven guidance · Context aware");
-        robotMeta.appendChild(robotStrong);
-        robotMeta.appendChild(robotSpan);
+        robotMeta.appendChild(createElement("strong", "", "Experion AI Assistant"));
+        robotMeta.appendChild(createElement("span", "", "Context aware · Conversation memory"));
         const robotAvatar = createElement("div", "agone-experion-robot-avatar");
         robotAvatar.appendChild(createElement("div", "agone-experion-robot-head"));
         robotAvatar.appendChild(createElement("div", "agone-experion-robot-visor"));
@@ -383,30 +479,35 @@
         robotAvatar.appendChild(createElement("div", "agone-experion-robot-body"));
         robotHero.appendChild(robotMeta);
         robotHero.appendChild(robotAvatar);
+
         ui.suggestions = createElement("div", "agone-experion-suggestions");
         ui.messages = createElement("div", "agone-experion-messages");
+        ui.authNotice = createElement("div", "agone-experion-auth-notice");
         const inputWrap = createElement("div", "agone-experion-input-wrap");
         ui.input = createElement("input", "agone-experion-input");
         ui.input.setAttribute("placeholder", "Tell Experion what you want to do...");
-        ui.input.addEventListener("keydown", function (ev) {
-            if (ev.key === "Enter") {
+        ui.input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
                 sendMessage();
             }
         });
         ui.sendButton = createElement("button", "agone-experion-send", "Send");
         ui.sendButton.setAttribute("type", "button");
-        ui.sendButton.addEventListener("click", function () {
-            sendMessage();
-        });
+        ui.sendButton.addEventListener("click", function () { sendMessage(); });
         inputWrap.appendChild(ui.input);
         inputWrap.appendChild(ui.sendButton);
 
+        main.appendChild(robotHero);
+        main.appendChild(ui.suggestions);
+        main.appendChild(ui.messages);
+        main.appendChild(ui.authNotice);
+        main.appendChild(inputWrap);
+        content.appendChild(sidebar);
+        content.appendChild(main);
+
         ui.panel.appendChild(header);
         ui.panel.appendChild(ui.status);
-        ui.panel.appendChild(robotHero);
-        ui.panel.appendChild(ui.suggestions);
-        ui.panel.appendChild(ui.messages);
-        ui.panel.appendChild(inputWrap);
+        ui.panel.appendChild(content);
 
         document.body.appendChild(ui.panel);
         document.body.appendChild(ui.launcher);
@@ -418,10 +519,39 @@
         }
     }
 
-    function addMessage(role, text) {
-        const msg = createElement("div", "agone-experion-msg " + (role === "user" ? "user" : "bot"), text);
-        ui.messages.appendChild(msg);
-        ui.messages.scrollTop = ui.messages.scrollHeight;
+    function clearMessages() {
+        if (ui.messages) {
+            ui.messages.innerHTML = "";
+        }
+    }
+
+    function addMessage(role, text, preventScroll) {
+        if (!ui.messages) {
+            return;
+        }
+
+        const safeRole = role === "user" ? "user" : "bot";
+        const message = createElement("div", "agone-experion-msg " + safeRole, text || "");
+        ui.messages.appendChild(message);
+        if (!preventScroll) {
+            ui.messages.scrollTop = ui.messages.scrollHeight;
+        }
+    }
+
+    function renderMessages(messages) {
+        clearMessages();
+        const list = Array.isArray(messages) ? messages.slice() : [];
+        list.sort(function (a, b) {
+            const first = Date.parse(a.occurredAtUtc || "") || 0;
+            const second = Date.parse(b.occurredAtUtc || "") || 0;
+            return first - second;
+        });
+        for (let i = 0; i < list.length; i++) {
+            addMessage(list[i].role === "user" ? "user" : "bot", list[i].content || "", true);
+        }
+        if (ui.messages) {
+            ui.messages.scrollTop = ui.messages.scrollHeight;
+        }
     }
 
     function renderSuggestionChips(suggestions) {
@@ -442,14 +572,12 @@
             if (!text) {
                 continue;
             }
-
             const chip = createElement("button", "agone-experion-chip", text);
             chip.setAttribute("type", "button");
             chip.addEventListener("click", function () {
                 if (!ui.input) {
                     return;
                 }
-
                 ui.input.value = text;
                 sendMessage();
             });
@@ -465,11 +593,144 @@
         return Math.min(Math.max(value, min), max);
     }
 
+    function generateGuid() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+            return window.crypto.randomUUID();
+        }
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (char) {
+            const random = Math.random() * 16 | 0;
+            const value = char === "x" ? random : (random & 0x3 | 0x8);
+            return value.toString(16);
+        });
+    }
+
+    function setAuthRequired(message) {
+        state.authRequired = true;
+        state.session = null;
+        state.currentConversationId = null;
+        state.history = null;
+        if (ui.input) {
+            ui.input.disabled = true;
+        }
+        if (ui.sendButton) {
+            ui.sendButton.disabled = true;
+        }
+        if (ui.newChatButton) {
+            ui.newChatButton.disabled = true;
+        }
+        if (ui.authNotice) {
+            ui.authNotice.style.display = "block";
+            ui.authNotice.textContent = message || "Sign in required. Experion is available only for logged-in users.";
+        }
+        clearMessages();
+        renderConversationThreads([], null);
+        setStatus("Login required");
+    }
+
+    function clearAuthRequired() {
+        state.authRequired = false;
+        if (ui.input) {
+            ui.input.disabled = false;
+        }
+        if (ui.sendButton) {
+            ui.sendButton.disabled = false;
+        }
+        if (ui.newChatButton) {
+            ui.newChatButton.disabled = false;
+        }
+        if (ui.authNotice) {
+            ui.authNotice.style.display = "none";
+            ui.authNotice.textContent = "";
+        }
+    }
+
+    function formatTimeLabel(utcString) {
+        if (!utcString) {
+            return "";
+        }
+        const date = new Date(utcString);
+        if (isNaN(date.getTime())) {
+            return "";
+        }
+        return date.toLocaleString(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    function getDayBucket(utcString) {
+        const date = new Date(utcString);
+        if (isNaN(date.getTime())) {
+            return "Earlier";
+        }
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        if (day.getTime() === today.getTime()) {
+            return "Today";
+        }
+        if (day.getTime() === yesterday.getTime()) {
+            return "Yesterday";
+        }
+        return "Earlier";
+    }
+
+    function renderConversationThreads(threads, activeConversationId) {
+        if (!ui.sidebarList) {
+            return;
+        }
+        ui.sidebarList.innerHTML = "";
+        const list = Array.isArray(threads) ? threads.slice() : [];
+        if (list.length === 0) {
+            ui.sidebarList.appendChild(createElement("div", "agone-experion-history-label", "No previous chats"));
+            return;
+        }
+
+        const grouped = {
+            Today: [],
+            Yesterday: [],
+            Earlier: []
+        };
+        for (let i = 0; i < list.length; i++) {
+            const bucket = getDayBucket(list[i].lastOccurredAtUtc);
+            if (!grouped[bucket]) {
+                grouped[bucket] = [];
+            }
+            grouped[bucket].push(list[i]);
+        }
+
+        ["Today", "Yesterday", "Earlier"].forEach(function (bucket) {
+            const items = grouped[bucket] || [];
+            if (items.length === 0) {
+                return;
+            }
+            const group = createElement("div", "agone-experion-thread-group");
+            group.appendChild(createElement("div", "agone-experion-thread-group-title", bucket));
+            for (let i = 0; i < items.length; i++) {
+                const thread = items[i];
+                const button = createElement("button", "agone-experion-thread-item");
+                button.setAttribute("type", "button");
+                if (String(thread.conversationId || "") === String(activeConversationId || "")) {
+                    button.classList.add("active");
+                }
+                button.appendChild(createElement("div", "agone-experion-thread-title", thread.title || "Conversation"));
+                button.appendChild(createElement("div", "agone-experion-thread-meta", formatTimeLabel(thread.lastOccurredAtUtc)));
+                button.addEventListener("click", function () {
+                    openConversation(thread.conversationId);
+                });
+                group.appendChild(button);
+            }
+            ui.sidebarList.appendChild(group);
+        });
+    }
+
     function positionPanelDefault() {
         if (!ui.panel) {
             return;
         }
-
         ui.panel.style.left = "";
         ui.panel.style.top = "";
         ui.panel.style.right = "20px";
@@ -486,10 +747,8 @@
         const gap = 14;
         const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
         const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-
-        const panelWidth = ui.panel.offsetWidth || 360;
-        const panelHeight = ui.panel.offsetHeight || 520;
-
+        const panelWidth = ui.panel.offsetWidth || 760;
+        const panelHeight = ui.panel.offsetHeight || 560;
         const anchorX = Math.max(0, anchor.x || 0);
         const anchorY = Math.max(0, anchor.y || 0);
         const anchorWidth = Math.max(24, anchor.width || 0);
@@ -519,12 +778,10 @@
         if (!anchor) {
             return;
         }
-
         if (!ui.highlight) {
             ui.highlight = createElement("div", "agone-experion-highlight");
             document.body.appendChild(ui.highlight);
         }
-
         const pad = 8;
         ui.highlight.style.display = "block";
         ui.highlight.style.left = Math.max(0, anchor.x - pad) + "px";
@@ -543,19 +800,16 @@
         if (!anchor) {
             return "";
         }
-
         const centerX = Math.round(anchor.x + (anchor.width || 0) / 2);
         const centerY = Math.round(anchor.y + (anchor.height || 0) / 2);
         const element = document.elementFromPoint(centerX, centerY);
         if (!element) {
             return "";
         }
-
         const chunks = [];
         if (element.tagName) {
             chunks.push("target:" + element.tagName.toLowerCase());
         }
-
         const block = element.closest("section,article,main,div,td,tr,li");
         if (block) {
             const heading = block.querySelector("h1,h2,h3,h4,h5,h6,strong,label");
@@ -566,11 +820,9 @@
                 chunks.push("blockText:" + block.textContent.replace(/\s+/g, " ").trim().slice(0, 260));
             }
         }
-
         if (element.getAttribute("aria-label")) {
             chunks.push("ariaLabel:" + element.getAttribute("aria-label"));
         }
-
         return chunks.join(" | ");
     }
 
@@ -578,7 +830,6 @@
         if (typeof state.config.authTokenProvider !== "function") {
             return null;
         }
-
         try {
             const token = await state.config.authTokenProvider();
             return token || null;
@@ -598,45 +849,97 @@
         };
     }
 
-    async function apiCall(path, payload) {
-        const url = state.config.apiBaseUrl.replace(/\/+$/, "") + path;
+    async function toApiError(response) {
+        const text = await response.text();
+        let message = text;
+        try {
+            const parsed = JSON.parse(text);
+            if (parsed && parsed.message) {
+                message = parsed.message;
+            }
+        } catch {
+            if (!message) {
+                message = "Unknown API error.";
+            }
+        }
+        const error = new Error(message || ("Experion API error (" + response.status + ")"));
+        error.status = response.status;
+        return error;
+    }
+
+    async function apiRequest(method, path, payload, query) {
+        const queryString = query
+            ? "?" + Object.keys(query)
+                .filter(function (key) {
+                    return query[key] !== undefined && query[key] !== null && String(query[key]).length > 0;
+                })
+                .map(function (key) {
+                    return encodeURIComponent(key) + "=" + encodeURIComponent(String(query[key]));
+                })
+                .join("&")
+            : "";
+        const url = state.config.apiBaseUrl.replace(/\/+$/, "") + path + queryString;
         const token = await resolveAuthToken();
         const headers = {
-            "Content-Type": "application/json",
             "X-AGONE-Product": state.config.productCode || "unknown",
             "X-AGONE-WorkspaceId": state.config.workspaceId || ""
         };
 
+        if (method !== "GET") {
+            headers["Content-Type"] = "application/json";
+        }
         if (state.config.sourceToken) {
             headers["X-AGONE-SourceToken"] = state.config.sourceToken;
         }
-
+        if (state.config.userId) {
+            headers["X-AGONE-UserId"] = state.config.userId;
+        }
         if (token) {
             headers.Authorization = "Bearer " + token;
         }
 
         const response = await fetch(url, {
-            method: "POST",
+            method: method,
             headers: headers,
-            body: JSON.stringify(payload || {})
+            body: method === "GET" ? undefined : JSON.stringify(payload || {})
         });
 
         if (!response.ok) {
-            const body = await response.text();
-            throw new Error("Experion API error (" + response.status + "): " + body);
+            throw await toApiError(response);
         }
-
         return await response.json();
     }
 
-    async function bootstrapSession(triggerType) {
-        const payload = Object.assign({}, collectContext(), {
-            triggerType: triggerType || "manual"
+    async function loadConversationHistory(conversationId) {
+        if (state.authRequired) {
+            return null;
+        }
+        const response = await apiRequest("GET", "/conversation/history", null, {
+            conversationId: conversationId || "",
+            conversationTake: 20,
+            messageTake: 120
         });
+        state.history = response;
+        state.currentConversationId = response.activeConversationId || state.currentConversationId;
+        renderConversationThreads(response.conversations || [], state.currentConversationId);
+        renderMessages(response.messages || []);
+        if (!response.messages || response.messages.length === 0) {
+            addMessage("bot", "Hi, I am Experion. Start with a new chat or continue an old one.");
+        }
+        return response;
+    }
 
-        const session = await apiCall("/session/bootstrap", payload);
+    async function bootstrapSession(triggerType) {
+        clearAuthRequired();
+        const payload = Object.assign({}, collectContext(), {
+            triggerType: triggerType || "manual",
+            conversationId: state.currentConversationId
+        });
+        const session = await apiRequest("POST", "/session/bootstrap", payload);
         state.session = session;
-        setStatus("Connected · session " + (session.sessionId || "").slice(0, 8));
+        state.currentConversationId = session.conversationId || state.currentConversationId || generateGuid();
+        setStatus("Connected · session " + String(session.sessionId || "").slice(0, 8));
+        await loadConversationHistory(state.currentConversationId);
         return session;
     }
 
@@ -644,20 +947,18 @@
         if (!state.session) {
             return null;
         }
-
-        const bbox = extra && extra.boundingBox ? extra.boundingBox : null;
+        const box = extra && extra.boundingBox ? extra.boundingBox : null;
         const payload = Object.assign({}, collectContext(), {
             sessionId: state.session.sessionId,
             triggerType: triggerType,
             domContext: extra && extra.domContext ? extra.domContext : "",
             selectionText: extra && extra.selectionText ? extra.selectionText : "",
-            x: bbox ? (bbox.x || 0) : 0,
-            y: bbox ? (bbox.y || 0) : 0,
-            width: bbox ? (bbox.width || 0) : 0,
-            height: bbox ? (bbox.height || 0) : 0
+            x: box ? (box.x || 0) : 0,
+            y: box ? (box.y || 0) : 0,
+            width: box ? (box.width || 0) : 0,
+            height: box ? (box.height || 0) : 0
         });
-
-        return await apiCall("/context/trigger", payload);
+        return await apiRequest("POST", "/context/trigger", payload);
     }
 
     function applyTriggerSuggestions(triggerResponse, anchor) {
@@ -666,7 +967,6 @@
             addMessage("bot", "I detected this area. Tell me what you want done here.");
             return;
         }
-
         const lines = [];
         if (anchor) {
             lines.push("I detected the section you circled.");
@@ -677,50 +977,81 @@
         if (typeof triggerResponse.confidence === "number") {
             lines.push("Confidence: " + Math.round(triggerResponse.confidence * 100) + "%");
         }
-
         if (triggerResponse.suggestedPrompts && triggerResponse.suggestedPrompts.length > 0) {
-            lines.push("");
-            lines.push("Suggested prompts:");
-            for (let i = 0; i < Math.min(3, triggerResponse.suggestedPrompts.length); i++) {
-                lines.push("- " + triggerResponse.suggestedPrompts[i]);
-            }
+            renderSuggestionChips(triggerResponse.suggestedPrompts);
         }
-
-        if (triggerResponse.recommendedActions && triggerResponse.recommendedActions.length > 0) {
-            lines.push("");
-            lines.push("Recommended actions:");
-            for (let j = 0; j < Math.min(3, triggerResponse.recommendedActions.length); j++) {
-                lines.push("- " + triggerResponse.recommendedActions[j]);
-            }
-        }
-
         addMessage("bot", lines.join("\n").trim() || "I detected this area. How can I help?");
     }
 
+    async function openConversation(conversationId) {
+        if (!conversationId || state.authRequired) {
+            return;
+        }
+        state.currentConversationId = conversationId;
+        setStatus("Loading chat...");
+        try {
+            await loadConversationHistory(conversationId);
+            setStatus("Connected");
+        } catch (error) {
+            if (error && error.status === 401) {
+                setAuthRequired(error.message);
+                return;
+            }
+            setStatus("Could not load chat");
+        }
+    }
+
+    async function startNewChat() {
+        if (state.authRequired) {
+            return;
+        }
+        state.currentConversationId = generateGuid();
+        if (state.session) {
+            state.session.conversationId = state.currentConversationId;
+        }
+        clearMessages();
+        addMessage("bot", "New chat started. Tell me what you want done.");
+        renderConversationThreads(state.history ? state.history.conversations : [], state.currentConversationId);
+        if (ui.input) {
+            ui.input.focus();
+        }
+    }
+
     async function sendMessage() {
-        const text = (ui.input.value || "").trim();
+        if (state.authRequired) {
+            setStatus("Login required");
+            return;
+        }
+        const text = (ui.input && ui.input.value ? ui.input.value : "").trim();
         if (!text) {
             return;
         }
-
         ui.input.value = "";
         addMessage("user", text);
 
         try {
+            if (!state.currentConversationId) {
+                state.currentConversationId = generateGuid();
+            }
             if (!state.session) {
                 await bootstrapSession("manual");
             }
-
             setStatus("Thinking...");
-            const response = await apiCall("/conversation/message", {
+            const response = await apiRequest("POST", "/conversation/message", {
                 sessionId: state.session.sessionId,
+                conversationId: state.currentConversationId,
                 message: text,
                 contextVersion: 1
             });
-
+            state.currentConversationId = response.conversationId || state.currentConversationId;
             addMessage("bot", response.assistantMessage || "I am ready to help.");
+            await loadConversationHistory(state.currentConversationId);
             setStatus("Connected");
         } catch (error) {
+            if (error && error.status === 401) {
+                setAuthRequired(error.message);
+                return;
+            }
             addMessage("bot", "I could not complete that request. Please try again.");
             setStatus("Error: " + (error && error.message ? error.message : "unknown"));
         }
@@ -729,7 +1060,7 @@
     async function openPanel(triggerType, anchor, triggerExtra) {
         ensureUi();
         state.currentAnchor = anchor || null;
-        ui.panel.style.display = "block";
+        ui.panel.style.display = "flex";
         state.isOpen = true;
 
         if (anchor) {
@@ -745,17 +1076,19 @@
         try {
             if (!state.session) {
                 await bootstrapSession(triggerType || "manual");
+            } else {
+                await loadConversationHistory(state.currentConversationId || state.session.conversationId);
             }
-
             const triggerResponse = await notifyTrigger(triggerType || "manual", triggerExtra || {});
             if (triggerType === "circle") {
                 applyTriggerSuggestions(triggerResponse, anchor);
-            } else if (ui.messages.childElementCount === 0) {
-                addMessage("bot", "Hi, I am Experion. I can help you complete this journey faster.");
             }
-
-            setStatus("Connected");
+            setStatus(state.authRequired ? "Login required" : "Connected");
         } catch (error) {
+            if (error && error.status === 401) {
+                setAuthRequired(error.message);
+                return;
+            }
             setStatus("Connection failed");
             addMessage("bot", "Connection failed. Please verify AG AI Hub configuration.");
         }
@@ -765,7 +1098,6 @@
         if (!ui.panel) {
             return;
         }
-
         ui.panel.style.display = "none";
         state.isOpen = false;
         hideHighlight();
@@ -776,7 +1108,6 @@
             openPanel("manual", null, {});
             return;
         }
-
         closePanel();
     }
 
@@ -784,11 +1115,9 @@
         if (!points || points.length < 12) {
             return false;
         }
-
         const first = points[0];
         const last = points[points.length - 1];
-        const closeDistance = Math.hypot(last.x - first.x, last.y - first.y);
-        if (closeDistance > 32) {
+        if (Math.hypot(last.x - first.x, last.y - first.y) > 32) {
             return false;
         }
 
@@ -796,21 +1125,18 @@
         let minY = Number.POSITIVE_INFINITY;
         let maxX = Number.NEGATIVE_INFINITY;
         let maxY = Number.NEGATIVE_INFINITY;
-
         for (let i = 0; i < points.length; i++) {
-            const p = points[i];
-            if (p.x < minX) minX = p.x;
-            if (p.y < minY) minY = p.y;
-            if (p.x > maxX) maxX = p.x;
-            if (p.y > maxY) maxY = p.y;
+            const point = points[i];
+            if (point.x < minX) minX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y > maxY) maxY = point.y;
         }
-
         const width = maxX - minX;
         const height = maxY - minY;
         if (width < 40 || height < 40) {
             return false;
         }
-
         const ratio = width / height;
         return ratio > 0.45 && ratio < 2.2;
     }
@@ -820,15 +1146,13 @@
         let minY = Number.POSITIVE_INFINITY;
         let maxX = Number.NEGATIVE_INFINITY;
         let maxY = Number.NEGATIVE_INFINITY;
-
         for (let i = 0; i < points.length; i++) {
-            const p = points[i];
-            if (p.x < minX) minX = p.x;
-            if (p.y < minY) minY = p.y;
-            if (p.x > maxX) maxX = p.x;
-            if (p.y > maxY) maxY = p.y;
+            const point = points[i];
+            if (point.x < minX) minX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y > maxY) maxY = point.y;
         }
-
         return {
             x: Math.max(0, Math.round(minX)),
             y: Math.max(0, Math.round(minY)),
@@ -841,7 +1165,6 @@
         if (!target) {
             return false;
         }
-
         return (ui.panel && ui.panel.contains(target))
             || (ui.launcher && ui.launcher.contains(target));
     }
@@ -849,12 +1172,10 @@
     function captureCircleGesture() {
         let drawing = false;
         let points = [];
-
         document.addEventListener("pointerdown", function (event) {
             if (event.button !== 0 || isUiTarget(event.target)) {
                 return;
             }
-
             drawing = true;
             points = [{ x: event.clientX, y: event.clientY }];
         }, true);
@@ -863,7 +1184,6 @@
             if (!drawing) {
                 return;
             }
-
             points.push({ x: event.clientX, y: event.clientY });
         }, true);
 
@@ -871,27 +1191,22 @@
             if (!drawing) {
                 return;
             }
-
             drawing = false;
             points.push({ x: event.clientX, y: event.clientY });
-
             if (safeNow() < state.triggerCooldownUntil) {
                 return;
             }
-
             if (!isCircleGesture(points)) {
                 return;
             }
-
             state.triggerCooldownUntil = safeNow() + 5000;
-            const bbox = boundingBox(points);
+            const box = boundingBox(points);
             const selectionText = window.getSelection ? String(window.getSelection()).trim() : "";
-            const domContext = getDomContextFromPoint(bbox);
-
-            await openPanel("circle", bbox, {
+            const domContext = getDomContextFromPoint(box);
+            await openPanel("circle", box, {
                 domContext: domContext || (document.title || ""),
                 selectionText: selectionText,
-                boundingBox: bbox
+                boundingBox: box
             });
         }, true);
     }
@@ -900,7 +1215,6 @@
         if (state.initialized) {
             return;
         }
-
         state.config = Object.assign({}, state.config, config || {});
         ensureUi();
         captureCircleGesture();
@@ -925,17 +1239,22 @@
         },
         close: closePanel,
         toggle: togglePanel,
+        newChat: startNewChat,
         send: function (text) {
             if (!ui.input) {
                 return;
             }
-
             ui.input.value = text || "";
             return sendMessage();
         },
         resetSession: function () {
             state.session = null;
+            state.currentConversationId = null;
             state.lastTriggerResponse = null;
+            state.history = null;
+            clearAuthRequired();
+            clearMessages();
+            renderConversationThreads([], null);
             setStatus("Ready");
         }
     };

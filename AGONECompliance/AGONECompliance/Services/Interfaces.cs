@@ -67,6 +67,16 @@ public interface IComplianceSearchService
 {
     Task EnsureIndexExistsAsync(CancellationToken cancellationToken);
     Task IndexDocumentAsync(UploadedDocument document, CancellationToken cancellationToken);
+    Task EnsureExperionConversationIndexExistsAsync(CancellationToken cancellationToken);
+    Task IndexExperionConversationAsync(
+        ExperionConversationIndexDocument document,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<ExperionConversationIndexDocument>> SearchExperionConversationsAsync(
+        string productCode,
+        string workspaceId,
+        string userId,
+        int take,
+        CancellationToken cancellationToken);
 }
 
 public interface IEvaluationOrchestrator
@@ -125,6 +135,10 @@ public interface IExperionService
 
     Task<IReadOnlyList<ExperionAuditEventDto>> GetAuditEventsAsync(
         Guid sessionId,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+    Task<ExperionConversationHistoryResponse> GetConversationHistoryAsync(
+        ExperionConversationHistoryRequest request,
         ExperionRequestContext context,
         CancellationToken cancellationToken);
 }

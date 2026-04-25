@@ -128,3 +128,17 @@ public sealed class ExperionMemoryEntry : BaseEntity
     public int HitCount { get; set; }
     public DateTimeOffset LastAccessedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }
+
+public sealed class ExperionConversationEntry : BaseEntity
+{
+    public Guid ConversationId { get; set; }
+    public Guid SessionId { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public string ProductCode { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
+    public string UserPrompt { get; set; } = string.Empty;
+    public string AssistantResponse { get; set; } = string.Empty;
+    public string ResponseLayer { get; set; } = "llm";
+    public string CacheKey { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAtUtc { get; set; } = DateTimeOffset.UtcNow;
+}

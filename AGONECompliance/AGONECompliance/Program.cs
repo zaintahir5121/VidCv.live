@@ -106,6 +106,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     await DataSeeder.SeedAsync(dbContext, CancellationToken.None);
     var searchService = scope.ServiceProvider.GetRequiredService<IComplianceSearchService>();
     await searchService.EnsureIndexExistsAsync(CancellationToken.None);
+    await searchService.EnsureExperionConversationIndexExistsAsync(CancellationToken.None);
 }
 
 if (app.Environment.IsDevelopment())
