@@ -11,6 +11,7 @@ using Quartz;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<AzureOptions>(builder.Configuration.GetSection(AzureOptions.SectionName));
+builder.Services.Configure<ExperionOptions>(builder.Configuration.GetSection(ExperionOptions.SectionName));
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 500 * 1024 * 1024;
@@ -49,6 +50,7 @@ builder.Services.AddScoped<IComplianceSearchService, ComplianceSearchService>();
 builder.Services.AddScoped<IEvaluationOrchestrator, EvaluationOrchestrator>();
 builder.Services.AddScoped<IDocumentProcessingOrchestrator, DocumentProcessingOrchestrator>();
 builder.Services.AddScoped<IRuleGenerationOrchestrator, RuleGenerationOrchestrator>();
+builder.Services.AddScoped<IExperionService, ExperionService>();
 builder.Services.AddSingleton<IEvaluationReportPdfBuilder, EvaluationReportPdfBuilder>();
 
 builder.Services.AddQuartz(options =>

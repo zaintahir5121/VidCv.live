@@ -96,3 +96,36 @@ public interface IRuleGenerationOrchestrator
     Task ProcessNextPendingJobAsync(CancellationToken cancellationToken);
 }
 
+public interface IExperionService
+{
+    Task<ExperionSessionBootstrapResponse> BootstrapSessionAsync(
+        ExperionSessionBootstrapRequest request,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+
+    Task<ExperionContextTriggerResponse> TriggerContextAsync(
+        ExperionContextTriggerRequest request,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+
+    Task<ExperionConversationMessageResponse> SendMessageAsync(
+        ExperionConversationMessageRequest request,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+
+    Task<ExperionActionExecuteResponse> ExecuteActionAsync(
+        ExperionActionExecuteRequest request,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+
+    Task<ExperionActionStatusDto> GetActionStatusAsync(
+        Guid executionId,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ExperionAuditEventDto>> GetAuditEventsAsync(
+        Guid sessionId,
+        ExperionRequestContext context,
+        CancellationToken cancellationToken);
+}
+
