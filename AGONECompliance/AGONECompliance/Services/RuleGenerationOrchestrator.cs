@@ -36,7 +36,7 @@ public sealed class RuleGenerationOrchestrator(
             JobType = RuleGenerationType,
             Status = "Queued",
             Message = $"Rule generation queued for workspace {request.EvaluationWorkspaceId:N}",
-            RelatedDocumentId = request.GuideDocumentId,
+            RelatedDocumentId = null,
             RelatedRuleGenerationRequestId = request.AppendixDocumentId
         };
 
@@ -63,18 +63,6 @@ public sealed class RuleGenerationOrchestrator(
 
         try
         {
-            string guideText = string.Empty;
-            if (job.RelatedDocumentId.HasValue)
-            {
-                var guidePath = await dbContext.UploadedDocuments
-                    .Where(x => x.Id == job.RelatedDocumentId.Value
-                                && x.EvaluationWorkspaceId == job.EvaluationWorkspaceId
-                                && x.Type == DocumentType.Guide)
-                    .Select(x => x.FullTextBlobPath)
-                    .FirstOrDefaultAsync(cancellationToken);
-                guideText = await blobStorageService.DownloadTextAsync(guidePath, cancellationToken) ?? string.Empty;
-            }
-
             string appendixText = string.Empty;
             if (job.RelatedRuleGenerationRequestId.HasValue)
             {
@@ -87,7 +75,12 @@ public sealed class RuleGenerationOrchestrator(
                 appendixText = await blobStorageService.DownloadTextAsync(appendixPath, cancellationToken) ?? string.Empty;
             }
 
-            var generated = await aiService.GenerateRulesAsync(appendixText, guideText, cancellationToken);
+            if (string.IsNullOrWhiteSpace(appendixText))
+            {
+                throw new InvalidOperationException("Appendix full text is required for rule generation.");
+            }
+
+            var generated = await aiService.GenerateRulesAsync(appendixText, cancellationToken);
             if (generated.Count == 0)
             {
                 throw new InvalidOperationException("No rules were generated from the supplied documents.");

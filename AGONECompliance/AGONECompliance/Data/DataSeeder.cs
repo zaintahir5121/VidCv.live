@@ -70,17 +70,17 @@ public static class DataSeeder
                 {
                     TemplateType = "rule-extraction",
                     Name = "Rule Extraction from Guide and Appendix",
-                    Description = "Derive structured checks from guideline/appendix content",
+                    Description = "Derive structured checks from appendix requirement document",
                     Version = 1,
                     IsActive = true,
                     SystemPrompt =
-                        "You are an intelligent assistant that classifies guide and appendix paragraphs into compliance checklist items. " +
+                        "You are an intelligent assistant that extracts compliance checks from an appendix requirement document. " +
                         "Classify each extracted item using: category = Info or Requirement, and action_party = Onsite, Management, or None (None only when category is Info). " +
                         "If requirement references multiple sections and context exists, provide the full requirement text instead of partial quotes. " +
                         "Return only a valid JSON array.",
                     UserPromptFormat =
-                        "Guide Text:\n{{guide_text}}\n\nAppendix Text:\n{{appendix_text}}\n\n" +
-                        "Primary source for extracting checks is Appendix Text. Use Guide Text only when appendix rule explicitly references a guide section and you need context to complete the requirement sentence.\n" +
+                        "Appendix Text:\n{{appendix_text}}\n\n" +
+                        "Extract checks from Appendix Text only. Do not use Guide text for rule extraction.\n" +
                         "Use this exact classification rubric:\n" +
                         "Category = Info or Requirement.\n" +
                         "Action Party = Onsite or Management; if Category is Info set Action Party to None.\n" +

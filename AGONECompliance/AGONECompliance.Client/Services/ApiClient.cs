@@ -21,14 +21,13 @@ public sealed class ApiClient(HttpClient httpClient)
 
     public async Task<GenerateRulesResponse> QueueRuleGenerationAsync(
         Guid evaluationWorkspaceId,
-        Guid? guideId,
         Guid? appendixId,
         CancellationToken cancellationToken = default)
     {
         var payload = new GenerateRulesRequest
         {
             EvaluationWorkspaceId = evaluationWorkspaceId,
-            GuideDocumentId = guideId,
+            GuideDocumentId = null,
             AppendixDocumentId = appendixId,
             ReplaceExistingRules = false
         };

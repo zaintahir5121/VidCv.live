@@ -23,7 +23,6 @@ public sealed class PortalContext(ApiClient apiClient)
             State.Rules = [];
             State.Runs = [];
             State.BackgroundJobs = [];
-            State.SelectedGuideDocumentId = null;
             State.SelectedAppendixDocumentId = null;
             State.SelectedProspectusDocumentId = null;
             State.SelectedRuleIds.Clear();
@@ -40,7 +39,6 @@ public sealed class PortalContext(ApiClient apiClient)
         State.PromptTemplates = await apiClient.GetPromptTemplatesAsync();
         SystemConfig = await apiClient.GetSystemConfigurationAsync();
 
-        State.SelectedGuideDocumentId ??= State.Documents.FirstOrDefault(x => x.Type == DocumentType.Guide)?.Id;
         State.SelectedAppendixDocumentId ??= State.Documents.FirstOrDefault(x => x.Type == DocumentType.Appendix)?.Id;
         State.SelectedProspectusDocumentId ??= State.Documents.FirstOrDefault(x => x.Type == DocumentType.Prospectus)?.Id;
         State.SelectedRuleIds = State.SelectedRuleIds
@@ -65,7 +63,6 @@ public sealed class PortalContext(ApiClient apiClient)
                 Description = description.Trim()
             });
             State.SelectedEvaluationWorkspaceId = workspace.Id;
-            State.SelectedGuideDocumentId = null;
             State.SelectedAppendixDocumentId = null;
             State.SelectedProspectusDocumentId = null;
             State.SelectedRuleIds.Clear();
@@ -86,7 +83,6 @@ public sealed class PortalContext(ApiClient apiClient)
     public async Task ChangeEvaluationWorkspaceAsync(Guid? workspaceId)
     {
         State.SelectedEvaluationWorkspaceId = workspaceId;
-        State.SelectedGuideDocumentId = null;
         State.SelectedAppendixDocumentId = null;
         State.SelectedProspectusDocumentId = null;
         State.SelectedRuleIds.Clear();
@@ -131,13 +127,18 @@ public sealed class PortalContext(ApiClient apiClient)
             return;
         }
 
+        if (State.SelectedAppendixDocumentId is null)
+        {
+            StatusMessage = "Select an Appendix document source before generating rules.";
+            return;
+        }
+
         try
         {
             IsBusy = true;
             StatusMessage = "Rule generation queued. Track progress in Jobs Monitoring.";
             var result = await apiClient.QueueRuleGenerationAsync(
                 State.SelectedEvaluationWorkspaceId.Value,
-                State.SelectedGuideDocumentId,
                 State.SelectedAppendixDocumentId);
             await RefreshAllAsync();
             StatusMessage = result.Message;

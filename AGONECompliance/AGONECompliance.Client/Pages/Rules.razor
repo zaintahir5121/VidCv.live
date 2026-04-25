@@ -16,7 +16,7 @@
 
 <section class="module-card">
     <h2>Rule Builder</h2>
-    <p class="module-subtitle">Generate compliance checks from Guide + Appendix in the active workspace.</p>
+    <p class="module-subtitle">Generate compliance checks directly from the selected Appendix document in the active workspace.</p>
     @if (Portal.State.SelectedEvaluationWorkspaceId is null)
     {
         <div class="status-banner">Select or create an Evaluation Workspace on the Dashboard first.</div>
@@ -30,15 +30,6 @@
         </div>
     }
     <div class="form-grid">
-        <select class="form-select select-input"
-                @bind="Portal.State.SelectedGuideDocumentId"
-                disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null)">
-            <option value="">Select Guide source</option>
-            @foreach (var item in GuideDocuments)
-            {
-                <option value="@item.Id">@item.OriginalFileName</option>
-            }
-        </select>
         <select class="form-select select-input"
                 @bind="Portal.State.SelectedAppendixDocumentId"
                 disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null)">
@@ -126,11 +117,6 @@
 @code {
     private EvaluationWorkspaceDto? ActiveWorkspace =>
         Portal.State.Workspaces.FirstOrDefault(x => x.Id == Portal.State.SelectedEvaluationWorkspaceId);
-
-    private IEnumerable<DocumentDto> GuideDocuments =>
-        Portal.State.Documents
-            .Where(x => x.Type == DocumentType.Guide)
-            .OrderByDescending(x => x.UploadedAtUtc);
 
     private IEnumerable<DocumentDto> AppendixDocuments =>
         Portal.State.Documents

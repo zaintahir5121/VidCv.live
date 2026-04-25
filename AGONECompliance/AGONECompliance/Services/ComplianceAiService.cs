@@ -24,7 +24,6 @@ public sealed class ComplianceAiService(
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public async Task<List<ComplianceRule>> GenerateRulesAsync(
-        string guideText,
         string appendixText,
         CancellationToken cancellationToken)
     {
@@ -38,10 +37,8 @@ public sealed class ComplianceAiService(
             return FallbackRules();
         }
 
-        var guidePayloadForPrompt = BuildGuidePayloadForRuleGeneration(guideText, appendixText);
         var appendixPayloadForPrompt = BuildAppendixPayloadForRuleGeneration(appendixText);
         var userPrompt = template.UserPromptFormat
-            .Replace("{{guide_text}}", guidePayloadForPrompt)
             .Replace("{{appendix_text}}", appendixPayloadForPrompt);
         userPrompt +=
             "\n\nAdditional extraction constraints:\n" +
@@ -552,29 +549,6 @@ public sealed class ComplianceAiService(
         return requirementText.Length <= maxTitleLength
             ? requirementText
             : $"{requirementText[..maxTitleLength]}...";
-    }
-
-    private static string BuildGuidePayloadForRuleGeneration(string guideText, string appendixText)
-    {
-        // Rules are extracted from Appendix directly; guide is only supporting context.
-        if (string.IsNullOrWhiteSpace(guideText))
-        {
-            return string.Empty;
-        }
-
-        var appendixReferences = ExtractReferenceTokens(appendixText);
-        if (appendixReferences.Count == 0)
-        {
-            return TrimForModel(guideText, 35_000);
-        }
-
-        var selectedBlocks = ExtractGuideBlocksByReferences(guideText, appendixReferences);
-        if (selectedBlocks.Count == 0)
-        {
-            return TrimForModel(guideText, 35_000);
-        }
-
-        return string.Join("\n\n", selectedBlocks);
     }
 
     private static string BuildAppendixPayloadForRuleGeneration(string appendixText)

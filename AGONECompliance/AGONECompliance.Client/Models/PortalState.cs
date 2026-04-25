@@ -11,7 +11,6 @@ public sealed class PortalState
     public List<ComplianceRuleDto> Rules { get; set; } = [];
     public List<EvaluationRunDto> Runs { get; set; } = [];
     public List<PromptTemplateDto> PromptTemplates { get; set; } = [];
-    public Guid? SelectedGuideDocumentId { get; set; }
     public Guid? SelectedAppendixDocumentId { get; set; }
     public Guid? SelectedProspectusDocumentId { get; set; }
     public HashSet<Guid> SelectedRuleIds { get; set; } = [];

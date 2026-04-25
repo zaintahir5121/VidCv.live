@@ -45,7 +45,7 @@ public interface IDocumentIntelligenceService
 
 public interface IComplianceAiService
 {
-    Task<List<ComplianceRule>> GenerateRulesAsync(string guideText, string appendixText, CancellationToken cancellationToken);
+    Task<List<ComplianceRule>> GenerateRulesAsync(string appendixText, CancellationToken cancellationToken);
     Task<List<RuleAssessment>> EvaluateProspectusAsync(
         string prospectusText,
         IReadOnlyCollection<ComplianceRule> selectedRules,
