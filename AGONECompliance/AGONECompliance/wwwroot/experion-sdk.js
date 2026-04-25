@@ -95,28 +95,27 @@
   position: fixed;
   right: 20px;
   bottom: 104px;
-  width: 410px;
+  width: 460px;
   max-width: calc(100vw - 24px);
-  height: 560px;
+  height: 600px;
   max-height: calc(100vh - 110px);
-  border-radius: 22px;
-  color: #e8eeff;
-  box-shadow: 0 24px 70px rgba(8, 12, 28, 0.46), 0 0 42px rgba(76, 112, 255, 0.28);
+  border-radius: 24px;
+  color: #253046;
+  box-shadow: 0 28px 78px rgba(17, 33, 79, 0.24);
   z-index: 2147483000;
   display: none;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.16);
-  backdrop-filter: blur(14px);
-  background: linear-gradient(160deg, rgba(17, 24, 39, 0.88) 0%, rgba(39, 34, 92, 0.82) 52%, rgba(76, 37, 141, 0.76) 100%);
+  border: 1px solid #dce5f7;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
 }
 .agone-experion-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 14px 16px 8px;
+  border-bottom: 1px solid #e6ecfb;
 }
 .agone-experion-brand {
   display: flex;
@@ -131,19 +130,20 @@
   box-shadow: 0 0 16px rgba(108, 58, 237, 0.6);
 }
 .agone-experion-title {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   letter-spacing: 0.2px;
+  color: #253048;
 }
 .agone-experion-subtitle {
   font-size: 11px;
-  color: rgba(224,231,255,0.78);
+  color: #7b8aa8;
   margin-top: 2px;
 }
 .agone-experion-close {
   border: none;
-  background: rgba(255,255,255,0.12);
-  color: #f8faff;
+  background: #edf2ff;
+  color: #4f5f86;
   border-radius: 10px;
   width: 32px;
   height: 32px;
@@ -152,8 +152,74 @@
 }
 .agone-experion-status {
   font-size: 11px;
-  color: #c8d4ff;
+  color: #7383a4;
   padding: 9px 16px 0;
+}
+.agone-experion-robot-hero {
+  margin: 8px 14px 10px;
+  border: 1px solid #e4ebfb;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef3ff 52%, #f3edff 100%);
+  padding: 11px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.agone-experion-robot-meta strong {
+  display: block;
+  font-size: 13px;
+  color: #25304a;
+}
+.agone-experion-robot-meta span {
+  font-size: 11px;
+  color: #6e7ea3;
+}
+.agone-experion-robot-avatar {
+  position: relative;
+  width: 72px;
+  height: 58px;
+}
+.agone-experion-robot-head {
+  position: absolute;
+  left: 10px;
+  top: 0;
+  width: 46px;
+  height: 34px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #dce6fb;
+  box-shadow: 0 8px 16px rgba(39, 72, 167, 0.15);
+}
+.agone-experion-robot-visor {
+  position: absolute;
+  left: 16px;
+  top: 9px;
+  width: 34px;
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3f4fff, #6f45f2);
+}
+.agone-experion-robot-dot {
+  position: absolute;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #c8f0ff;
+  box-shadow: 0 0 8px rgba(181, 241, 255, 0.9);
+}
+.agone-experion-robot-dot.left { left: 22px; }
+.agone-experion-robot-dot.right { left: 36px; }
+.agone-experion-robot-body {
+  position: absolute;
+  left: 19px;
+  top: 34px;
+  width: 28px;
+  height: 22px;
+  border-radius: 13px;
+  background: #ffffff;
+  border: 1px solid #dce6fb;
 }
 .agone-experion-suggestions {
   display: flex;
@@ -162,9 +228,9 @@
   padding: 8px 14px 10px;
 }
 .agone-experion-chip {
-  border: 1px solid rgba(183, 198, 255, 0.35);
-  color: #dfe7ff;
-  background: rgba(255,255,255,0.08);
+  border: 1px solid #d8e2fb;
+  color: #4b5f8a;
+  background: #f3f7ff;
   border-radius: 999px;
   padding: 7px 11px;
   font-size: 12px;
@@ -172,7 +238,7 @@
   cursor: pointer;
 }
 .agone-experion-chip:hover {
-  background: rgba(116, 141, 255, 0.24);
+  background: #e8f0ff;
 }
 .agone-experion-messages {
   padding: 8px 14px 12px;
@@ -196,28 +262,28 @@
 }
 .agone-experion-msg.bot {
   margin-right: auto;
-  background: rgba(255,255,255,0.11);
-  border: 1px solid rgba(193, 205, 255, 0.2);
-  color: #eaf0ff;
+  background: #ffffff;
+  border: 1px solid #e1e8f8;
+  color: #2f3b57;
 }
 .agone-experion-input-wrap {
   display: flex;
   gap: 8px;
   padding: 10px 12px 12px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid #e6ecfb;
 }
 .agone-experion-input {
   flex: 1;
   min-width: 0;
-  border: 1px solid rgba(180, 199, 255, 0.3);
+  border: 1px solid #d8e2f8;
   border-radius: 12px;
   padding: 10px 12px;
   font-size: 13px;
-  background: rgba(7, 14, 36, 0.62);
-  color: #edf3ff;
+  background: #ffffff;
+  color: #22304a;
 }
 .agone-experion-input::placeholder {
-  color: rgba(211, 223, 255, 0.6);
+  color: #8fa1c6;
 }
 .agone-experion-send {
   border: 0;
@@ -232,9 +298,9 @@
 .agone-experion-highlight {
   position: fixed;
   z-index: 2147482990;
-  border: 2px solid rgba(114, 137, 255, 0.95);
+  border: 2px solid rgba(97, 124, 255, 0.9);
   border-radius: 16px;
-  box-shadow: 0 0 0 9999px rgba(96, 70, 188, 0.12), 0 0 0 4px rgba(107, 171, 255, 0.22);
+  box-shadow: 0 0 0 9999px rgba(102, 128, 255, 0.1), 0 0 0 4px rgba(115, 176, 255, 0.18);
   pointer-events: none;
 }
 `;
@@ -292,6 +358,20 @@
         header.appendChild(ui.closeButton);
 
         ui.status = createElement("div", "agone-experion-status", "Disconnected");
+        const robotHero = createElement("div", "agone-experion-robot-hero");
+        const robotMeta = createElement("div", "agone-experion-robot-meta");
+        const robotStrong = createElement("strong", "", "Experion AI Assistant");
+        const robotSpan = createElement("span", "", "Action-driven guidance · Context aware");
+        robotMeta.appendChild(robotStrong);
+        robotMeta.appendChild(robotSpan);
+        const robotAvatar = createElement("div", "agone-experion-robot-avatar");
+        robotAvatar.appendChild(createElement("div", "agone-experion-robot-head"));
+        robotAvatar.appendChild(createElement("div", "agone-experion-robot-visor"));
+        robotAvatar.appendChild(createElement("div", "agone-experion-robot-dot left"));
+        robotAvatar.appendChild(createElement("div", "agone-experion-robot-dot right"));
+        robotAvatar.appendChild(createElement("div", "agone-experion-robot-body"));
+        robotHero.appendChild(robotMeta);
+        robotHero.appendChild(robotAvatar);
         ui.suggestions = createElement("div", "agone-experion-suggestions");
         ui.messages = createElement("div", "agone-experion-messages");
         const inputWrap = createElement("div", "agone-experion-input-wrap");
@@ -312,6 +392,7 @@
 
         ui.panel.appendChild(header);
         ui.panel.appendChild(ui.status);
+        ui.panel.appendChild(robotHero);
         ui.panel.appendChild(ui.suggestions);
         ui.panel.appendChild(ui.messages);
         ui.panel.appendChild(inputWrap);
