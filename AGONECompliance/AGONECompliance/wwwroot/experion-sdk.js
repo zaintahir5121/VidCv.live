@@ -30,7 +30,9 @@
         launcher: null,
         panel: null,
         headerTitle: null,
+        headerSubtitle: null,
         messages: null,
+        suggestions: null,
         input: null,
         sendButton: null,
         closeButton: null,
@@ -257,32 +259,44 @@
 
         ensureStyles();
 
-        ui.launcher = createElement("button", "agone-experion-launcher", "AI");
+        ui.launcher = createElement("button", "agone-experion-launcher");
         ui.launcher.setAttribute("type", "button");
         ui.launcher.setAttribute("aria-label", "Open AG ONE Experion");
         ui.launcher.addEventListener("click", function () {
             togglePanel();
         });
+        const launcherOrb = createElement("div", "agone-experion-orb");
+        launcherOrb.appendChild(createElement("span", "agone-experion-eye"));
+        launcherOrb.appendChild(createElement("span", "agone-experion-eye"));
+        ui.launcher.appendChild(launcherOrb);
 
         ui.panel = createElement("section", "agone-experion-panel");
         ui.panel.setAttribute("role", "dialog");
         ui.panel.setAttribute("aria-label", "AG ONE Experion assistant");
 
         const header = createElement("div", "agone-experion-header");
-        ui.headerTitle = createElement("div", "agone-experion-title", "AG ONE Experion");
+        const brand = createElement("div", "agone-experion-brand");
+        brand.appendChild(createElement("div", "agone-experion-brand-orb"));
+        const brandText = createElement("div");
+        ui.headerTitle = createElement("div", "agone-experion-title", "Experion");
+        ui.headerSubtitle = createElement("div", "agone-experion-subtitle", "AI execution companion");
+        brandText.appendChild(ui.headerTitle);
+        brandText.appendChild(ui.headerSubtitle);
+        brand.appendChild(brandText);
         ui.closeButton = createElement("button", "agone-experion-close", "×");
         ui.closeButton.setAttribute("type", "button");
         ui.closeButton.addEventListener("click", function () {
             closePanel();
         });
-        header.appendChild(ui.headerTitle);
+        header.appendChild(brand);
         header.appendChild(ui.closeButton);
 
         ui.status = createElement("div", "agone-experion-status", "Disconnected");
+        ui.suggestions = createElement("div", "agone-experion-suggestions");
         ui.messages = createElement("div", "agone-experion-messages");
         const inputWrap = createElement("div", "agone-experion-input-wrap");
         ui.input = createElement("input", "agone-experion-input");
-        ui.input.setAttribute("placeholder", "Ask Experion anything about this page...");
+        ui.input.setAttribute("placeholder", "Tell Experion what you want to do...");
         ui.input.addEventListener("keydown", function (ev) {
             if (ev.key === "Enter") {
                 sendMessage();
@@ -298,6 +312,7 @@
 
         ui.panel.appendChild(header);
         ui.panel.appendChild(ui.status);
+        ui.panel.appendChild(ui.suggestions);
         ui.panel.appendChild(ui.messages);
         ui.panel.appendChild(inputWrap);
 
@@ -315,6 +330,39 @@
         const msg = createElement("div", "agone-experion-msg " + (role === "user" ? "user" : "bot"), text);
         ui.messages.appendChild(msg);
         ui.messages.scrollTop = ui.messages.scrollHeight;
+    }
+
+    function renderSuggestionChips(suggestions) {
+        if (!ui.suggestions) {
+            return;
+        }
+
+        ui.suggestions.innerHTML = "";
+        const items = Array.isArray(suggestions) ? suggestions.filter(Boolean).slice(0, 4) : [];
+        if (items.length === 0) {
+            ui.suggestions.style.display = "none";
+            return;
+        }
+
+        ui.suggestions.style.display = "flex";
+        for (let i = 0; i < items.length; i++) {
+            const text = String(items[i]).trim();
+            if (!text) {
+                continue;
+            }
+
+            const chip = createElement("button", "agone-experion-chip", text);
+            chip.setAttribute("type", "button");
+            chip.addEventListener("click", function () {
+                if (!ui.input) {
+                    return;
+                }
+
+                ui.input.value = text;
+                sendMessage();
+            });
+            ui.suggestions.appendChild(chip);
+        }
     }
 
     function safeNow() {
