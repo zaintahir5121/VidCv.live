@@ -95,11 +95,11 @@
   position: fixed;
   right: 20px;
   bottom: 104px;
-  width: 460px;
+  width: 390px;
   max-width: calc(100vw - 24px);
-  height: 600px;
+  height: 520px;
   max-height: calc(100vh - 110px);
-  border-radius: 24px;
+  border-radius: 28px;
   color: #253046;
   box-shadow: 0 28px 78px rgba(17, 33, 79, 0.24);
   z-index: 2147483000;
@@ -111,11 +111,10 @@
 }
 .agone-experion-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 8px;
-  border-bottom: 1px solid #e6ecfb;
+  padding: 14px 14px 8px;
 }
 .agone-experion-brand {
   display: flex;
@@ -123,8 +122,8 @@
   gap: 10px;
 }
 .agone-experion-brand-orb {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   background: radial-gradient(circle at 28% 20%, #7de3ff 0%, #5a8bff 45%, #7a4aff 100%);
   box-shadow: 0 0 16px rgba(108, 58, 237, 0.6);
@@ -153,14 +152,14 @@
 .agone-experion-status {
   font-size: 11px;
   color: #7383a4;
-  padding: 9px 16px 0;
+  padding: 0 14px 4px;
 }
 .agone-experion-robot-hero {
-  margin: 8px 14px 10px;
+  margin: 2px 14px 10px;
   border: 1px solid #e4ebfb;
-  border-radius: 16px;
+  border-radius: 18px;
   background: linear-gradient(135deg, #f8fbff 0%, #eef3ff 52%, #f3edff 100%);
-  padding: 11px 12px;
+  padding: 12px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -177,55 +176,65 @@
 }
 .agone-experion-robot-avatar {
   position: relative;
-  width: 72px;
-  height: 58px;
+  width: 82px;
+  height: 68px;
 }
 .agone-experion-robot-head {
   position: absolute;
-  left: 10px;
+  left: 14px;
   top: 0;
-  width: 46px;
-  height: 34px;
-  border-radius: 16px;
+  width: 52px;
+  height: 38px;
+  border-radius: 18px;
   background: #ffffff;
   border: 1px solid #dce6fb;
   box-shadow: 0 8px 16px rgba(39, 72, 167, 0.15);
 }
 .agone-experion-robot-visor {
   position: absolute;
-  left: 16px;
-  top: 9px;
-  width: 34px;
-  height: 14px;
+  left: 20px;
+  top: 10px;
+  width: 40px;
+  height: 16px;
   border-radius: 8px;
   background: linear-gradient(135deg, #3f4fff, #6f45f2);
 }
 .agone-experion-robot-dot {
   position: absolute;
-  top: 12px;
+  top: 14px;
   width: 6px;
   height: 6px;
   border-radius: 999px;
   background: #c8f0ff;
   box-shadow: 0 0 8px rgba(181, 241, 255, 0.9);
 }
-.agone-experion-robot-dot.left { left: 22px; }
-.agone-experion-robot-dot.right { left: 36px; }
+.agone-experion-robot-dot.left { left: 27px; }
+.agone-experion-robot-dot.right { left: 43px; }
 .agone-experion-robot-body {
   position: absolute;
-  left: 19px;
-  top: 34px;
-  width: 28px;
-  height: 22px;
-  border-radius: 13px;
+  left: 24px;
+  top: 39px;
+  width: 31px;
+  height: 25px;
+  border-radius: 15px;
   background: #ffffff;
   border: 1px solid #dce6fb;
+}
+.agone-experion-summary {
+  margin: 0 14px 8px;
+  border: 1px solid #e7ecf9;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 10px 10px;
+  color: #475779;
+  font-size: 12px;
+  line-height: 1.4;
 }
 .agone-experion-suggestions {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  padding: 8px 14px 10px;
+  padding: 0 14px 10px;
 }
 .agone-experion-chip {
   border: 1px solid #d8e2fb;
@@ -241,27 +250,28 @@
   background: #e8f0ff;
 }
 .agone-experion-messages {
-  padding: 8px 14px 12px;
+  padding: 4px 14px 10px;
   overflow: auto;
   flex: 1 1 auto;
+  min-height: 100px;
 }
 .agone-experion-msg {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.43;
-  padding: 10px 12px;
+  padding: 9px 10px;
   border-radius: 13px;
-  margin-bottom: 10px;
-  max-width: 88%;
+  margin-bottom: 8px;
+  max-width: 100%;
   white-space: pre-wrap;
 }
 .agone-experion-msg.user {
-  margin-left: auto;
+  margin-left: 0;
   background: linear-gradient(135deg, rgba(80,127,255,0.85) 0%, rgba(122,74,255,0.92) 100%);
   border: 1px solid rgba(171, 191, 255, 0.28);
   color: #f3f7ff;
 }
 .agone-experion-msg.bot {
-  margin-right: auto;
+  margin-right: 0;
   background: #ffffff;
   border: 1px solid #e1e8f8;
   color: #2f3b57;
@@ -269,8 +279,9 @@
 .agone-experion-input-wrap {
   display: flex;
   gap: 8px;
-  padding: 10px 12px 12px;
+  padding: 8px 12px 12px;
   border-top: 1px solid #e6ecfb;
+  margin-top: auto;
 }
 .agone-experion-input {
   flex: 1;
@@ -289,7 +300,7 @@
   border: 0;
   border-radius: 12px;
   color: #fff;
-  min-width: 56px;
+  min-width: 52px;
   padding: 10px 12px;
   cursor: pointer;
   font-weight: 600;
