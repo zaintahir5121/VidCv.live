@@ -11,6 +11,26 @@ namespace AGONECompliance.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(
+                """
+                IF SCHEMA_ID(N'compliance') IS NULL
+                BEGIN
+                    EXEC(N'CREATE SCHEMA [compliance]');
+                END;
+
+                IF OBJECT_ID(N'[compliance].[EvaluationWorkspaces]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[EvaluationWorkspaces]', N'U') IS NOT NULL
+                BEGIN
+                    EXEC(N'ALTER SCHEMA [compliance] TRANSFER [dbo].[EvaluationWorkspaces]');
+                END;
+
+                IF OBJECT_ID(N'[compliance].[UploadedDocuments]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[UploadedDocuments]', N'U') IS NOT NULL
+                BEGIN
+                    EXEC(N'ALTER SCHEMA [compliance] TRANSFER [dbo].[UploadedDocuments]');
+                END;
+                """);
+
             migrationBuilder.CreateTable(
                 name: "DocumentPageBlobs",
                 schema: "compliance",
