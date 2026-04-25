@@ -377,6 +377,47 @@ h1:focus {
     gap: 0.35rem;
 }
 
+.guide-context {
+    margin-top: 0.4rem;
+}
+
+.guide-context summary {
+    cursor: pointer;
+    color: #3d4d86;
+    font-size: 0.8rem;
+    font-weight: 600;
+    list-style: none;
+}
+
+.guide-context summary::-webkit-details-marker {
+    display: none;
+}
+
+.guide-context summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.35rem;
+    color: #5f6ec2;
+    transition: transform 0.15s ease;
+}
+
+.guide-context[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.guide-context-content {
+    margin-top: 0.4rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid #dce4ff;
+    border-radius: 0.55rem;
+    background: #f8faff;
+    color: #3f4d81;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
 @media (max-width: 1000px) {
     .start-eval-grid {
         grid-template-columns: 1fr;

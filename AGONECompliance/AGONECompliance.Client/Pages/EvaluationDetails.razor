@@ -51,7 +51,7 @@
                         <th>Rule</th>
                         <th>Category</th>
                         <th>Action Party</th>
-                        <th>Guide Ref</th>
+                        <th>Guide Context Used</th>
                         <th>Status</th>
                         <th>Confidence</th>
                         <th>Reason</th>
@@ -69,7 +69,20 @@
                             </td>
                             <td><span class="@($"pill {GetCategoryClass(result.RuleCategory)}")">@result.RuleCategory</span></td>
                             <td><span class="@($"pill {GetActionPartyClass(result.RuleActionParty)}")">@result.RuleActionParty</span></td>
-                            <td>@result.GuideReference</td>
+                            <td>
+                                @if (TrySplitGuideContext(result.GuideReference, out var referencePart, out var contextPart))
+                                {
+                                    <div class="small-muted">@referencePart</div>
+                                    <details class="guide-context-details">
+                                        <summary>Guide Context Used</summary>
+                                        <div class="guide-context-content">@contextPart</div>
+                                    </details>
+                                }
+                                else
+                                {
+                                    @result.GuideReference
+                                }
+                            </td>
                             <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
                             <td>@(Math.Round(result.ConfidenceScore * 100, 1))%</td>
                             <td>@result.Reason</td>
@@ -158,4 +171,20 @@
         "none" => "pill-neutral",
         _ => "pill-neutral"
     };
+
+    private static bool TrySplitGuideContext(string guideReference, out string referencePart, out string contextPart)
+    {
+        const string marker = "| Context:";
+        var idx = guideReference.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (idx <= 0)
+        {
+            referencePart = guideReference;
+            contextPart = string.Empty;
+            return false;
+        }
+
+        referencePart = guideReference[..idx].Trim();
+        contextPart = guideReference[(idx + marker.Length)..].Trim();
+        return !string.IsNullOrWhiteSpace(contextPart);
+    }
 }

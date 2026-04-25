@@ -166,7 +166,16 @@
                                     </td>
                                     <td>@result.RuleCategory</td>
                                     <td>@result.RuleActionParty</td>
-                                    <td>@result.GuideReference</td>
+                                    <td>
+                                        <div class="guide-reference-inline">@PrimaryGuideReference(result.GuideReference)</div>
+                                        @if (HasGuideContext(result.GuideReference))
+                                        {
+                                            <details class="guide-context">
+                                                <summary>Guide Context Used</summary>
+                                                <div class="guide-context-content">@ExtractGuideContext(result.GuideReference)</div>
+                                            </details>
+                                        }
+                                    </td>
                                     <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
                                     <td>@(Math.Round(result.ConfidenceScore * 100, 1))%</td>
                                     <td>@result.Reason</td>
@@ -256,5 +265,42 @@
             "none" => "pill-neutral",
             _ => "pill-neutral"
         };
+    }
+
+    private static bool HasGuideContext(string? guideReference)
+        => !string.IsNullOrWhiteSpace(ExtractGuideContext(guideReference));
+
+    private static string PrimaryGuideReference(string? guideReference)
+    {
+        if (string.IsNullOrWhiteSpace(guideReference))
+        {
+            return "-";
+        }
+
+        var contextMarker = " | Context:";
+        var markerIndex = guideReference.IndexOf(contextMarker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0)
+        {
+            return guideReference;
+        }
+
+        return guideReference[..markerIndex].Trim();
+    }
+
+    private static string ExtractGuideContext(string? guideReference)
+    {
+        if (string.IsNullOrWhiteSpace(guideReference))
+        {
+            return string.Empty;
+        }
+
+        var contextMarker = " | Context:";
+        var markerIndex = guideReference.IndexOf(contextMarker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0)
+        {
+            return string.Empty;
+        }
+
+        return guideReference[(markerIndex + contextMarker.Length)..].Trim();
     }
 }
