@@ -21,7 +21,9 @@
             autoOpen: false
         },
         session: null,
-        triggerCooldownUntil: 0
+        triggerCooldownUntil: 0,
+        currentAnchor: null,
+        lastTriggerResponse: null
     };
 
     const ui = {
@@ -32,7 +34,8 @@
         input: null,
         sendButton: null,
         closeButton: null,
-        status: null
+        status: null,
+        highlight: null
     };
 
     const styleId = "agone-experion-style";
@@ -117,6 +120,7 @@
   border-radius: 10px;
   margin-bottom: 8px;
   max-width: 85%;
+  white-space: pre-wrap;
 }
 .agone-experion-msg.user {
   margin-left: auto;
@@ -155,6 +159,14 @@
   padding: 9px 12px;
   cursor: pointer;
   background: linear-gradient(135deg, #4779F7 0%, #6C3AED 100%);
+}
+.agone-experion-highlight {
+  position: fixed;
+  z-index: 2147482990;
+  border: 2px solid #6C3AED;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(108,58,237,0.08), 0 0 0 4px rgba(71,121,247,0.20);
+  pointer-events: none;
 }
 `;
         document.head.appendChild(style);
@@ -242,6 +254,119 @@
         return Date.now();
     }
 
+    function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    function positionPanelDefault() {
+        if (!ui.panel) {
+            return;
+        }
+
+        ui.panel.style.left = "";
+        ui.panel.style.top = "";
+        ui.panel.style.right = "20px";
+        ui.panel.style.bottom = "88px";
+    }
+
+    function positionPanelNearAnchor(anchor) {
+        if (!ui.panel || !anchor) {
+            positionPanelDefault();
+            return;
+        }
+
+        const margin = 12;
+        const gap = 14;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+        const panelWidth = ui.panel.offsetWidth || 360;
+        const panelHeight = ui.panel.offsetHeight || 520;
+
+        const anchorX = Math.max(0, anchor.x || 0);
+        const anchorY = Math.max(0, anchor.y || 0);
+        const anchorWidth = Math.max(24, anchor.width || 0);
+        const anchorHeight = Math.max(24, anchor.height || 0);
+
+        let left = anchorX + anchorWidth + gap;
+        if (left + panelWidth > viewportWidth - margin) {
+            left = anchorX - panelWidth - gap;
+        }
+        if (left < margin) {
+            left = clamp(anchorX, margin, Math.max(margin, viewportWidth - panelWidth - margin));
+        }
+
+        let top = anchorY;
+        if (top + panelHeight > viewportHeight - margin) {
+            top = viewportHeight - panelHeight - margin;
+        }
+        top = clamp(top, margin, Math.max(margin, viewportHeight - panelHeight - margin));
+
+        ui.panel.style.right = "auto";
+        ui.panel.style.bottom = "auto";
+        ui.panel.style.left = Math.round(left) + "px";
+        ui.panel.style.top = Math.round(top) + "px";
+    }
+
+    function showHighlight(anchor) {
+        if (!anchor) {
+            return;
+        }
+
+        if (!ui.highlight) {
+            ui.highlight = createElement("div", "agone-experion-highlight");
+            document.body.appendChild(ui.highlight);
+        }
+
+        const pad = 8;
+        ui.highlight.style.display = "block";
+        ui.highlight.style.left = Math.max(0, anchor.x - pad) + "px";
+        ui.highlight.style.top = Math.max(0, anchor.y - pad) + "px";
+        ui.highlight.style.width = Math.max(24, anchor.width + pad * 2) + "px";
+        ui.highlight.style.height = Math.max(24, anchor.height + pad * 2) + "px";
+    }
+
+    function hideHighlight() {
+        if (ui.highlight) {
+            ui.highlight.style.display = "none";
+        }
+    }
+
+    function getDomContextFromPoint(anchor) {
+        if (!anchor) {
+            return "";
+        }
+
+        const centerX = Math.round(anchor.x + (anchor.width || 0) / 2);
+        const centerY = Math.round(anchor.y + (anchor.height || 0) / 2);
+        const element = document.elementFromPoint(centerX, centerY);
+        if (!element) {
+            return "";
+        }
+
+        const chunks = [];
+        if (element.tagName) {
+            chunks.push("target:" + element.tagName.toLowerCase());
+        }
+
+        const block = element.closest("section,article,main,div,td,tr,li");
+        if (block) {
+            const heading = block.querySelector("h1,h2,h3,h4,h5,h6,strong,label");
+            if (heading && heading.textContent) {
+                chunks.push("heading:" + heading.textContent.trim());
+            }
+            if (block.textContent) {
+                chunks.push("blockText:" + block.textContent.replace(/\s+/g, " ").trim().slice(0, 260));
+            }
+        }
+
+        if (element.getAttribute("aria-label")) {
+            chunks.push("ariaLabel:" + element.getAttribute("aria-label"));
+        }
+
+        return chunks.join(" | ");
+    }
+
     async function resolveAuthToken() {
         if (typeof state.config.authTokenProvider !== "function") {
             return null;
@@ -274,6 +399,7 @@
             "X-AGONE-Product": state.config.productCode || "unknown",
             "X-AGONE-WorkspaceId": state.config.workspaceId || ""
         };
+
         if (state.config.sourceToken) {
             headers["X-AGONE-SourceToken"] = state.config.sourceToken;
         }
@@ -309,7 +435,7 @@
 
     async function notifyTrigger(triggerType, extra) {
         if (!state.session) {
-            return;
+            return null;
         }
 
         const bbox = extra && extra.boundingBox ? extra.boundingBox : null;
@@ -324,7 +450,44 @@
             height: bbox ? (bbox.height || 0) : 0
         });
 
-        await apiCall("/context/trigger", payload);
+        return await apiCall("/context/trigger", payload);
+    }
+
+    function applyTriggerSuggestions(triggerResponse, anchor) {
+        state.lastTriggerResponse = triggerResponse || null;
+        if (!triggerResponse) {
+            addMessage("bot", "I detected this area. Tell me what you want done here.");
+            return;
+        }
+
+        const lines = [];
+        if (anchor) {
+            lines.push("I detected the section you circled.");
+        }
+        if (triggerResponse.detectedIntent) {
+            lines.push("Intent: " + triggerResponse.detectedIntent);
+        }
+        if (typeof triggerResponse.confidence === "number") {
+            lines.push("Confidence: " + Math.round(triggerResponse.confidence * 100) + "%");
+        }
+
+        if (triggerResponse.suggestedPrompts && triggerResponse.suggestedPrompts.length > 0) {
+            lines.push("");
+            lines.push("Suggested prompts:");
+            for (let i = 0; i < Math.min(3, triggerResponse.suggestedPrompts.length); i++) {
+                lines.push("- " + triggerResponse.suggestedPrompts[i]);
+            }
+        }
+
+        if (triggerResponse.recommendedActions && triggerResponse.recommendedActions.length > 0) {
+            lines.push("");
+            lines.push("Recommended actions:");
+            for (let j = 0; j < Math.min(3, triggerResponse.recommendedActions.length); j++) {
+                lines.push("- " + triggerResponse.recommendedActions[j]);
+            }
+        }
+
+        addMessage("bot", lines.join("\n").trim() || "I detected this area. How can I help?");
     }
 
     async function sendMessage() {
@@ -356,10 +519,20 @@
         }
     }
 
-    async function openPanel(triggerType) {
+    async function openPanel(triggerType, anchor, triggerExtra) {
         ensureUi();
+        state.currentAnchor = anchor || null;
         ui.panel.style.display = "block";
         state.isOpen = true;
+
+        if (anchor) {
+            positionPanelNearAnchor(anchor);
+            showHighlight(anchor);
+        } else {
+            positionPanelDefault();
+            hideHighlight();
+        }
+
         setStatus("Connecting...");
 
         try {
@@ -367,10 +540,14 @@
                 await bootstrapSession(triggerType || "manual");
             }
 
-            await notifyTrigger(triggerType || "manual", {});
-            if (ui.messages.childElementCount === 0) {
+            const triggerResponse = await notifyTrigger(triggerType || "manual", triggerExtra || {});
+            if (triggerType === "circle") {
+                applyTriggerSuggestions(triggerResponse, anchor);
+            } else if (ui.messages.childElementCount === 0) {
                 addMessage("bot", "Hi, I am Experion. I can help you complete this journey faster.");
             }
+
+            setStatus("Connected");
         } catch (error) {
             setStatus("Connection failed");
             addMessage("bot", "Connection failed. Please verify AG AI Hub configuration.");
@@ -384,11 +561,12 @@
 
         ui.panel.style.display = "none";
         state.isOpen = false;
+        hideHighlight();
     }
 
     function togglePanel() {
         if (!ui.panel || ui.panel.style.display === "none") {
-            openPanel("manual");
+            openPanel("manual", null, {});
             return;
         }
 
@@ -403,7 +581,7 @@
         const first = points[0];
         const last = points[points.length - 1];
         const closeDistance = Math.hypot(last.x - first.x, last.y - first.y);
-        if (closeDistance > 28) {
+        if (closeDistance > 32) {
             return false;
         }
 
@@ -422,8 +600,7 @@
 
         const width = maxX - minX;
         const height = maxY - minY;
-        const minSize = 36;
-        if (width < minSize || height < minSize) {
+        if (width < 40 || height < 40) {
             return false;
         }
 
@@ -431,12 +608,43 @@
         return ratio > 0.45 && ratio < 2.2;
     }
 
+    function boundingBox(points) {
+        let minX = Number.POSITIVE_INFINITY;
+        let minY = Number.POSITIVE_INFINITY;
+        let maxX = Number.NEGATIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+
+        for (let i = 0; i < points.length; i++) {
+            const p = points[i];
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y > maxY) maxY = p.y;
+        }
+
+        return {
+            x: Math.max(0, Math.round(minX)),
+            y: Math.max(0, Math.round(minY)),
+            width: Math.max(0, Math.round(maxX - minX)),
+            height: Math.max(0, Math.round(maxY - minY))
+        };
+    }
+
+    function isUiTarget(target) {
+        if (!target) {
+            return false;
+        }
+
+        return (ui.panel && ui.panel.contains(target))
+            || (ui.launcher && ui.launcher.contains(target));
+    }
+
     function captureCircleGesture() {
         let drawing = false;
         let points = [];
 
         document.addEventListener("pointerdown", function (event) {
-            if (!event.shiftKey) {
+            if (event.button !== 0 || isUiTarget(event.target)) {
                 return;
             }
 
@@ -470,40 +678,15 @@
 
             state.triggerCooldownUntil = safeNow() + 5000;
             const bbox = boundingBox(points);
-            await openPanel("circle");
-            try {
-                await notifyTrigger("circle", {
-                    domContext: document.title || "",
-                    selectionText: window.getSelection ? String(window.getSelection()) : "",
-                    boundingBox: bbox
-                });
-                addMessage("bot", "I noticed the area you circled. Tell me what you want to do there.");
-            } catch {
-                // ignore
-            }
+            const selectionText = window.getSelection ? String(window.getSelection()).trim() : "";
+            const domContext = getDomContextFromPoint(bbox);
+
+            await openPanel("circle", bbox, {
+                domContext: domContext || (document.title || ""),
+                selectionText: selectionText,
+                boundingBox: bbox
+            });
         }, true);
-    }
-
-    function boundingBox(points) {
-        let minX = Number.POSITIVE_INFINITY;
-        let minY = Number.POSITIVE_INFINITY;
-        let maxX = Number.NEGATIVE_INFINITY;
-        let maxY = Number.NEGATIVE_INFINITY;
-
-        for (let i = 0; i < points.length; i++) {
-            const p = points[i];
-            if (p.x < minX) minX = p.x;
-            if (p.y < minY) minY = p.y;
-            if (p.x > maxX) maxX = p.x;
-            if (p.y > maxY) maxY = p.y;
-        }
-
-        return {
-            x: Math.max(0, Math.round(minX)),
-            y: Math.max(0, Math.round(minY)),
-            width: Math.max(0, Math.round(maxX - minX)),
-            height: Math.max(0, Math.round(maxY - minY))
-        };
     }
 
     async function initialize(config) {
@@ -518,13 +701,21 @@
         setStatus("Ready");
 
         if (state.config.autoOpen) {
-            await openPanel("auto");
+            await openPanel("auto", null, {});
         }
     }
 
     window.AGONEExperion = {
         init: initialize,
-        open: function () { return openPanel("manual"); },
+        open: function () { return openPanel("manual", null, {}); },
+        openNear: function (rect) { return openPanel("manual", rect, {}); },
+        openForSelection: function (rect, selectionText, domContext) {
+            return openPanel("circle", rect || null, {
+                selectionText: selectionText || "",
+                domContext: domContext || "",
+                boundingBox: rect || null
+            });
+        },
         close: closePanel,
         toggle: togglePanel,
         send: function (text) {
@@ -537,6 +728,7 @@
         },
         resetSession: function () {
             state.session = null;
+            state.lastTriggerResponse = null;
             setStatus("Ready");
         }
     };
