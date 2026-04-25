@@ -61,7 +61,7 @@ namespace AGONECompliance.Data.Migrations
                         principalSchema: "compliance",
                         principalTable: "UploadedDocuments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

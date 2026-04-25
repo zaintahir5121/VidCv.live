@@ -464,7 +464,7 @@ namespace AGONECompliance.Data.Migrations
                     b.HasOne("AGONECompliance.Domain.UploadedDocument", "Document")
                         .WithMany()
                         .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("AGONECompliance.Domain.EvaluationWorkspace", "EvaluationWorkspace")

@@ -56,7 +56,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
             entity.HasOne(x => x.Document)
                 .WithMany()
                 .HasForeignKey(x => x.DocumentId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ComplianceRule>(entity =>
