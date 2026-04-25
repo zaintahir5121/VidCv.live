@@ -1,8 +1,16 @@
+using System.Security.Cryptography;
+using System.Text;
+using AGONECompliance.Data;
+using AGONECompliance.Domain;
 using AGONECompliance.Shared;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AGONECompliance.Services;
 
-public sealed class ExperionService : IExperionService
+public sealed class ExperionService(
+    ComplianceDbContext dbContext,
+    IMemoryCache memoryCache) : IExperionService
 {
     private static readonly string[] DefaultSuggestedPrompts =
     [
@@ -84,15 +92,37 @@ public sealed class ExperionService : IExperionService
         ExperionRequestContext context,
         CancellationToken cancellationToken)
     {
-        _ = context;
         var trimmed = string.IsNullOrWhiteSpace(request.Message)
             ? "I can help you with this page."
             : request.Message.Trim();
 
+        var cacheKey = BuildCacheKey(context, trimmed);
+        if (TryGetMemoryCache(cacheKey, out var memoryHit))
+        {
+            return Task.FromResult(memoryHit);
+        }
+
+        var sqlHit = dbContext.ExperionMemoryEntries
+            .AsNoTracking()
+            .Where(x => x.MemoryKey == cacheKey && x.LastAccessedAtUtc > DateTimeOffset.UtcNow.AddHours(-4))
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .FirstOrDefault();
+        if (sqlHit is not null)
+        {
+            var cachedResponse = BuildCachedResponse(sqlHit);
+            StoreInMemoryCache(cacheKey, cachedResponse, DateTimeOffset.UtcNow.AddMinutes(20));
+            return Task.FromResult(cachedResponse);
+        }
+
+        var llmSuggestion = BuildLlmSuggestion(trimmed, context);
+        var actionAdvice = BuildApplicationActionGuidance(context);
         var response = new ExperionConversationMessageResponse
         {
-            AssistantMessage = "Understood. I analyzed your page context and can guide or execute this journey step-by-step.",
-            Explanation = "For critical actions, I will ask for your confirmation before executing.",
+            AssistantMessage = llmSuggestion,
+            Explanation = "Layer flow: Memory cache miss -> SQL cache miss -> LLM suggestion + ApplicationAction guidance.",
+            ResponseLayer = "llm+application-action",
+            IsCacheHit = false,
+            CacheKey = cacheKey,
             RequiresConfirmation = true,
             MissingInputs = [],
             ProposedActions =
@@ -108,10 +138,18 @@ public sealed class ExperionService : IExperionService
                     ActionName = "execute-approved-step",
                     Label = "Execute selected step after your confirmation.",
                     IsCritical = true
+                },
+                new ExperionProposedActionDto
+                {
+                    ActionName = actionAdvice,
+                    Label = "Invoke product API through ApplicationAction layer.",
+                    IsCritical = true
                 }
             ]
         };
 
+        PersistSqlCache(cacheKey, context, trimmed, response);
+        StoreInMemoryCache(cacheKey, response, DateTimeOffset.UtcNow.AddMinutes(20));
         return Task.FromResult(response);
     }
 
@@ -220,5 +258,105 @@ public sealed class ExperionService : IExperionService
         return actionName.Contains("execute", StringComparison.OrdinalIgnoreCase)
                || actionName.Contains("submit", StringComparison.OrdinalIgnoreCase)
                || actionName.Contains("delete", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildCacheKey(ExperionRequestContext context, string message)
+    {
+        var input = $"{NormalizeProductCode(context.ProductCode)}|{context.WorkspaceId}|{message.Trim().ToLowerInvariant()}";
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(bytes);
+    }
+
+    private bool TryGetMemoryCache(string cacheKey, out ExperionConversationMessageResponse response)
+    {
+        if (memoryCache.TryGetValue(cacheKey, out ExperionConversationMessageResponse? cached) && cached is not null)
+        {
+            response = new ExperionConversationMessageResponse
+            {
+                AssistantMessage = cached.AssistantMessage,
+                Explanation = cached.Explanation,
+                RequiresConfirmation = cached.RequiresConfirmation,
+                MissingInputs = [..cached.MissingInputs],
+                ProposedActions = [..cached.ProposedActions],
+                ResponseLayer = "memory-cache",
+                IsCacheHit = true,
+                CacheKey = cacheKey
+            };
+            return true;
+        }
+
+        response = null!;
+        return false;
+    }
+
+    private static ExperionConversationMessageResponse BuildCachedResponse(ExperionMemoryEntry cache)
+    {
+        return new ExperionConversationMessageResponse
+        {
+            AssistantMessage = cache.AssistantResponse,
+            Explanation = "Returned from SQL memory cache.",
+            RequiresConfirmation = true,
+            MissingInputs = [],
+            ResponseLayer = "sql-cache",
+            IsCacheHit = true,
+            CacheKey = cache.MemoryKey,
+            ProposedActions =
+            [
+                new ExperionProposedActionDto
+                {
+                    ActionName = "prepare-action-plan",
+                    Label = "Use cached guidance and continue.",
+                    IsCritical = false
+                }
+            ]
+        };
+    }
+
+    private static string BuildLlmSuggestion(string message, ExperionRequestContext context)
+    {
+        var product = NormalizeProductCode(context.ProductCode);
+        return $"[LLM Suggestion] For {product}, I recommend validating dependencies and confirmations before executing: \"{message}\".";
+    }
+
+    private static string BuildApplicationActionGuidance(ExperionRequestContext context)
+    {
+        var product = NormalizeProductCode(context.ProductCode);
+        return $"{product}.application-action.execute";
+    }
+
+    private void PersistSqlCache(
+        string cacheKey,
+        ExperionRequestContext context,
+        string message,
+        ExperionConversationMessageResponse response)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var record = new ExperionMemoryEntry
+        {
+            MemoryKey = cacheKey,
+            ProductCode = NormalizeProductCode(context.ProductCode),
+            WorkspaceId = string.IsNullOrWhiteSpace(context.WorkspaceId) ? "default" : context.WorkspaceId.Trim(),
+            UserPrompt = message,
+            AssistantResponse = response.AssistantMessage,
+            LayerSource = "llm+application-action",
+            LastAccessedAtUtc = now
+        };
+
+        dbContext.ExperionMemoryEntries.Add(record);
+        dbContext.SaveChanges();
+    }
+
+    private void StoreInMemoryCache(
+        string cacheKey,
+        ExperionConversationMessageResponse response,
+        DateTimeOffset expiresAtUtc)
+    {
+        var ttl = expiresAtUtc - DateTimeOffset.UtcNow;
+        if (ttl <= TimeSpan.Zero)
+        {
+            ttl = TimeSpan.FromMinutes(1);
+        }
+
+        memoryCache.Set(cacheKey, response, ttl);
     }
 }

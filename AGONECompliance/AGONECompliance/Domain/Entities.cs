@@ -116,3 +116,15 @@ public sealed class EvaluationRunRule : BaseEntity
     public EvaluationRun EvaluationRun { get; set; } = null!;
     public Guid RuleId { get; set; }
 }
+
+public sealed class ExperionMemoryEntry : BaseEntity
+{
+    public string ProductCode { get; set; } = string.Empty;
+    public string WorkspaceId { get; set; } = string.Empty;
+    public string MemoryKey { get; set; } = string.Empty;
+    public string UserPrompt { get; set; } = string.Empty;
+    public string AssistantResponse { get; set; } = string.Empty;
+    public string LayerSource { get; set; } = "llm";
+    public int HitCount { get; set; }
+    public DateTimeOffset LastAccessedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+}

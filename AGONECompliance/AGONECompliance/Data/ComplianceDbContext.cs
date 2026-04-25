@@ -15,6 +15,7 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
     public DbSet<EvaluationRunRule> EvaluationRunRules => Set<EvaluationRunRule>();
     public DbSet<BackgroundJobRun> BackgroundJobRuns => Set<BackgroundJobRun>();
     public DbSet<PromptTemplate> PromptTemplates => Set<PromptTemplate>();
+    public DbSet<ExperionMemoryEntry> ExperionMemoryEntries => Set<ExperionMemoryEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -131,6 +132,17 @@ public sealed class ComplianceDbContext(DbContextOptions<ComplianceDbContext> op
                 .WithMany()
                 .HasForeignKey(x => x.RuleId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ExperionMemoryEntry>(entity =>
+        {
+            entity.HasIndex(x => x.MemoryKey).IsUnique();
+            entity.HasIndex(x => x.LastAccessedAtUtc);
+            entity.Property(x => x.MemoryKey).HasMaxLength(512);
+            entity.Property(x => x.ProductCode).HasMaxLength(64);
+            entity.Property(x => x.WorkspaceId).HasMaxLength(128);
+            entity.Property(x => x.UserPrompt).HasMaxLength(4096);
+            entity.Property(x => x.LayerSource).HasMaxLength(64);
         });
     }
 }

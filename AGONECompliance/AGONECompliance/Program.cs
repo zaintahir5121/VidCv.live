@@ -25,6 +25,7 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient(nameof(ComplianceAiService), client =>
 {
     client.Timeout = TimeSpan.FromMinutes(15);

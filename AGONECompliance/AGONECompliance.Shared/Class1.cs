@@ -257,6 +257,9 @@ public sealed class ExperionConversationMessageResponse
     public string AssistantMessage { get; set; } = string.Empty;
     public string Explanation { get; set; } = string.Empty;
     public bool RequiresConfirmation { get; set; }
+    public string ResponseLayer { get; set; } = "llm";
+    public bool IsCacheHit { get; set; }
+    public string CacheKey { get; set; } = string.Empty;
     public List<string> MissingInputs { get; set; } = [];
     public List<ExperionProposedActionDto> ProposedActions { get; set; } = [];
 }
