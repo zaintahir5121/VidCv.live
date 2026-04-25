@@ -80,6 +80,7 @@ public static class DataSeeder
                         "Return only a valid JSON array.",
                     UserPromptFormat =
                         "Guide Text:\n{{guide_text}}\n\nAppendix Text:\n{{appendix_text}}\n\n" +
+                        "Primary source for extracting checks is Appendix Text. Use Guide Text only when appendix rule explicitly references a guide section and you need context to complete the requirement sentence.\n" +
                         "Use this exact classification rubric:\n" +
                         "Category = Info or Requirement.\n" +
                         "Action Party = Onsite or Management; if Category is Info set Action Party to None.\n" +
@@ -105,6 +106,7 @@ public static class DataSeeder
                         "Always identify page-level location for matched evidence when available.",
                     UserPromptFormat =
                         "Prospectus Text:\n{{prospectus_text}}\n\nRules:\n{{rules_json}}\n\n" +
+                        "For each rule, use guideContext as mandatory supporting context when available. Evaluate prospectus evidence against the combined meaning of requirementText + guideContext.\n" +
                         "Return JSON array with fields: ruleCode,status,reason,evidenceExcerpt,pageNumber,confidenceScore."
                 });
         }

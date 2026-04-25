@@ -87,7 +87,7 @@ public sealed class RuleGenerationOrchestrator(
                 appendixText = await blobStorageService.DownloadTextAsync(appendixPath, cancellationToken) ?? string.Empty;
             }
 
-            var generated = await aiService.GenerateRulesAsync(guideText, appendixText, cancellationToken);
+            var generated = await aiService.GenerateRulesAsync(appendixText, guideText, cancellationToken);
             if (generated.Count == 0)
             {
                 throw new InvalidOperationException("No rules were generated from the supplied documents.");

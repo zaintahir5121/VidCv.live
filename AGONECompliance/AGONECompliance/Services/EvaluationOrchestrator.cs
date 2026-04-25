@@ -2,6 +2,7 @@ using AGONECompliance.Data;
 using AGONECompliance.Domain;
 using AGONECompliance.Shared;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace AGONECompliance.Services;
 
@@ -12,6 +13,8 @@ public sealed class EvaluationOrchestrator(
     IComplianceSearchService searchService,
     ILogger<EvaluationOrchestrator> logger) : IEvaluationOrchestrator
 {
+    private static readonly Regex PageHeaderRegex = new(@"\[Page\s+\d+\]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public async Task<Guid> QueueEvaluationAsync(
         Guid evaluationWorkspaceId,
         Guid prospectusDocumentId,
@@ -127,7 +130,19 @@ public sealed class EvaluationOrchestrator(
                 .Where(x => x.EvaluationWorkspaceId == run.EvaluationWorkspaceId && selectedRuleIds.Contains(x.Id))
                 .ToListAsync(cancellationToken);
 
-            var assessments = await aiService.EvaluateProspectusAsync(prospectusText, rules, cancellationToken);
+            var guideDocument = await dbContext.UploadedDocuments
+                .Where(x => x.EvaluationWorkspaceId == run.EvaluationWorkspaceId && x.Type == DocumentType.Guide)
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+            var guideText = await blobStorageService.DownloadTextAsync(guideDocument?.FullTextBlobPath, cancellationToken);
+
+            var guideContextByRuleId = ComplianceAiService.BuildGuideContextMap(guideText ?? string.Empty, rules);
+
+            var assessments = await aiService.EvaluateProspectusAsync(
+                prospectusText,
+                rules,
+                guideContextByRuleId,
+                cancellationToken);
 
             var existing = await dbContext.EvaluationResults
                 .Where(x => x.EvaluationRunId == run.Id)

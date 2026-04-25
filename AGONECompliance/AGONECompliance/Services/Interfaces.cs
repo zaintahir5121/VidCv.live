@@ -49,6 +49,7 @@ public interface IComplianceAiService
     Task<List<RuleAssessment>> EvaluateProspectusAsync(
         string prospectusText,
         IReadOnlyCollection<ComplianceRule> selectedRules,
+        IReadOnlyDictionary<Guid, string>? guideContextsByRuleId,
         CancellationToken cancellationToken);
 }
 

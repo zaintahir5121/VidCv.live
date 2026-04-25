@@ -19,6 +19,9 @@ public sealed class ComplianceAiService(
     ILogger<ComplianceAiService> logger) : IComplianceAiService
 {
     private readonly AzureOptions _options = azureOptions.Value;
+    private static readonly Regex ReferenceTokenRegex = new(
+        @"(?:(?:part|pg|paragraph)\s*[a-z0-9\.\-]+)|(?:\d+\.\d+(?:\([a-z0-9]+\))?)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public async Task<List<ComplianceRule>> GenerateRulesAsync(
         string guideText,
@@ -35,9 +38,18 @@ public sealed class ComplianceAiService(
             return FallbackRules();
         }
 
+        var guidePayloadForPrompt = BuildGuidePayloadForRuleGeneration(guideText, appendixText);
+        var appendixPayloadForPrompt = BuildAppendixPayloadForRuleGeneration(appendixText);
         var userPrompt = template.UserPromptFormat
-            .Replace("{{guide_text}}", TrimForModel(guideText))
-            .Replace("{{appendix_text}}", TrimForModel(appendixText));
+            .Replace("{{guide_text}}", guidePayloadForPrompt)
+            .Replace("{{appendix_text}}", appendixPayloadForPrompt);
+        userPrompt +=
+            "\n\nAdditional extraction constraints:\n" +
+            "1) Appendix is the primary source of truth for checks and requirements.\n" +
+            "2) Do not skip any appendix regime/section (including IPO, UTF, URG, and similarly named sections).\n" +
+            "3) If a row references guide paragraphs/parts (for example 1.09 Part B), keep that reference in 'reference'.\n" +
+            "4) If requirement sentence is split across lines/table cells, merge into one coherent requirementText.\n" +
+            "5) Return as many valid rules as present in the appendix content; do not compress multiple independent checks into one rule.";
 
         var json = await CallAzureOpenAiAsync(template.SystemPrompt, userPrompt, cancellationToken);
         var parsed = TryDeserializeCollection<RuleGenerationPayload>(json);
@@ -54,7 +66,10 @@ public sealed class ComplianceAiService(
             {
                 Code = SanitizeCode(string.IsNullOrWhiteSpace(x.Item.Code) ? $"GENERATED-RULE-{x.Index + 1}" : x.Item.Code!),
                 Title = ResolveTitle(x.Item, x.Index + 1),
-                Reference = x.Item.Reference?.Trim() ?? "Generated",
+                Reference = NormalizeReference(
+                    x.Item.Reference?.Trim(),
+                    GetRequirementText(x.Item),
+                    x.Item.Title),
                 RequirementText = GetRequirementText(x.Item),
                 ClassificationCategory = NormalizeClassificationCategory(GetCategory(x.Item)),
                 ActionParty = NormalizeActionParty(GetActionParty(x.Item), GetCategory(x.Item)),
@@ -66,6 +81,7 @@ public sealed class ComplianceAiService(
     public async Task<List<RuleAssessment>> EvaluateProspectusAsync(
         string prospectusText,
         IReadOnlyCollection<ComplianceRule> selectedRules,
+        IReadOnlyDictionary<Guid, string>? ruleGuideContexts,
         CancellationToken cancellationToken)
     {
         if (selectedRules.Count == 0)
@@ -89,7 +105,8 @@ public sealed class ComplianceAiService(
             ruleCode = rule.Code,
             title = rule.Title,
             reference = rule.Reference,
-            requirementText = rule.RequirementText
+            requirementText = rule.RequirementText,
+            guideContext = ResolveRuleGuideContext(rule, ruleGuideContexts)
         });
 
         var userPrompt = template.UserPromptFormat
@@ -117,7 +134,7 @@ public sealed class ComplianceAiService(
             {
                 RuleId = rule.Id,
                 RuleCode = rule.Code,
-                GuideReference = rule.Reference,
+                GuideReference = BuildGuideReferenceForAssessment(rule, ruleGuideContexts),
                 Status = ParseStatus(item.Status),
                 Reason = item.Reason?.Trim() ?? "No reason provided.",
                 EvidenceExcerpt = item.EvidenceExcerpt?.Trim() ?? string.Empty,
@@ -234,7 +251,7 @@ public sealed class ComplianceAiService(
             {
                 RuleId = rule.Id,
                 RuleCode = rule.Code,
-                GuideReference = rule.Reference,
+                GuideReference = BuildGuideReferenceForAssessment(rule, null),
                 Status = status,
                 Reason = $"Heuristic match score based on {hits}/{requiredTerms.Count} expected indicators.",
                 EvidenceExcerpt = ExtractEvidence(prospectusText, requiredTerms),
@@ -324,7 +341,7 @@ public sealed class ComplianceAiService(
             {
                 RuleId = rule.Id,
                 RuleCode = rule.Code,
-                GuideReference = rule.Reference,
+                GuideReference = BuildGuideReferenceForAssessment(rule, null),
                 Status = ComplianceStatus.NeedsReview,
                 Reason = "No explicit model result returned for this rule.",
                 EvidenceExcerpt = string.Empty,
@@ -535,6 +552,257 @@ public sealed class ComplianceAiService(
         return requirementText.Length <= maxTitleLength
             ? requirementText
             : $"{requirementText[..maxTitleLength]}...";
+    }
+
+    private static string BuildGuidePayloadForRuleGeneration(string guideText, string appendixText)
+    {
+        // Rules are extracted from Appendix directly; guide is only supporting context.
+        if (string.IsNullOrWhiteSpace(guideText))
+        {
+            return string.Empty;
+        }
+
+        var appendixReferences = ExtractReferenceTokens(appendixText);
+        if (appendixReferences.Count == 0)
+        {
+            return TrimForModel(guideText, 35_000);
+        }
+
+        var selectedBlocks = ExtractGuideBlocksByReferences(guideText, appendixReferences);
+        if (selectedBlocks.Count == 0)
+        {
+            return TrimForModel(guideText, 35_000);
+        }
+
+        return string.Join("\n\n", selectedBlocks);
+    }
+
+    private static string BuildAppendixPayloadForRuleGeneration(string appendixText)
+    {
+        if (string.IsNullOrWhiteSpace(appendixText))
+        {
+            return string.Empty;
+        }
+
+        const int maxLength = 260_000;
+        if (appendixText.Length <= maxLength)
+        {
+            return appendixText;
+        }
+
+        var normalized = appendixText.Replace("\r\n", "\n", StringComparison.Ordinal);
+        var blocks = normalized
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(CompressWhitespace)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        if (blocks.Count == 0)
+        {
+            return TrimForModel(appendixText, maxLength);
+        }
+
+        var selected = new List<string>();
+        var selectedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var block in blocks)
+        {
+            if (!ContainsImportantAppendixSignal(block))
+            {
+                continue;
+            }
+
+            if (selectedSet.Add(block))
+            {
+                selected.Add(block);
+            }
+        }
+
+        var head = TrimForModel(appendixText, 90_000);
+        var tail = appendixText.Length <= 90_000 ? appendixText : appendixText[^90_000..];
+        var enriched = $"{head}\n\n{string.Join("\n\n", selected.Take(400))}\n\n{tail}";
+        return TrimForModel(enriched, maxLength);
+    }
+
+    private static bool ContainsImportantAppendixSignal(string block)
+    {
+        if (block.Length < 16)
+        {
+            return false;
+        }
+
+        return block.Contains("requirement", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("check", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("paragraph", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("guideline", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("reference", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("part ", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("ipo", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("utf", StringComparison.OrdinalIgnoreCase)
+               || block.Contains("urg", StringComparison.OrdinalIgnoreCase)
+               || ReferenceTokenRegex.IsMatch(block);
+    }
+
+    private static string BuildGuideReferenceForAssessment(
+        ComplianceRule rule,
+        IReadOnlyDictionary<Guid, string>? ruleGuideContexts)
+    {
+        if (ruleGuideContexts is null || !ruleGuideContexts.TryGetValue(rule.Id, out var context) || string.IsNullOrWhiteSpace(context))
+        {
+            return rule.Reference;
+        }
+
+        var compressed = CompressWhitespace(context);
+        const int maxLength = 420;
+        if (compressed.Length <= maxLength)
+        {
+            return $"{rule.Reference} | Context: {compressed}";
+        }
+
+        return $"{rule.Reference} | Context: {compressed[..maxLength]}...";
+    }
+
+    private static string ResolveRuleGuideContext(
+        ComplianceRule rule,
+        IReadOnlyDictionary<Guid, string>? ruleGuideContexts)
+    {
+        if (ruleGuideContexts is null || !ruleGuideContexts.TryGetValue(rule.Id, out var context))
+        {
+            return string.Empty;
+        }
+
+        return context;
+    }
+
+    private static string NormalizeReference(string? reference, string requirementText, string? title)
+    {
+        if (!string.IsNullOrWhiteSpace(reference))
+        {
+            return CompressWhitespace(reference);
+        }
+
+        var source = $"{title} {requirementText}";
+        var tokens = ExtractReferenceTokens(source);
+        if (tokens.Count == 0)
+        {
+            return "Appendix";
+        }
+
+        return string.Join(", ", tokens.Take(4));
+    }
+
+    public static IReadOnlyDictionary<Guid, string> BuildGuideContextMap(
+        string guideText,
+        IReadOnlyCollection<ComplianceRule> rules)
+    {
+        var output = new Dictionary<Guid, string>();
+        if (string.IsNullOrWhiteSpace(guideText) || rules.Count == 0)
+        {
+            return output;
+        }
+
+        foreach (var rule in rules)
+        {
+            var references = ExtractReferenceTokens($"{rule.Reference} {rule.RequirementText}");
+            if (references.Count == 0)
+            {
+                continue;
+            }
+
+            var blocks = ExtractGuideBlocksByReferences(guideText, references);
+            if (blocks.Count == 0)
+            {
+                continue;
+            }
+
+            output[rule.Id] = string.Join("\n\n", blocks.Take(3));
+        }
+
+        return output;
+    }
+
+    private static List<string> ExtractReferenceTokens(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return [];
+        }
+
+        var tokens = ReferenceTokenRegex.Matches(text)
+            .Select(x => CompressWhitespace(x.Value))
+            .Where(x => x.Length >= 3)
+            .Select(x => x.Trim(',', ';', ':', '.'))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return tokens;
+    }
+
+    private static List<string> ExtractGuideBlocksByReferences(string guideText, IReadOnlyCollection<string> references)
+    {
+        var blocks = SplitGuideIntoBlocks(guideText);
+        var selected = new List<string>();
+        var selectedSet = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var reference in references)
+        {
+            foreach (var block in blocks)
+            {
+                if (!block.Contains(reference, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (selectedSet.Add(block))
+                {
+                    selected.Add(block);
+                }
+            }
+        }
+
+        return selected;
+    }
+
+    private static List<string> SplitGuideIntoBlocks(string guideText)
+    {
+        var normalized = guideText.Replace("\r\n", "\n", StringComparison.Ordinal);
+        var sections = normalized
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(CompressWhitespace)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        if (sections.Count == 0)
+        {
+            return [];
+        }
+
+        // Document Intelligence output can produce small chunks; merge tiny fragments.
+        var merged = new List<string>();
+        foreach (var section in sections)
+        {
+            if (merged.Count == 0)
+            {
+                merged.Add(section);
+                continue;
+            }
+
+            if (section.Length < 90)
+            {
+                merged[^1] = $"{merged[^1]} {section}";
+            }
+            else
+            {
+                merged.Add(section);
+            }
+        }
+
+        return merged;
+    }
+
+    private static string CompressWhitespace(string value)
+    {
+        return Regex.Replace(value, @"\s+", " ").Trim();
     }
 
     private sealed class RuleGenerationPayload
