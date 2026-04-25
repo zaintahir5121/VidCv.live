@@ -1,0 +1,19 @@
+<svg width="420" height="84" viewBox="0 0 420 84" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AG ONE Compliance logo">
+  <defs>
+    <linearGradient id="agGrad" x1="18" y1="12" x2="94" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2EA9FF"/>
+      <stop offset="1" stop-color="#0F7DFF"/>
+    </linearGradient>
+    <linearGradient id="oneGrad" x1="108" y1="16" x2="225" y2="62" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#39B4FF"/>
+      <stop offset="1" stop-color="#1C8FFF"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M18 63L37 24H55L36 63H18Z" fill="url(#agGrad)"/>
+  <path d="M44 63V51L60 35H79L63 51H74V63H44Z" fill="url(#agGrad)"/>
+  <path d="M79 24H97V63H79V24Z" fill="url(#agGrad)"/>
+
+  <text x="108" y="56" fill="url(#oneGrad)" font-family="Segoe UI, Arial, sans-serif" font-size="50" font-weight="800" letter-spacing="0.5">ONE</text>
+  <text x="248" y="56" fill="#D6E2FF" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="0.4">Compliance</text>
+</svg>

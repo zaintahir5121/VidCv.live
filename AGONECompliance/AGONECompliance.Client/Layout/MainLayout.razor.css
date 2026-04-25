@@ -34,6 +34,12 @@ main {
     letter-spacing: 0.2px;
 }
 
+.header-brand {
+    height: 2rem;
+    width: auto;
+    display: block;
+}
+
 .header-subtext {
     color: #6a75a5;
     font-size: 0.82rem;
