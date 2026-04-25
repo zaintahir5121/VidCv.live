@@ -55,117 +55,184 @@
   z-index: 2147483000;
   border: 0;
   border-radius: 999px;
-  width: 56px;
-  height: 56px;
-  color: #fff;
-  font-weight: 700;
+  width: 76px;
+  height: 76px;
+  padding: 0;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(71,121,247,0.35);
-  background: linear-gradient(135deg, #4779F7 0%, #6C3AED 100%);
+  background: transparent;
+}
+.agone-experion-launcher:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+.agone-experion-orb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 28% 20%, #54d0ff 0%, #4779F7 36%, #6C3AED 70%, #8f42ff 100%);
+  box-shadow: 0 12px 38px rgba(57, 111, 255, 0.45), 0 0 22px rgba(88, 176, 255, 0.55);
+  animation: agoneOrbPulse 2.8s ease-in-out infinite;
+}
+@keyframes agoneOrbPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 12px 38px rgba(57, 111, 255, 0.45), 0 0 22px rgba(88, 176, 255, 0.55); }
+  50% { transform: scale(1.04); box-shadow: 0 18px 44px rgba(108, 58, 237, 0.48), 0 0 30px rgba(88, 176, 255, 0.65); }
+}
+.agone-experion-eye {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f8fdff;
+  margin: 0 5px;
+  box-shadow: 0 0 14px rgba(255,255,255,0.9);
 }
 .agone-experion-panel {
   position: fixed;
   right: 20px;
-  bottom: 88px;
-  width: 360px;
+  bottom: 104px;
+  width: 410px;
   max-width: calc(100vw - 24px);
-  height: 520px;
-  max-height: calc(100vh - 120px);
-  border-radius: 14px;
-  background: #fff;
-  color: #111827;
-  box-shadow: 0 14px 38px rgba(15, 23, 42, 0.22);
+  height: 560px;
+  max-height: calc(100vh - 110px);
+  border-radius: 22px;
+  color: #e8eeff;
+  box-shadow: 0 24px 70px rgba(8, 12, 28, 0.46), 0 0 42px rgba(76, 112, 255, 0.28);
   z-index: 2147483000;
   display: none;
+  flex-direction: column;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(14px);
+  background: linear-gradient(160deg, rgba(17, 24, 39, 0.88) 0%, rgba(39, 34, 92, 0.82) 52%, rgba(76, 37, 141, 0.76) 100%);
 }
 .agone-experion-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  color: #fff;
-  background: linear-gradient(135deg, #4779F7 0%, #6C3AED 100%);
+  gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.agone-experion-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.agone-experion-brand-orb {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 28% 20%, #7de3ff 0%, #5a8bff 45%, #7a4aff 100%);
+  box-shadow: 0 0 16px rgba(108, 58, 237, 0.6);
 }
 .agone-experion-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.agone-experion-subtitle {
+  font-size: 11px;
+  color: rgba(224,231,255,0.78);
+  margin-top: 2px;
 }
 .agone-experion-close {
   border: none;
-  background: rgba(255,255,255,0.18);
-  color: #fff;
-  border-radius: 8px;
-  width: 30px;
-  height: 30px;
+  background: rgba(255,255,255,0.12);
+  color: #f8faff;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
+  font-size: 16px;
 }
 .agone-experion-status {
+  font-size: 11px;
+  color: #c8d4ff;
+  padding: 9px 16px 0;
+}
+.agone-experion-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 8px 14px 10px;
+}
+.agone-experion-chip {
+  border: 1px solid rgba(183, 198, 255, 0.35);
+  color: #dfe7ff;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  padding: 7px 11px;
   font-size: 12px;
-  color: #475569;
-  padding: 8px 14px;
-  border-bottom: 1px solid #eef2f7;
+  line-height: 1;
+  cursor: pointer;
+}
+.agone-experion-chip:hover {
+  background: rgba(116, 141, 255, 0.24);
 }
 .agone-experion-messages {
-  padding: 12px 14px;
-  height: calc(100% - 160px);
+  padding: 8px 14px 12px;
   overflow: auto;
-  background: #f8fafc;
+  flex: 1 1 auto;
 }
 .agone-experion-msg {
   font-size: 13px;
-  line-height: 1.35;
-  padding: 10px 11px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  max-width: 85%;
+  line-height: 1.43;
+  padding: 10px 12px;
+  border-radius: 13px;
+  margin-bottom: 10px;
+  max-width: 88%;
   white-space: pre-wrap;
 }
 .agone-experion-msg.user {
   margin-left: auto;
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: linear-gradient(135deg, rgba(80,127,255,0.85) 0%, rgba(122,74,255,0.92) 100%);
+  border: 1px solid rgba(171, 191, 255, 0.28);
+  color: #f3f7ff;
 }
 .agone-experion-msg.bot {
   margin-right: auto;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  color: #0f172a;
+  background: rgba(255,255,255,0.11);
+  border: 1px solid rgba(193, 205, 255, 0.2);
+  color: #eaf0ff;
 }
 .agone-experion-input-wrap {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
   display: flex;
   gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid #e5e7eb;
-  background: #fff;
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 .agone-experion-input {
   flex: 1;
   min-width: 0;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 9px 10px;
+  border: 1px solid rgba(180, 199, 255, 0.3);
+  border-radius: 12px;
+  padding: 10px 12px;
   font-size: 13px;
+  background: rgba(7, 14, 36, 0.62);
+  color: #edf3ff;
+}
+.agone-experion-input::placeholder {
+  color: rgba(211, 223, 255, 0.6);
 }
 .agone-experion-send {
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   color: #fff;
-  padding: 9px 12px;
+  min-width: 56px;
+  padding: 10px 12px;
   cursor: pointer;
-  background: linear-gradient(135deg, #4779F7 0%, #6C3AED 100%);
+  font-weight: 600;
+  background: linear-gradient(135deg, #4a89ff 0%, #6C3AED 100%);
 }
 .agone-experion-highlight {
   position: fixed;
   z-index: 2147482990;
-  border: 2px solid #6C3AED;
-  border-radius: 14px;
-  box-shadow: 0 0 0 9999px rgba(108,58,237,0.08), 0 0 0 4px rgba(71,121,247,0.20);
+  border: 2px solid rgba(114, 137, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(96, 70, 188, 0.12), 0 0 0 4px rgba(107, 171, 255, 0.22);
   pointer-events: none;
 }
 `;
