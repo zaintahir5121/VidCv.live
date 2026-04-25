@@ -76,11 +76,13 @@ public static class DataSeeder
                     SystemPrompt =
                         "You are an intelligent assistant that extracts compliance checks from an appendix requirement document. " +
                         "Classify each extracted item using: category = Info or Requirement, and action_party = Onsite, Management, or None (None only when category is Info). " +
-                        "If requirement references multiple sections and context exists, provide the full requirement text instead of partial quotes. " +
-                        "Return only a valid JSON array.",
+                        "Requirement text must be copied exactly from appendix wording with only whitespace/line-break normalization. " +
+                        "Do not rewrite, summarize, infer, or expand requirement meaning. Return only a valid JSON array.",
                     UserPromptFormat =
                         "Appendix Text:\n{{appendix_text}}\n\n" +
                         "Extract checks from Appendix Text only. Do not use Guide text for rule extraction.\n" +
+                        "Requirement extraction rule: requirementText must stay exactly the same as appendix content (only fix line breaks/spaces).\n" +
+                        "Do NOT add generated context or inferred requirements.\n" +
                         "Use this exact classification rubric:\n" +
                         "Category = Info or Requirement.\n" +
                         "Action Party = Onsite or Management; if Category is Info set Action Party to None.\n" +
@@ -88,7 +90,6 @@ public static class DataSeeder
                         "Requirement includes explicit obligations/actions that shall be complied.\n" +
                         "Onsite includes physical/skilled workplace execution actions.\n" +
                         "Management includes documentation/notification/filing/reporting obligations.\n" +
-                        "If requirement references multiple sections and context is available, provide full requirement text.\n" +
                         "Return JSON array items with fields: code, title, reference, requirementText, classificationCategory, actionParty.\n" +
                         "Allowed values:\n" +
                         "- classificationCategory: Info | Requirement\n" +

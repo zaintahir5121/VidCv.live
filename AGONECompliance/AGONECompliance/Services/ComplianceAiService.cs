@@ -19,6 +19,9 @@ public sealed class ComplianceAiService(
     ILogger<ComplianceAiService> logger) : IComplianceAiService
 {
     private readonly AzureOptions _options = azureOptions.Value;
+    private const int RuleGenerationChunkLength = 120_000;
+    private const int RuleGenerationChunkOverlap = 6_000;
+    private const int MaxRuleGenerationChunks = 6;
     private static readonly Regex ReferenceTokenRegex = new(
         @"(?:(?:part|pg|paragraph)\s*[a-z0-9\.\-]+)|(?:\d+\.\d+(?:\([a-z0-9]+\))?)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -37,26 +40,38 @@ public sealed class ComplianceAiService(
             return FallbackRules();
         }
 
-        var appendixPayloadForPrompt = BuildAppendixPayloadForRuleGeneration(appendixText);
-        var userPrompt = template.UserPromptFormat
-            .Replace("{{appendix_text}}", appendixPayloadForPrompt);
-        userPrompt +=
-            "\n\nAdditional extraction constraints:\n" +
-            "1) Appendix is the primary source of truth for checks and requirements.\n" +
-            "2) Do not skip any appendix regime/section (including IPO, UTF, URG, and similarly named sections).\n" +
-            "3) If a row references guide paragraphs/parts (for example 1.09 Part B), keep that reference in 'reference'.\n" +
-            "4) If requirement sentence is split across lines/table cells, merge into one coherent requirementText.\n" +
-            "5) Return as many valid rules as present in the appendix content; do not compress multiple independent checks into one rule.";
+        var chunks = BuildAppendixChunksForRuleGeneration(appendixText);
+        var parsedItems = new List<RuleGenerationPayload>();
+        foreach (var chunk in chunks)
+        {
+            var userPrompt = template.UserPromptFormat
+                .Replace("{{appendix_text}}", chunk);
+            userPrompt +=
+                "\n\nAdditional extraction constraints:\n" +
+                "1) Appendix is the only source of truth for checks and requirements.\n" +
+                "2) requirementText MUST be copied verbatim from Appendix text (normalize only whitespace/newlines).\n" +
+                "3) Never paraphrase, summarize, or infer missing words for requirementText.\n" +
+                "4) If a row references guide paragraphs/parts (for example 1.09 Part B), keep that reference in 'reference'.\n" +
+                "5) Do not skip any appendix regime/section (including IPO, UTF, URG, and similarly named sections).\n" +
+                "6) Return all independent rules/checks found in this chunk.";
 
-        var json = await CallAzureOpenAiAsync(template.SystemPrompt, userPrompt, cancellationToken);
-        var parsed = TryDeserializeCollection<RuleGenerationPayload>(json);
-        if (parsed is null || parsed.Count == 0)
+            var json = await CallAzureOpenAiAsync(template.SystemPrompt, userPrompt, cancellationToken);
+            var parsedChunk = TryDeserializeCollection<RuleGenerationPayload>(json);
+            if (parsedChunk is null || parsedChunk.Count == 0)
+            {
+                continue;
+            }
+
+            parsedItems.AddRange(parsedChunk);
+        }
+
+        if (parsedItems.Count == 0)
         {
             logger.LogWarning("AI rule generation returned no structured rules. Using fallback rules.");
             return FallbackRules();
         }
 
-        return parsed
+        var rules = parsedItems
             .Select((x, index) => new { Item = x, Index = index })
             .Where(x => !string.IsNullOrWhiteSpace(GetRequirementText(x.Item)))
             .Select(x => new ComplianceRule
@@ -67,12 +82,14 @@ public sealed class ComplianceAiService(
                     x.Item.Reference?.Trim(),
                     GetRequirementText(x.Item),
                     x.Item.Title),
-                RequirementText = GetRequirementText(x.Item),
+                RequirementText = NormalizeAppendixRequirementText(GetRequirementText(x.Item)),
                 ClassificationCategory = NormalizeClassificationCategory(GetCategory(x.Item)),
                 ActionParty = NormalizeActionParty(GetActionParty(x.Item), GetCategory(x.Item)),
                 IsActive = true
             })
             .ToList();
+
+        return DeduplicateRulesPreservingRequirementText(rules);
     }
 
     public async Task<List<RuleAssessment>> EvaluateProspectusAsync(
@@ -551,69 +568,83 @@ public sealed class ComplianceAiService(
             : $"{requirementText[..maxTitleLength]}...";
     }
 
-    private static string BuildAppendixPayloadForRuleGeneration(string appendixText)
+    private static IReadOnlyList<string> BuildAppendixChunksForRuleGeneration(string appendixText)
     {
         if (string.IsNullOrWhiteSpace(appendixText))
+        {
+            return [];
+        }
+
+        if (appendixText.Length <= RuleGenerationChunkLength)
+        {
+            return [appendixText];
+        }
+
+        var chunks = new List<string>();
+        var start = 0;
+        while (start < appendixText.Length && chunks.Count < MaxRuleGenerationChunks)
+        {
+            var remaining = appendixText.Length - start;
+            var length = Math.Min(RuleGenerationChunkLength, remaining);
+            var segment = appendixText.Substring(start, length);
+            chunks.Add(segment);
+
+            if (start + length >= appendixText.Length)
+            {
+                break;
+            }
+
+            start += RuleGenerationChunkLength - RuleGenerationChunkOverlap;
+            if (start < 0)
+            {
+                break;
+            }
+        }
+
+        if (chunks.Count == 0)
+        {
+            chunks.Add(appendixText);
+        }
+
+        return chunks;
+    }
+
+    private static string NormalizeAppendixRequirementText(string requirementText)
+    {
+        if (string.IsNullOrWhiteSpace(requirementText))
         {
             return string.Empty;
         }
 
-        const int maxLength = 260_000;
-        if (appendixText.Length <= maxLength)
-        {
-            return appendixText;
-        }
+        var normalized = requirementText.Replace("\r\n", "\n", StringComparison.Ordinal);
+        normalized = Regex.Replace(normalized, @"[ \t]+", " ");
+        normalized = Regex.Replace(normalized, @"\n{3,}", "\n\n");
+        return normalized.Trim();
+    }
 
-        var normalized = appendixText.Replace("\r\n", "\n", StringComparison.Ordinal);
-        var blocks = normalized
-            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(CompressWhitespace)
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .ToList();
-
-        if (blocks.Count == 0)
+    private static List<ComplianceRule> DeduplicateRulesPreservingRequirementText(
+        IReadOnlyCollection<ComplianceRule> rules)
+    {
+        var output = new List<ComplianceRule>();
+        var byRequirement = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rule in rules)
         {
-            return TrimForModel(appendixText, maxLength);
-        }
-
-        var selected = new List<string>();
-        var selectedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var block in blocks)
-        {
-            if (!ContainsImportantAppendixSignal(block))
+            var requirementKey = NormalizeAppendixRequirementText(rule.RequirementText);
+            if (string.IsNullOrWhiteSpace(requirementKey))
             {
                 continue;
             }
 
-            if (selectedSet.Add(block))
+            if (!byRequirement.Add(requirementKey))
             {
-                selected.Add(block);
+                continue;
             }
+
+            rule.RequirementText = requirementKey;
+            output.Add(rule);
         }
 
-        var head = TrimForModel(appendixText, 90_000);
-        var tail = appendixText.Length <= 90_000 ? appendixText : appendixText[^90_000..];
-        var enriched = $"{head}\n\n{string.Join("\n\n", selected.Take(400))}\n\n{tail}";
-        return TrimForModel(enriched, maxLength);
-    }
-
-    private static bool ContainsImportantAppendixSignal(string block)
-    {
-        if (block.Length < 16)
-        {
-            return false;
-        }
-
-        return block.Contains("requirement", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("check", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("paragraph", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("guideline", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("reference", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("part ", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("ipo", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("utf", StringComparison.OrdinalIgnoreCase)
-               || block.Contains("urg", StringComparison.OrdinalIgnoreCase)
-               || ReferenceTokenRegex.IsMatch(block);
+        return output;
     }
 
     private static string BuildGuideReferenceForAssessment(
