@@ -48,6 +48,13 @@
 
 <section class="module-card">
     <h2>Uploaded Documents</h2>
+    <PaginationBar CurrentPage="@documentsPage"
+                   TotalPages="@documentsTotalPages"
+                   TotalItems="@sortedDocuments.Count"
+                   PageSize="@PageSize"
+                   Label="Documents"
+                   OnPrevious="PreviousDocumentsPage"
+                   OnNext="NextDocumentsPage" />
     <div class="table-wrap">
         <table class="table doc-table">
             <thead>
@@ -68,7 +75,7 @@
             }
             else
             {
-                @foreach (var item in Portal.State.Documents.OrderByDescending(x => x.UploadedAtUtc))
+                @foreach (var item in PagedDocuments)
                 {
                     <tr>
                         <td>@item.Type</td>
@@ -88,10 +95,17 @@
 
 @code {
     private int inputKey;
+    private const int PageSize = 10;
+    private int documentsPage = 1;
+    private List<DocumentDto> sortedDocuments = [];
+    private int documentsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedDocuments.Count / (double)PageSize));
+    private IEnumerable<DocumentDto> PagedDocuments =>
+        sortedDocuments.Skip((documentsPage - 1) * PageSize).Take(PageSize);
 
     protected override async Task OnInitializedAsync()
     {
         await Portal.RefreshAllAsync();
+        RefreshDocumentPagination();
     }
 
     private async Task UploadAsync(DocumentType type, InputFileChangeEventArgs args)
@@ -103,5 +117,34 @@
 
         await Portal.UploadDocumentAsync(type, args.File);
         inputKey++;
+        RefreshDocumentPagination();
+    }
+
+    private void RefreshDocumentPagination()
+    {
+        sortedDocuments = Portal.State.Documents
+            .OrderByDescending(x => x.UploadedAtUtc)
+            .ToList();
+        documentsPage = Math.Clamp(documentsPage, 1, documentsTotalPages);
+    }
+
+    private Task PreviousDocumentsPage()
+    {
+        if (documentsPage > 1)
+        {
+            documentsPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextDocumentsPage()
+    {
+        if (documentsPage < documentsTotalPages)
+        {
+            documentsPage++;
+        }
+
+        return Task.CompletedTask;
     }
 }

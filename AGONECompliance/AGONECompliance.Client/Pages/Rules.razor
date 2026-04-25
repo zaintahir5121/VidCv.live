@@ -42,7 +42,7 @@
     </div>
     <div class="row-actions">
         <button class="btn btn-gradient"
-                @onclick="Portal.GenerateRulesAsync"
+                @onclick="GenerateRulesAsync"
                 disabled="@(Portal.IsBusy || Portal.State.SelectedEvaluationWorkspaceId is null)">
             Queue Rule Generation
         </button>
@@ -65,6 +65,13 @@
             <span class="pill pill-neutral">None @CountByActionParty("None")</span>
         </div>
     }
+    <PaginationBar CurrentPage="@rulesPage"
+                   TotalPages="@rulesTotalPages"
+                   TotalItems="@sortedRules.Count"
+                   PageSize="@PageSize"
+                   Label="Rules"
+                   OnPrevious="PreviousRulesPage"
+                   OnNext="NextRulesPage" />
     <div class="table-wrap">
         <table class="table rule-table">
             <thead>
@@ -85,7 +92,7 @@
             }
             else
             {
-                @foreach (var rule in Portal.State.Rules.OrderBy(x => x.Code))
+                @foreach (var rule in PagedRules)
                 {
                     <tr>
                         <td>
@@ -115,6 +122,13 @@
 </section>
 
 @code {
+    private const int PageSize = 10;
+    private int rulesPage = 1;
+    private List<ComplianceRuleDto> sortedRules = [];
+    private int rulesTotalPages => Math.Max(1, (int)Math.Ceiling(sortedRules.Count / (double)PageSize));
+    private IEnumerable<ComplianceRuleDto> PagedRules =>
+        sortedRules.Skip((rulesPage - 1) * PageSize).Take(PageSize);
+
     private EvaluationWorkspaceDto? ActiveWorkspace =>
         Portal.State.Workspaces.FirstOrDefault(x => x.Id == Portal.State.SelectedEvaluationWorkspaceId);
 
@@ -126,6 +140,13 @@
     protected override async Task OnInitializedAsync()
     {
         await Portal.RefreshAllAsync();
+        RefreshRulesPagination();
+    }
+
+    private async Task GenerateRulesAsync()
+    {
+        await Portal.GenerateRulesAsync();
+        RefreshRulesPagination();
     }
 
     private int CountByCategory(string category)
@@ -136,6 +157,34 @@
     private int CountByActionParty(string actionParty)
     {
         return Portal.State.Rules.Count(x => string.Equals(x.ActionParty, actionParty, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void RefreshRulesPagination()
+    {
+        sortedRules = Portal.State.Rules
+            .OrderBy(x => x.Code)
+            .ToList();
+        rulesPage = Math.Clamp(rulesPage, 1, rulesTotalPages);
+    }
+
+    private Task PreviousRulesPage()
+    {
+        if (rulesPage > 1)
+        {
+            rulesPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextRulesPage()
+    {
+        if (rulesPage < rulesTotalPages)
+        {
+            rulesPage++;
+        }
+
+        return Task.CompletedTask;
     }
 
     private static string GetCategoryClass(string category)

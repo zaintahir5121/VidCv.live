@@ -238,6 +238,14 @@ h1:focus {
     overflow-x: auto;
 }
 
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-bottom: 0.65rem;
+}
+
 .rule-table th,
 .result-table th,
 .doc-table th {

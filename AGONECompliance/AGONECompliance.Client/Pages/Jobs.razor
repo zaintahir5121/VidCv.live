@@ -47,6 +47,13 @@
 
 <section class="module-card">
     <h2>Recent Jobs</h2>
+    <PaginationBar CurrentPage="@jobsPage"
+                   TotalPages="@jobsTotalPages"
+                   TotalItems="@sortedJobs.Count"
+                   PageSize="@PageSize"
+                   Label="Jobs"
+                   OnPrevious="PreviousJobsPage"
+                   OnNext="NextJobsPage" />
     <div class="table-wrap">
         <table class="table result-table">
             <thead>
@@ -67,7 +74,7 @@
             }
             else
             {
-                @foreach (var job in Portal.State.BackgroundJobs.OrderByDescending(x => x.CreatedAtUtc).Take(100))
+                @foreach (var job in PagedJobs)
                 {
                     <tr>
                         <td>@job.JobType</td>
@@ -86,14 +93,51 @@
 </section>
 
 @code {
+    private const int PageSize = 10;
+    private int jobsPage = 1;
+    private List<BackgroundJobDto> sortedJobs = [];
+    private int jobsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedJobs.Count / (double)PageSize));
+    private IEnumerable<BackgroundJobDto> PagedJobs =>
+        sortedJobs.Skip((jobsPage - 1) * PageSize).Take(PageSize);
+
     protected override async Task OnInitializedAsync()
     {
         await Portal.RefreshAllAsync();
+        RefreshJobsPagination();
     }
 
     private async Task RefreshJobsAsync()
     {
         await Portal.RefreshAllAsync();
+        RefreshJobsPagination();
+    }
+
+    private void RefreshJobsPagination()
+    {
+        sortedJobs = Portal.State.BackgroundJobs
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToList();
+        jobsPage = Math.Clamp(jobsPage, 1, jobsTotalPages);
+    }
+
+    private Task PreviousJobsPage()
+    {
+        if (jobsPage > 1)
+        {
+            jobsPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextJobsPage()
+    {
+        if (jobsPage < jobsTotalPages)
+        {
+            jobsPage++;
+        }
+
+        return Task.CompletedTask;
     }
 
     private static string GetStatusClass(string status) => status.ToLowerInvariant() switch

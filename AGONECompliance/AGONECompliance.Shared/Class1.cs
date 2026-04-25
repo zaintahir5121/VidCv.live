@@ -120,6 +120,11 @@ public sealed class ComplianceReportDto
 {
     public Guid EvaluationWorkspaceId { get; set; }
     public Guid EvaluationRunId { get; set; }
+    public string WorkspaceName { get; set; } = string.Empty;
+    public string RunLabel { get; set; } = string.Empty;
+    public string HeaderTitle { get; set; } = "AG ONE Compliance Evaluation Report";
+    public string FooterText { get; set; } = "Aventra Group";
+    public DateTimeOffset GeneratedAtUtc { get; set; } = DateTimeOffset.UtcNow;
     public int TotalRules { get; set; }
     public int CompliantCount { get; set; }
     public int NonCompliantCount { get; set; }

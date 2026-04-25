@@ -55,7 +55,7 @@
         <button class="btn btn-light" @onclick="Portal.SelectAllRules">Select All Checks</button>
         <button class="btn btn-light" @onclick="Portal.ClearRuleSelection">Clear Checks</button>
         <button class="btn btn-gradient"
-                @onclick="Portal.StartEvaluationAsync"
+                @onclick="StartEvaluationAsync"
                 disabled="@(Portal.State.SelectedEvaluationWorkspaceId is null || Portal.IsBusy || Portal.State.SelectedProspectusDocumentId is null || Portal.State.SelectedRuleIds.Count == 0)">
             Start Evaluation
         </button>
@@ -65,6 +65,13 @@
 
 <section class="module-card">
     <h2>Step 2: Choose Checks</h2>
+    <PaginationBar CurrentPage="@checksPage"
+                   TotalPages="@checksTotalPages"
+                   TotalItems="@activeRules.Count"
+                   PageSize="@PageSize"
+                   Label="Checks"
+                   OnPrevious="PreviousChecksPage"
+                   OnNext="NextChecksPage" />
     <div class="table-wrap">
         <table class="table rule-table">
             <thead>
@@ -84,7 +91,7 @@
             }
             else
             {
-                @foreach (var rule in Portal.State.Rules.Where(x => x.IsActive).OrderBy(x => x.Code))
+                @foreach (var rule in PagedActiveRules)
                 {
                     <tr>
                         <td>
@@ -113,13 +120,20 @@
         <h2>Evaluation Runs</h2>
         <a class="btn btn-light" href="/jobs">Open Jobs Monitoring</a>
     </div>
+    <PaginationBar CurrentPage="@runsPage"
+                   TotalPages="@runsTotalPages"
+                   TotalItems="@sortedRuns.Count"
+                   PageSize="@PageSize"
+                   Label="Runs"
+                   OnPrevious="PreviousRunsPage"
+                   OnNext="NextRunsPage" />
     @if (Portal.State.Runs.Count == 0)
     {
         <p class="empty-state">No runs yet. Start your first evaluation above.</p>
     }
     else
     {
-        @foreach (var run in Portal.State.Runs.OrderByDescending(x => x.CreatedAtUtc))
+        @foreach (var run in PagedRuns)
         {
             <div class="run-card">
                 <div class="run-head">
@@ -141,6 +155,13 @@
 
                 @if (run.Results.Count > 0)
                 {
+                    <PaginationBar CurrentPage="@GetResultPage(run.Id)"
+                                   TotalPages="@GetResultTotalPages(run.Id)"
+                                   TotalItems="@run.Results.Count"
+                                   PageSize="@PageSize"
+                                   Label="@($"Results for {run.Id.ToString("N")[..8]}")"
+                                   OnPrevious="@(() => PreviousRunResultPage(run.Id))"
+                                   OnNext="@(() => NextRunResultPage(run.Id))" />
                     <div class="table-wrap">
                         <table class="table result-table">
                             <thead>
@@ -157,7 +178,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach (var result in run.Results)
+                            @foreach (var result in GetPagedResults(run))
                             {
                                 <tr>
                                     <td>
@@ -215,9 +236,53 @@
 }
 
 @code {
+    private const int PageSize = 10;
+    private int checksPage = 1;
+    private int runsPage = 1;
+    private List<ComplianceRuleDto> activeRules = [];
+    private List<EvaluationRunDto> sortedRuns = [];
+    private readonly Dictionary<Guid, int> runResultPages = new();
+    private int checksTotalPages => Math.Max(1, (int)Math.Ceiling(activeRules.Count / (double)PageSize));
+    private int runsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedRuns.Count / (double)PageSize));
+    private IEnumerable<ComplianceRuleDto> PagedActiveRules =>
+        activeRules.Skip((checksPage - 1) * PageSize).Take(PageSize);
+    private IEnumerable<EvaluationRunDto> PagedRuns =>
+        sortedRuns.Skip((runsPage - 1) * PageSize).Take(PageSize);
+
     protected override async Task OnInitializedAsync()
     {
         await Portal.RefreshAllAsync();
+        RefreshPaginationState();
+    }
+
+    private async Task StartEvaluationAsync()
+    {
+        await Portal.StartEvaluationAsync();
+        RefreshPaginationState();
+    }
+
+    private void RefreshPaginationState()
+    {
+        activeRules = Portal.State.Rules
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.Code)
+            .ToList();
+        sortedRuns = Portal.State.Runs
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToList();
+
+        checksPage = Math.Clamp(checksPage, 1, checksTotalPages);
+        runsPage = Math.Clamp(runsPage, 1, runsTotalPages);
+
+        foreach (var run in sortedRuns)
+        {
+            if (!runResultPages.ContainsKey(run.Id))
+            {
+                runResultPages[run.Id] = 1;
+            }
+
+            runResultPages[run.Id] = Math.Clamp(runResultPages[run.Id], 1, GetResultTotalPages(run.Id));
+        }
     }
 
     private string PdfUrl(Guid runId)
@@ -228,6 +293,99 @@
         }
 
         return $"api/evaluations/{runId}/report/pdf?evaluationWorkspaceId={Portal.State.SelectedEvaluationWorkspaceId.Value}";
+    }
+
+    private Task PreviousChecksPage()
+    {
+        if (checksPage > 1)
+        {
+            checksPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextChecksPage()
+    {
+        if (checksPage < checksTotalPages)
+        {
+            checksPage++;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task PreviousRunsPage()
+    {
+        if (runsPage > 1)
+        {
+            runsPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextRunsPage()
+    {
+        if (runsPage < runsTotalPages)
+        {
+            runsPage++;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private int GetResultPage(Guid runId)
+    {
+        if (!runResultPages.TryGetValue(runId, out var page))
+        {
+            page = 1;
+            runResultPages[runId] = page;
+        }
+
+        return page;
+    }
+
+    private int GetResultTotalPages(Guid runId)
+    {
+        var run = sortedRuns.FirstOrDefault(x => x.Id == runId);
+        if (run is null || run.Results.Count == 0)
+        {
+            return 1;
+        }
+
+        return Math.Max(1, (int)Math.Ceiling(run.Results.Count / (double)PageSize));
+    }
+
+    private IEnumerable<EvaluationResultItemDto> GetPagedResults(EvaluationRunDto run)
+    {
+        var page = GetResultPage(run.Id);
+        return run.Results
+            .Skip((page - 1) * PageSize)
+            .Take(PageSize);
+    }
+
+    private Task PreviousRunResultPage(Guid runId)
+    {
+        var page = GetResultPage(runId);
+        if (page > 1)
+        {
+            runResultPages[runId] = page - 1;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextRunResultPage(Guid runId)
+    {
+        var page = GetResultPage(runId);
+        var totalPages = GetResultTotalPages(runId);
+        if (page < totalPages)
+        {
+            runResultPages[runId] = page + 1;
+        }
+
+        return Task.CompletedTask;
     }
 
     private static string GetStatusClass(string status) => status.ToLowerInvariant() switch

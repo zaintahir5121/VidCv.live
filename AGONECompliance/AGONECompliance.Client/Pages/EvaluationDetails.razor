@@ -44,6 +44,13 @@
         }
         else
         {
+            <PaginationBar CurrentPage="@resultsPage"
+                           TotalPages="@resultsTotalPages"
+                           TotalItems="@sortedResults.Count"
+                           PageSize="@PageSize"
+                           Label="Evaluation results"
+                           OnPrevious="PreviousResultsPage"
+                           OnNext="NextResultsPage" />
             <div class="table-wrap">
                 <table class="table result-table">
                     <thead>
@@ -60,7 +67,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var result in run.Results)
+                    @foreach (var result in PagedResults)
                     {
                         <tr>
                             <td>
@@ -80,7 +87,7 @@
                                 }
                                 else
                                 {
-                                    @result.GuideReference
+                                    @(string.IsNullOrWhiteSpace(result.GuideReference) ? "-" : result.GuideReference)
                                 }
                             </td>
                             <td><span class="@($"pill {GetResultClass(result.Status)}")">@result.Status</span></td>
@@ -106,6 +113,12 @@
 @code {
     [Parameter] public string RunKey { get; set; } = string.Empty;
 
+    private const int PageSize = 10;
+    private int resultsPage = 1;
+    private List<EvaluationResultItemDto> sortedResults = [];
+    private int resultsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedResults.Count / (double)PageSize));
+    private IEnumerable<EvaluationResultItemDto> PagedResults =>
+        sortedResults.Skip((resultsPage - 1) * PageSize).Take(PageSize);
     private EvaluationRunDto? run;
     private bool isLoaded;
 
@@ -117,6 +130,8 @@
 
         if (Portal.State.SelectedEvaluationWorkspaceId is null || string.IsNullOrWhiteSpace(RunKey))
         {
+            sortedResults = [];
+            resultsPage = 1;
             isLoaded = true;
             return;
         }
@@ -138,7 +153,29 @@
             }
         }
 
+        sortedResults = run?.Results.ToList() ?? [];
+        resultsPage = Math.Clamp(resultsPage, 1, resultsTotalPages);
         isLoaded = true;
+    }
+
+    private Task PreviousResultsPage()
+    {
+        if (resultsPage > 1)
+        {
+            resultsPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextResultsPage()
+    {
+        if (resultsPage < resultsTotalPages)
+        {
+            resultsPage++;
+        }
+
+        return Task.CompletedTask;
     }
 
     private static string GetStatusClass(string status) => status.ToLowerInvariant() switch
@@ -172,8 +209,15 @@
         _ => "pill-neutral"
     };
 
-    private static bool TrySplitGuideContext(string guideReference, out string referencePart, out string contextPart)
+    private static bool TrySplitGuideContext(string? guideReference, out string referencePart, out string contextPart)
     {
+        if (string.IsNullOrWhiteSpace(guideReference))
+        {
+            referencePart = "-";
+            contextPart = string.Empty;
+            return false;
+        }
+
         const string marker = "| Context:";
         var idx = guideReference.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
         if (idx <= 0)

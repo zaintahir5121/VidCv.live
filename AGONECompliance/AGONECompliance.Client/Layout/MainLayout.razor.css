@@ -34,10 +34,18 @@ main {
     letter-spacing: 0.2px;
 }
 
-.header-brand {
-    height: 2rem;
-    width: auto;
+.header-logo {
+    width: 184px;
+    height: 40px;
+    object-fit: contain;
     display: block;
+    flex-shrink: 0;
+}
+
+.header-block {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
 }
 
 .header-subtext {

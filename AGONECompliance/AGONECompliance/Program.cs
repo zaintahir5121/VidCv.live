@@ -24,7 +24,10 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient(nameof(ComplianceAiService), client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(15);
+});
 
 var sqlConnection = builder.Configuration.GetConnectionString("SqlServer");
 if (string.IsNullOrWhiteSpace(sqlConnection))

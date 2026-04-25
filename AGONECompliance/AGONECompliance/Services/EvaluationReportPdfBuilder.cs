@@ -26,12 +26,14 @@ public sealed class EvaluationReportPdfBuilder : IEvaluationReportPdfBuilder
 
                 page.Header().Column(header =>
                 {
-                    header.Item().Text("AGONE Compliance Evaluation Report")
+                    header.Item().Text(string.IsNullOrWhiteSpace(report.HeaderTitle)
+                            ? "AG ONE Compliance Evaluation Report"
+                            : report.HeaderTitle)
                         .FontSize(18)
                         .Bold();
                     header.Item().Text($"Workspace: {workspaceName}");
                     header.Item().Text($"Run: {runLabel}");
-                    header.Item().Text($"Generated (UTC): {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}");
+                    header.Item().Text($"Generated (UTC): {report.GeneratedAtUtc:yyyy-MM-dd HH:mm:ss}");
                 });
 
                 page.Content().Column(content =>
@@ -93,8 +95,9 @@ public sealed class EvaluationReportPdfBuilder : IEvaluationReportPdfBuilder
 
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("AGONECompliance");
+                    x.Span(string.IsNullOrWhiteSpace(report.FooterText) ? "Aventra Group" : report.FooterText);
                     x.Span(" · ");
+                    x.Span("Page ");
                     x.CurrentPageNumber();
                 });
             });

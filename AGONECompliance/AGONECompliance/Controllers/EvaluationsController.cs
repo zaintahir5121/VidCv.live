@@ -3,8 +3,6 @@ using AGONECompliance.Services;
 using AGONECompliance.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace AGONECompliance.Controllers;
@@ -13,7 +11,8 @@ namespace AGONECompliance.Controllers;
 [Route("api/[controller]")]
 public sealed class EvaluationsController(
     ComplianceDbContext dbContext,
-    IEvaluationOrchestrator orchestrator) : ControllerBase
+    IEvaluationOrchestrator orchestrator,
+    IEvaluationReportPdfBuilder reportPdfBuilder) : ControllerBase
 {
     static EvaluationsController()
     {
@@ -113,10 +112,22 @@ public sealed class EvaluationsController(
             return NotFound();
         }
 
+        var workspaceName = await dbContext.EvaluationWorkspaces
+            .Where(x => x.Id == evaluationWorkspaceId)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? "Unknown Workspace";
+        var generatedAtUtc = DateTimeOffset.UtcNow;
+
         return Ok(new ComplianceReportDto
         {
             EvaluationWorkspaceId = evaluationWorkspaceId,
             EvaluationRunId = dto.Id,
+            WorkspaceName = workspaceName,
+            RunLabel = dto.Id.ToString("N")[..8],
+            HeaderTitle = "AG ONE Compliance Evaluation Report",
+            FooterText = "Aventra Group",
+            GeneratedAtUtc = generatedAtUtc,
             TotalRules = dto.Results.Count,
             CompliantCount = dto.Results.Count(x => x.Status == ComplianceStatus.Compliant),
             NonCompliantCount = dto.Results.Count(x => x.Status == ComplianceStatus.NonCompliant),
@@ -125,6 +136,7 @@ public sealed class EvaluationsController(
         });
     }
 
+    [HttpGet("{id:guid}/report/pdf")]
     [HttpGet("{id:guid}/report-pdf")]
     public async Task<IActionResult> GetReportPdf(
         Guid id,
@@ -142,10 +154,22 @@ public sealed class EvaluationsController(
             return NotFound();
         }
 
+        var workspaceName = await dbContext.EvaluationWorkspaces
+            .Where(x => x.Id == evaluationWorkspaceId)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? "Unknown Workspace";
+        var generatedAtUtc = DateTimeOffset.UtcNow;
+        var runLabel = dto.Id.ToString("N")[..8];
         var report = new ComplianceReportDto
         {
             EvaluationWorkspaceId = evaluationWorkspaceId,
             EvaluationRunId = dto.Id,
+            WorkspaceName = workspaceName,
+            RunLabel = runLabel,
+            HeaderTitle = "AG ONE Compliance Evaluation Report",
+            FooterText = "Aventra Group",
+            GeneratedAtUtc = generatedAtUtc,
             TotalRules = dto.Results.Count,
             CompliantCount = dto.Results.Count(x => x.Status == ComplianceStatus.Compliant),
             NonCompliantCount = dto.Results.Count(x => x.Status == ComplianceStatus.NonCompliant),
@@ -153,53 +177,7 @@ public sealed class EvaluationsController(
             Items = dto.Results
         };
 
-        var document = Document.Create(container =>
-        {
-            container.Page(page =>
-            {
-                page.Margin(24);
-                page.Size(PageSizes.A4);
-                page.DefaultTextStyle(x => x.FontSize(9));
-
-                page.Header().Column(column =>
-                {
-                    column.Item().Text("AGONE Compliance Report").Bold().FontSize(16);
-                    column.Item().Text($"Workspace: {report.EvaluationWorkspaceId}");
-                    column.Item().Text($"Evaluation Run: {report.EvaluationRunId}");
-                    column.Item().Text($"Generated (UTC): {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss}");
-                });
-
-                page.Content().Column(column =>
-                {
-                    column.Spacing(8);
-                    column.Item().Text(
-                        $"Total: {report.TotalRules}  |  Compliant: {report.CompliantCount}  |  Non-Compliant: {report.NonCompliantCount}  |  Needs Review: {report.NeedsReviewCount}");
-
-                    foreach (var item in report.Items.OrderBy(x => x.RuleCode))
-                    {
-                        column.Item().Border(1).Padding(6).Column(card =>
-                        {
-                            card.Item().Text($"{item.RuleCode} - {item.RuleTitle}").Bold();
-                            card.Item().Text($"Category: {item.RuleCategory} | Action Party: {item.RuleActionParty} | Status: {item.Status}");
-                            card.Item().Text($"Guide Ref: {item.GuideReference}");
-                            card.Item().Text($"Reason: {item.Reason}");
-                            card.Item().Text($"Evidence Location: {item.EvidenceLocation}");
-                            if (!string.IsNullOrWhiteSpace(item.EvidenceLink))
-                            {
-                                card.Item().Text($"Evidence Link: {item.EvidenceLink}");
-                            }
-                            if (!string.IsNullOrWhiteSpace(item.EvidenceExcerpt))
-                            {
-                                card.Item().Text($"Evidence Excerpt: {item.EvidenceExcerpt}");
-                            }
-                            card.Item().Text($"Confidence: {Math.Round(item.ConfidenceScore * 100, 1)}%");
-                        });
-                    }
-                });
-            });
-        });
-
-        var bytes = document.GeneratePdf();
+        var bytes = reportPdfBuilder.Build(report, workspaceName, runLabel);
         return File(
             bytes,
             "application/pdf",

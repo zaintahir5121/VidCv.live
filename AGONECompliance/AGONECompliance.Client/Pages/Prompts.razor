@@ -19,7 +19,14 @@
     }
     else
     {
-        @foreach (var item in Portal.State.PromptTemplates.OrderBy(x => x.TemplateType).ThenByDescending(x => x.Version))
+        <PaginationBar CurrentPage="@promptsPage"
+                       TotalPages="@promptsTotalPages"
+                       TotalItems="@sortedPrompts.Count"
+                       PageSize="@PageSize"
+                       Label="Prompt templates"
+                       OnPrevious="PreviousPromptsPage"
+                       OnNext="NextPromptsPage" />
+        @foreach (var item in PagedPrompts)
         {
             <div class="prompt-card">
                 <div class="run-head">
@@ -42,8 +49,45 @@
 </section>
 
 @code {
+    private const int PageSize = 10;
+    private int promptsPage = 1;
+    private List<PromptTemplateDto> sortedPrompts = [];
+    private int promptsTotalPages => Math.Max(1, (int)Math.Ceiling(sortedPrompts.Count / (double)PageSize));
+    private IEnumerable<PromptTemplateDto> PagedPrompts =>
+        sortedPrompts.Skip((promptsPage - 1) * PageSize).Take(PageSize);
+
     protected override async Task OnInitializedAsync()
     {
         await Portal.RefreshAllAsync();
+        RefreshPromptsPagination();
+    }
+
+    private void RefreshPromptsPagination()
+    {
+        sortedPrompts = Portal.State.PromptTemplates
+            .OrderBy(x => x.TemplateType)
+            .ThenByDescending(x => x.Version)
+            .ToList();
+        promptsPage = Math.Clamp(promptsPage, 1, promptsTotalPages);
+    }
+
+    private Task PreviousPromptsPage()
+    {
+        if (promptsPage > 1)
+        {
+            promptsPage--;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task NextPromptsPage()
+    {
+        if (promptsPage < promptsTotalPages)
+        {
+            promptsPage++;
+        }
+
+        return Task.CompletedTask;
     }
 }

@@ -1,0 +1,25 @@
+@namespace AGONECompliance.Client.Components
+
+<div class="table-pagination">
+    <button class="btn btn-sm btn-light"
+            @onclick="OnPrevious"
+            disabled="@(CurrentPage <= 1)">
+        Previous
+    </button>
+    <span class="small-muted">@Label: @TotalItems items · @PageSize per page · Page @CurrentPage of @TotalPages</span>
+    <button class="btn btn-sm btn-light"
+            @onclick="OnNext"
+            disabled="@(CurrentPage >= TotalPages)">
+        Next
+    </button>
+</div>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int TotalPages { get; set; } = 1;
+    [Parameter] public int TotalItems { get; set; }
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public string Label { get; set; } = "Rows";
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+}
