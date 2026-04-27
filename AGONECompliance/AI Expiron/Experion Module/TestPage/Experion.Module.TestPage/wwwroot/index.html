@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Experion Module Test Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #eef3fb;
+            color: #2c3e5f;
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #d9e2f6;
+            box-shadow: 0 10px 30px rgba(20, 36, 74, 0.08);
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 8px;
+        }
+
+        .subtitle {
+            margin: 0 0 18px;
+            color: #5f739a;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            border: 1px solid #dbe5fa;
+            border-radius: 12px;
+            padding: 14px;
+            background: linear-gradient(180deg, #ffffff, #f8fbff);
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .line {
+            height: 10px;
+            background: #e9f0ff;
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="title">AG ONE Work · Billing Overview</h1>
+    <p class="subtitle">
+        Use circle gesture anywhere on page to open Experion with contextual suggestions.
+    </p>
+    <div class="cards">
+        <section class="card">
+            <h3>Invoice Configuration</h3>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line" style="width: 74%;"></div>
+        </section>
+        <section class="card">
+            <h3>Payment Terms</h3>
+            <div class="line"></div>
+            <div class="line" style="width: 86%;"></div>
+            <div class="line" style="width: 62%;"></div>
+        </section>
+    </div>
+</div>
+
+<script src="./experion-sdk.js"></script>
+<script>
+    window.ExperionSdk.init({
+        apiBaseUrl: "http://localhost:5188/api/experion-module",
+        productCode: "work",
+        workspaceId: "workspace-1",
+        userId: "demo.user@agone.com",
+        sourceToken: "signed-source-token",
+        autoOpen: true
+    });
+</script>
+</body>
+</html>
