@@ -36,7 +36,9 @@ public sealed class InsightsController(
             user.ChineseZodiac = astrologyService.GetChineseZodiac(request.DateOfBirth);
             user.UpdatedAtUtc = DateTime.UtcNow;
 
-            var photoSignal = astrologyService.CreatePhotoSignal(user);
+            var photoSignal = string.IsNullOrWhiteSpace(request.PhotoHint)
+                ? astrologyService.CreatePhotoSignal(user)
+                : request.PhotoHint!;
             var personalityInsights = await astrologyService.CalculatePersonalityInsights(user, photoSignal, cancellationToken);
             var monthlyForecast = await astrologyService.GetMonthlyForecast(user.ZodiacSign, photoSignal, cancellationToken);
 
@@ -76,6 +78,45 @@ public sealed class InsightsController(
             logger.LogError(ex, "Error generating insights.");
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("history")]
+    public async Task<IActionResult> GetHistory(CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId == null)
+        {
+            return Unauthorized(new { message = "User not authenticated" });
+        }
+
+        var user = await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == userId.Value, cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+
+        var history = await context.AstrologyInsights
+            .AsNoTracking()
+            .Where(x => x.UserId == userId.Value)
+            .OrderByDescending(x => x.CalculatedAt)
+            .Take(12)
+            .Select(x => new
+            {
+                x.Id,
+                x.CalculatedAt,
+                x.PersonalityTraits,
+                x.HealthInsights,
+                x.CareerInsights,
+                x.LoveInsights,
+                x.Element,
+                x.LuckyColor,
+                user.ZodiacSign
+            })
+            .ToListAsync(cancellationToken);
+
+        return Ok(new { success = true, history });
     }
 
     [HttpPost("compatibility")]

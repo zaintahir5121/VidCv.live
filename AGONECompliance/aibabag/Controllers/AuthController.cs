@@ -35,7 +35,9 @@ public sealed class AuthController(
             isAuthenticated = user is not null,
             userId = user?.Id,
             userName = user?.FullName,
-            email = user?.Email
+            email = user?.Email,
+            profileImageUrl = user?.ProfileImageUrl,
+            dateOfBirth = user?.DateOfBirth?.ToString("yyyy-MM-dd")
         });
     }
 
