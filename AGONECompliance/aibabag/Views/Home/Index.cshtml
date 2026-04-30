@@ -1,37 +1,736 @@
 @{
-    ViewData["Title"] = "AiBabag";
+    ViewData["Title"] = "AiBabag | AI Astro Intelligence";
 }
 
-<div class="aibabag-shell">
-    <h1>AiBabag</h1>
-    <p>One-page astrology dashboard app setup is ready.</p>
-    <ol>
-        <li>Sign in with Google</li>
-        <li>Capture your photo</li>
-        <li>Enter birth date</li>
-        <li>Generate insights + full dashboard</li>
-    </ol>
+<div class="page-shell">
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <div>
+                <h1>AiBabag</h1>
+                <p>Professional AI Astro Insights</p>
+            </div>
+        </div>
+        <div class="top-actions">
+            <button id="logoutBtn" class="btn ghost hidden">Logout</button>
+        </div>
+    </header>
+
+    <main id="appRoot">
+        <section id="landingSection" class="card hero">
+            <div class="hero-copy">
+                <h2>Your Personal AI Cosmic Dashboard</h2>
+                <p>Secure Google login, automatic face capture, birthday-based astrology, interactive insights, and one-click sharing.</p>
+                <ul>
+                    <li>Google-authenticated private profile</li>
+                    <li>Auto camera activation and photo signal</li>
+                    <li>Free AI insight generation + deep dashboard</li>
+                    <li>Export, share, Facebook post, LinkedIn post</li>
+                </ul>
+                <button id="googleLoginBtn" class="btn primary">Continue with Google</button>
+            </div>
+            <div class="hero-side">
+                <div class="hero-badge">.NET 8 • IIS Ready • Free AI</div>
+            </div>
+        </section>
+
+        <section id="onboardingSection" class="card hidden">
+            <h3>Complete your profile</h3>
+            <div class="grid-two">
+                <div>
+                    <div class="field">
+                        <label>Email</label>
+                        <input id="userEmail" readonly />
+                    </div>
+                    <div class="field">
+                        <label>Full Name</label>
+                        <input id="userName" readonly />
+                    </div>
+                    <div class="field">
+                        <label>Date of Birth</label>
+                        <input id="dobInput" type="date" />
+                    </div>
+                    <p class="small-note">If Google birthday is available, it is pre-filled automatically.</p>
+                    <button id="generateBtn" class="btn primary">Get Insights</button>
+                </div>
+                <div>
+                    <div class="camera-wrap">
+                        <video id="cameraFeed" autoplay playsinline muted></video>
+                        <canvas id="photoCanvas" class="hidden"></canvas>
+                    </div>
+                    <div class="camera-actions">
+                        <button id="captureBtn" class="btn secondary">Capture Face</button>
+                        <span id="cameraState" class="small-note">Camera initializing...</span>
+                    </div>
+                    <img id="previewImg" class="preview hidden" alt="Captured profile" />
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboardSection" class="hidden">
+            <div class="card">
+                <div class="dash-head">
+                    <div>
+                        <h3 id="dashTitle">Insights Dashboard</h3>
+                        <p id="dashSub">Generated from Google profile, DOB, and image context.</p>
+                    </div>
+                    <div class="dash-actions">
+                        <button id="copyBtn" class="btn secondary">Copy Summary</button>
+                        <button id="downloadBtn" class="btn secondary">Export JSON</button>
+                        <button id="shareNativeBtn" class="btn secondary">Share</button>
+                    </div>
+                </div>
+                <div id="quickCards" class="quick-cards"></div>
+            </div>
+
+            <div class="card">
+                <h4>Social publishing</h4>
+                <div class="social-grid">
+                    <div class="social-block">
+                        <label>Post Text</label>
+                        <textarea id="postText" rows="5"></textarea>
+                    </div>
+                    <div class="social-block">
+                        <label>Facebook Page Access Token</label>
+                        <input id="fbToken" placeholder="EAAB..." />
+                        <label>Facebook Page ID</label>
+                        <input id="fbPageId" placeholder="1234567890" />
+                        <button id="fbPostBtn" class="btn primary">Post to Facebook</button>
+                    </div>
+                    <div class="social-block">
+                        <label>LinkedIn Access Token</label>
+                        <input id="liToken" placeholder="AQX..." />
+                        <label>LinkedIn Person URN (optional)</label>
+                        <input id="liUrn" placeholder="urn:li:person:xxxx" />
+                        <button id="liPostBtn" class="btn primary">Post to LinkedIn</button>
+                    </div>
+                </div>
+                <p id="socialStatus" class="small-note"></p>
+            </div>
+
+            <div class="card">
+                <h4>Full detailed insights</h4>
+                <div id="detailGrid" class="detail-grid"></div>
+            </div>
+        </section>
+    </main>
 </div>
 
+<script>
+    const state = {
+        userId: null,
+        authUser: null,
+        cameraStream: null,
+        photoData: null,
+        latestDashboard: null,
+        latestQuick: null
+    };
+
+    const el = {
+        landingSection: document.getElementById('landingSection'),
+        onboardingSection: document.getElementById('onboardingSection'),
+        dashboardSection: document.getElementById('dashboardSection'),
+        googleLoginBtn: document.getElementById('googleLoginBtn'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        userEmail: document.getElementById('userEmail'),
+        userName: document.getElementById('userName'),
+        dobInput: document.getElementById('dobInput'),
+        generateBtn: document.getElementById('generateBtn'),
+        cameraFeed: document.getElementById('cameraFeed'),
+        photoCanvas: document.getElementById('photoCanvas'),
+        captureBtn: document.getElementById('captureBtn'),
+        cameraState: document.getElementById('cameraState'),
+        previewImg: document.getElementById('previewImg'),
+        quickCards: document.getElementById('quickCards'),
+        detailGrid: document.getElementById('detailGrid'),
+        postText: document.getElementById('postText'),
+        fbToken: document.getElementById('fbToken'),
+        fbPageId: document.getElementById('fbPageId'),
+        fbPostBtn: document.getElementById('fbPostBtn'),
+        liToken: document.getElementById('liToken'),
+        liUrn: document.getElementById('liUrn'),
+        liPostBtn: document.getElementById('liPostBtn'),
+        socialStatus: document.getElementById('socialStatus'),
+        copyBtn: document.getElementById('copyBtn'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        shareNativeBtn: document.getElementById('shareNativeBtn'),
+        dashTitle: document.getElementById('dashTitle')
+    };
+
+    async function init() {
+        bindEvents();
+        await hydrateAuth();
+    }
+
+    function bindEvents() {
+        el.googleLoginBtn.addEventListener('click', () => window.location.href = '/api/auth/login?returnUrl=/');
+        el.logoutBtn.addEventListener('click', () => window.location.href = '/api/auth/logout');
+        el.captureBtn.addEventListener('click', capturePhoto);
+        el.generateBtn.addEventListener('click', generateAllInsights);
+        el.fbPostBtn.addEventListener('click', () => postToSocial('facebook'));
+        el.liPostBtn.addEventListener('click', () => postToSocial('linkedin'));
+        el.copyBtn.addEventListener('click', copySummary);
+        el.downloadBtn.addEventListener('click', downloadJson);
+        el.shareNativeBtn.addEventListener('click', shareNative);
+    }
+
+    async function hydrateAuth() {
+        try {
+            const authRes = await fetch('/api/auth/status');
+            const auth = await authRes.json();
+            if (!auth.isAuthenticated) {
+                showLanding();
+                return;
+            }
+
+            state.userId = auth.userId;
+            state.authUser = auth;
+            el.userEmail.value = auth.email || '';
+            el.userName.value = auth.userName || '';
+            el.logoutBtn.classList.remove('hidden');
+
+            await preloadGoogleBirthday();
+            showOnboarding();
+            await startCamera();
+            await loadExistingDashboard();
+        } catch {
+            showLanding();
+        }
+    }
+
+    async function preloadGoogleBirthday() {
+        try {
+            const res = await fetch('/api/auth/google-birthday');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data?.birthDate) {
+                const isoDate = String(data.birthDate).slice(0, 10);
+                el.dobInput.value = isoDate;
+            }
+        } catch {
+            // noop
+        }
+    }
+
+    function showLanding() {
+        el.landingSection.classList.remove('hidden');
+        el.onboardingSection.classList.add('hidden');
+        el.dashboardSection.classList.add('hidden');
+    }
+
+    function showOnboarding() {
+        el.landingSection.classList.add('hidden');
+        el.onboardingSection.classList.remove('hidden');
+    }
+
+    async function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            el.cameraState.textContent = 'Camera not supported in this browser.';
+            return;
+        }
+
+        try {
+            state.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+            el.cameraFeed.srcObject = state.cameraStream;
+            el.cameraState.textContent = 'Camera is live. Capture your face photo.';
+        } catch {
+            el.cameraState.textContent = 'Camera access denied. Please allow camera and reload.';
+        }
+    }
+
+    async function capturePhoto() {
+        if (!state.cameraStream) {
+            el.cameraState.textContent = 'Camera is not active.';
+            return;
+        }
+
+        const video = el.cameraFeed;
+        const canvas = el.photoCanvas;
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        state.photoData = canvas.toDataURL('image/jpeg', 0.9);
+
+        el.previewImg.src = state.photoData;
+        el.previewImg.classList.remove('hidden');
+        el.cameraState.textContent = 'Face captured and ready.';
+
+        await fetch('/api/auth/upload-photo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoData: state.photoData })
+        });
+    }
+
+    async function generateAllInsights() {
+        if (!el.dobInput.value) {
+            alert('Please select date of birth.');
+            return;
+        }
+
+        if (!state.photoData) {
+            await capturePhoto();
+        }
+
+        el.generateBtn.disabled = true;
+        el.generateBtn.textContent = 'Generating...';
+
+        try {
+            const insightRes = await fetch('/api/insights/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dateOfBirth: el.dobInput.value })
+            });
+
+            if (!insightRes.ok) {
+                const err = await insightRes.json();
+                throw new Error(err.message || 'Failed to generate quick insights.');
+            }
+
+            const insightJson = await insightRes.json();
+            state.latestQuick = insightJson.data;
+
+            const dashboardRes = await fetch(`/api/dashboard/full/${state.userId}`);
+            const dashboardJson = await dashboardRes.json();
+            state.latestDashboard = dashboardJson;
+
+            renderQuickCards(insightJson.data);
+            renderDetailGrid(dashboardJson.dashboard);
+            el.postText.value = buildSocialPost(insightJson.data, dashboardJson.dashboard);
+            el.dashboardSection.classList.remove('hidden');
+            el.dashTitle.textContent = `${el.userName.value || 'User'}'s Cosmic Dashboard`;
+        } catch (e) {
+            alert(e.message || 'Unable to generate insights.');
+        } finally {
+            el.generateBtn.disabled = false;
+            el.generateBtn.textContent = 'Get Insights';
+        }
+    }
+
+    async function loadExistingDashboard() {
+        if (!state.userId) return;
+        try {
+            const dashboardRes = await fetch(`/api/dashboard/full/${state.userId}`);
+            if (!dashboardRes.ok) return;
+            const dashboardJson = await dashboardRes.json();
+            if (!dashboardJson?.dashboard) return;
+            state.latestDashboard = dashboardJson;
+            renderDetailGrid(dashboardJson.dashboard);
+            el.dashboardSection.classList.remove('hidden');
+        } catch {
+            // noop
+        }
+    }
+
+    function renderQuickCards(data) {
+        const map = [
+            ['Zodiac', data.zodiacSign],
+            ['Chinese Zodiac', data.chineseZodiac],
+            ['Traits', data.insights.personalityTraits],
+            ['Health', data.insights.healthInsights],
+            ['Career', data.insights.careerInsights],
+            ['Love', data.insights.loveInsights],
+            ['Lucky Numbers', data.insights.luckyNumbers],
+            ['Lucky Color', data.insights.luckyColor]
+        ];
+
+        el.quickCards.innerHTML = map.map(([label, value]) => `
+            <article class="mini-card">
+                <h5>${escapeHtml(label)}</h5>
+                <p>${escapeHtml(value || '-')}</p>
+            </article>`).join('');
+    }
+
+    function renderDetailGrid(detail) {
+        const items = Object.entries(detail || {})
+            .filter(([k]) => !['id', 'userId', 'user', 'calculatedAt'].includes(k))
+            .slice(0, 40);
+
+        el.detailGrid.innerHTML = items.map(([key, value]) => `
+            <article class="detail-item">
+                <h6>${formatKey(key)}</h6>
+                <p>${escapeHtml(String(value ?? '-'))}</p>
+            </article>
+        `).join('');
+    }
+
+    function buildSocialPost(quick, detail) {
+        return `My AI Astro Insights from AiBabag:\n` +
+            `Zodiac: ${quick?.zodiacSign || '-'}\n` +
+            `Traits: ${quick?.insights?.personalityTraits || '-'}\n` +
+            `Career: ${quick?.insights?.careerInsights || '-'}\n` +
+            `Love: ${quick?.insights?.loveInsights || '-'}\n` +
+            `Health: ${quick?.insights?.healthInsights || '-'}\n` +
+            `#AiBabag #Astrology #AI #PersonalInsights`;
+    }
+
+    async function postToSocial(provider) {
+        const accessToken = provider === 'facebook' ? el.fbToken.value.trim() : el.liToken.value.trim();
+        if (!accessToken) {
+            el.socialStatus.textContent = `Provide ${provider} access token first.`;
+            return;
+        }
+
+        el.socialStatus.textContent = `Posting to ${provider}...`;
+
+        try {
+            const endpoint = '/api/social/post';
+            const body = {
+                provider,
+                message: el.postText.value.trim(),
+                accessToken,
+                facebookPageId: el.fbPageId.value.trim(),
+                linkedInPersonUrn: el.liUrn.value.trim()
+            };
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+                throw new Error(json.message || 'Social post failed.');
+            }
+            el.socialStatus.textContent = `${provider} post successful.`;
+        } catch (err) {
+            el.socialStatus.textContent = err.message || 'Social post failed.';
+        }
+    }
+
+    async function copySummary() {
+        if (!el.postText.value.trim()) return;
+        await navigator.clipboard.writeText(el.postText.value);
+    }
+
+    function downloadJson() {
+        const payload = {
+            exportedAtUtc: new Date().toISOString(),
+            user: state.authUser,
+            quick: state.latestQuick,
+            dashboard: state.latestDashboard
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'aibabag_insights.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function shareNative() {
+        const text = el.postText.value || 'My AI Astro Insights from AiBabag';
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'AiBabag Insights', text });
+                return;
+            } catch {
+                // fallback below
+            }
+        }
+        await navigator.clipboard.writeText(text);
+        alert('Summary copied to clipboard.');
+    }
+
+    function formatKey(key) {
+        return key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+    }
+
+    function escapeHtml(input) {
+        return String(input)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    init();
+</script>
+
 <style>
-    .aibabag-shell {
-        max-width: 760px;
-        margin: 40px auto;
+    :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #14203a;
+        --muted: #64739a;
+        --primary: #2c64f6;
+        --primary-dark: #1948c9;
+        --line: #dbe3f5;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background: radial-gradient(circle at top right, #e8eeff, #f5f7fb 40%);
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        color: var(--text);
+    }
+
+    .page-shell {
+        max-width: 1200px;
+        margin: 0 auto;
         padding: 24px;
+    }
+
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .brand h1 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+
+    .brand p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+
+    .brand-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(120deg, #4765ff, #7c45ff);
+        box-shadow: 0 0 0 6px #e6ebff;
+    }
+
+    .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 12px 32px rgba(22, 45, 105, 0.08);
+        margin-bottom: 18px;
+    }
+
+    .hero {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .hero h2 {
+        margin-top: 0;
+        font-size: 2rem;
+    }
+
+    .hero p {
+        color: var(--muted);
+    }
+
+    .hero ul {
+        margin: 12px 0 18px;
+        padding-left: 20px;
+        color: #31436d;
+    }
+
+    .hero-badge {
+        height: 100%;
         border-radius: 14px;
-        border: 1px solid #d9e2f6;
+        border: 1px dashed #b7c8ff;
+        display: grid;
+        place-items: center;
+        color: #3652b0;
+        font-weight: 600;
+        background: linear-gradient(160deg, #eef2ff, #f7f9ff);
+    }
+
+    .grid-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .field {
+        margin-bottom: 12px;
+    }
+
+    .field label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }
+
+    input,
+    textarea {
+        width: 100%;
+        border: 1px solid var(--line);
         background: #fff;
-        box-shadow: 0 8px 24px rgba(21, 35, 70, 0.08);
-        font-family: "Segoe UI", Arial, sans-serif;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--text);
     }
 
-    .aibabag-shell h1 {
-        margin-bottom: 8px;
-        color: #2d3f74;
+    .camera-wrap {
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        overflow: hidden;
+        background: #0f1728;
+        min-height: 280px;
+        display: grid;
+        place-items: center;
     }
 
-    .aibabag-shell p {
-        color: #5a6d95;
-        margin-bottom: 16px;
+    #cameraFeed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .preview {
+        margin-top: 10px;
+        max-width: 160px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+    }
+
+    .camera-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 11px;
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn.primary {
+        color: #fff;
+        background: linear-gradient(130deg, var(--primary), #3658ff);
+    }
+
+    .btn.primary:hover {
+        background: linear-gradient(130deg, var(--primary-dark), #2b48d8);
+    }
+
+    .btn.secondary {
+        color: #203a7e;
+        border: 1px solid #c8d5ff;
+        background: #f4f7ff;
+    }
+
+    .btn.ghost {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: #44547c;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .small-note {
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+
+    .dash-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dash-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .quick-cards {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+    }
+
+    .mini-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fbfcff;
+    }
+
+    .mini-card h5 {
+        margin: 0 0 6px;
+        font-size: 0.85rem;
+        color: #4f6292;
+    }
+
+    .mini-card p {
+        margin: 0;
+        font-size: 0.92rem;
+        color: #1b2b52;
+    }
+
+    .social-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr;
+        gap: 12px;
+    }
+
+    .social-block label {
+        display: block;
+        font-size: 0.82rem;
+        margin: 6px 0 4px;
+        color: #596a92;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+    }
+
+    .detail-item {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+    }
+
+    .detail-item h6 {
+        margin: 0 0 5px;
+        font-size: 0.82rem;
+        color: #516392;
+    }
+
+    .detail-item p {
+        margin: 0;
+        color: #202f54;
+        font-size: 0.88rem;
+    }
+
+    @media (max-width: 900px) {
+        .hero,
+        .grid-two,
+        .social-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>

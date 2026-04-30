@@ -20,19 +20,27 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
 })
-.AddCookie()
+.AddCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+})
 .AddGoogle(options =>
 {
     options.ClientId = builder.Configuration["Google:ClientId"] ?? string.Empty;
     options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? string.Empty;
     options.SaveTokens = true;
     options.CallbackPath = "/signin-google";
+    options.Scope.Add("https://www.googleapis.com/auth/user.birthday.read");
 });
 
 builder.Services.AddScoped<IAstrologyService, AstrologyService>();
 builder.Services.AddScoped<IDetailedAstrologyService, DetailedAstrologyService>();
+builder.Services.AddScoped<ISocialPublisherService, SocialPublisherService>();
 builder.Services.Configure<AiProviderOptions>(builder.Configuration.GetSection("Ai"));
 builder.Services.AddHttpClient<IAiTextService, PollinationsAiTextService>();
+builder.Services.AddHttpClient<IGooglePeopleProfileService, GooglePeopleProfileService>();
 
 var app = builder.Build();
 

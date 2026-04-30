@@ -27,6 +27,18 @@ public sealed class ApplicationDbContext : DbContext
             .HasIndex(x => x.GoogleId)
             .IsUnique();
 
+        modelBuilder.Entity<User>()
+            .Property(x => x.Email)
+            .HasMaxLength(256);
+
+        modelBuilder.Entity<User>()
+            .Property(x => x.BirthDateSource)
+            .HasMaxLength(64);
+
+        modelBuilder.Entity<User>()
+            .Property(x => x.BirthDateRawText)
+            .HasMaxLength(256);
+
         modelBuilder.Entity<CompatibilityMatch>()
             .HasIndex(x => new { x.UserId, x.TargetZodiacSign, x.CalculatedAt });
 

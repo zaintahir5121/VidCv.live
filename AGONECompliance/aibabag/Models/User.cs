@@ -20,6 +20,14 @@ public sealed class User
     [MaxLength(1024)]
     public string ProfileImageUrl { get; set; } = string.Empty;
 
+    public DateTime? GoogleBirthday { get; set; }
+
+    [MaxLength(64)]
+    public string BirthDateSource { get; set; } = string.Empty;
+
+    [MaxLength(256)]
+    public string BirthDateRawText { get; set; } = string.Empty;
+
     public byte[]? PhotoData { get; set; }
 
     [MaxLength(64)]

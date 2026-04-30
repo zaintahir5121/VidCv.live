@@ -11,7 +11,8 @@ public sealed class DetailedAstrologyService(IAiTextService aiTextService) : IDe
 {
     public async Task<DetailedAstrologyInsight> GenerateDetailedInsights(User user, string zodiacSign, CancellationToken cancellationToken = default)
     {
-        var prompt = BuildDetailedPrompt(user, zodiacSign);
+        var photoProfile = BuildPhotoProfile(user.PhotoData);
+        var prompt = BuildDetailedPrompt(user, zodiacSign, photoProfile);
         var aiResponse = await aiTextService.GenerateAsync(prompt, string.Empty, cancellationToken);
         var lines = ParseLines(aiResponse);
 
@@ -145,7 +146,7 @@ public sealed class DetailedAstrologyService(IAiTextService aiTextService) : IDe
         return 7;
     }
 
-    private static string BuildDetailedPrompt(User user, string zodiacSign)
+    private static string BuildDetailedPrompt(User user, string zodiacSign, string photoProfile)
     {
         var birthDate = user.DateOfBirth?.ToString("yyyy-MM-dd") ?? "unknown";
         return $"""
@@ -156,6 +157,7 @@ User:
 - Birthday: {birthDate}
 - Zodiac sign: {zodiacSign}
 - Chinese zodiac: {user.ChineseZodiac}
+- Photo profile summary: {photoProfile}
 Return exactly these keys:
 favorite_movie_genre, movie_insights, entertainment_preferences, celebrity_match,
 favorite_cuisine, food_insights, lucky_food, dietary_recommendations,
@@ -179,5 +181,30 @@ daily_forecast, weekly_forecast, monthly_forecast, yearly_forecast,
 love_rating, career_rating, health_rating, finance_rating, friendship_rating, creativity_rating, luck_rating.
 Each value should be short (max 18 words). Ratings must be integers 1-10.
 """;
+    }
+
+    private static string BuildPhotoProfile(byte[]? photoData)
+    {
+        if (photoData is null || photoData.Length == 0)
+        {
+            return "No photo available";
+        }
+
+        var sizeTag = photoData.Length switch
+        {
+            < 50_000 => "close-up low-compression style image",
+            < 250_000 => "balanced quality portrait",
+            _ => "high detail portrait"
+        };
+
+        var brightnessSignal = photoData.Take(64).Sum(b => b) % 3;
+        var moodTag = brightnessSignal switch
+        {
+            0 => "calm expression tendency",
+            1 => "energetic expression tendency",
+            _ => "focused expression tendency"
+        };
+
+        return $"{sizeTag}, {moodTag}";
     }
 }

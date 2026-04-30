@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using aibabag.Data;
 using aibabag.Models;
+using aibabag.Services;
 
 namespace aibabag.Controllers;
 
@@ -13,6 +14,7 @@ namespace aibabag.Controllers;
 [Route("api/[controller]")]
 public sealed class AuthController(
     ApplicationDbContext context,
+    IGooglePeopleProfileService googlePeopleProfileService,
     ILogger<AuthController> logger) : ControllerBase
 {
     [HttpGet("status")]
@@ -40,13 +42,18 @@ public sealed class AuthController(
     [HttpGet("login")]
     public async Task Login(string? returnUrl = "/", CancellationToken cancellationToken = default)
     {
+        var redirectUri = Url.Action(
+            action: nameof(GoogleResponse),
+            controller: "Auth",
+            values: new { returnUrl = returnUrl ?? "/" }) ?? "/api/auth/google-response";
+
         await HttpContext.ChallengeAsync(
             GoogleDefaults.AuthenticationScheme,
-            new AuthenticationProperties { RedirectUri = returnUrl ?? "/" });
+            new AuthenticationProperties { RedirectUri = redirectUri });
     }
 
     [HttpGet("google-response")]
-    public async Task<IActionResult> GoogleResponse(CancellationToken cancellationToken)
+    public async Task<IActionResult> GoogleResponse(string? returnUrl = "/", CancellationToken cancellationToken = default)
     {
         try
         {
@@ -95,13 +102,63 @@ public sealed class AuthController(
             await context.SaveChangesAsync(cancellationToken);
             HttpContext.Session.SetInt32("UserId", existing.Id);
 
-            return RedirectToAction("Index", "Home");
+            return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Google authentication callback failed.");
             return BadRequest("Authentication failed.");
         }
+    }
+
+    [HttpGet("google-birthday")]
+    public async Task<IActionResult> GetGoogleBirthday(CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return Unauthorized(new { message = "User not authenticated." });
+        }
+
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId.Value, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return Ok(new
+            {
+                success = false,
+                message = "Google access token unavailable for profile sync."
+            });
+        }
+
+        var birthday = await googlePeopleProfileService.TryGetBirthdayAsync(accessToken, cancellationToken);
+        if (!birthday.HasValue)
+        {
+            return Ok(new
+            {
+                success = false,
+                message = "Could not fetch Google birthday."
+            });
+        }
+
+        user.GoogleBirthday = birthday;
+        user.DateOfBirth ??= birthday;
+        user.BirthDateSource = "google-people-api";
+        user.BirthDateRawText = birthday.Value.ToString("yyyy-MM-dd");
+        user.UpdatedAtUtc = DateTime.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Ok(new
+        {
+            success = true,
+            birthDate = user.DateOfBirth?.ToString("yyyy-MM-dd"),
+            source = user.BirthDateSource
+        });
     }
 
     [HttpPost("upload-photo")]

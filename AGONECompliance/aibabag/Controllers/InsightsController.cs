@@ -15,7 +15,7 @@ public sealed class InsightsController(
     ILogger<InsightsController> logger) : ControllerBase
 {
     [HttpPost("generate")]
-    public async Task<IActionResult> GenerateInsights([FromBody] InsightRequest request)
+    public async Task<IActionResult> GenerateInsights([FromBody] InsightRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -25,7 +25,7 @@ public sealed class InsightsController(
                 return Unauthorized(new { message = "User not authenticated" });
             }
 
-            var user = await context.Users.FindAsync(userId.Value);
+            var user = await context.Users.FindAsync([userId.Value], cancellationToken);
             if (user == null)
             {
                 return NotFound(new { message = "User not found" });
@@ -36,8 +36,9 @@ public sealed class InsightsController(
             user.ChineseZodiac = astrologyService.GetChineseZodiac(request.DateOfBirth);
             user.UpdatedAtUtc = DateTime.UtcNow;
 
-            var personalityInsights = await astrologyService.CalculatePersonalityInsights(user);
-            var monthlyForecast = await astrologyService.GetMonthlyForecast(user.ZodiacSign);
+            var photoSignal = astrologyService.CreatePhotoSignal(user);
+            var personalityInsights = await astrologyService.CalculatePersonalityInsights(user, photoSignal, cancellationToken);
+            var monthlyForecast = await astrologyService.GetMonthlyForecast(user.ZodiacSign, photoSignal, cancellationToken);
 
             var insight = new AstrologyInsight
             {
@@ -55,7 +56,7 @@ public sealed class InsightsController(
 
             user.Insights.Add(insight);
             context.AstrologyInsights.Add(insight);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
 
             return Ok(new
             {
@@ -78,7 +79,7 @@ public sealed class InsightsController(
     }
 
     [HttpPost("compatibility")]
-    public async Task<IActionResult> CheckCompatibility([FromBody] CompatibilityRequest request)
+    public async Task<IActionResult> CheckCompatibility([FromBody] CompatibilityRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -88,7 +89,7 @@ public sealed class InsightsController(
                 return Unauthorized(new { message = "User not authenticated" });
             }
 
-            var user = await context.Users.FindAsync(userId.Value);
+            var user = await context.Users.FindAsync([userId.Value], cancellationToken);
             if (user == null)
             {
                 return NotFound(new { message = "User not found" });
@@ -107,7 +108,7 @@ public sealed class InsightsController(
             };
 
             context.CompatibilityMatches.Add(match);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
 
             return Ok(new
             {
@@ -128,6 +129,7 @@ public sealed class InsightsController(
 public sealed class InsightRequest
 {
     public DateTime DateOfBirth { get; set; }
+    public string? PhotoHint { get; set; }
 }
 
 public sealed class CompatibilityRequest

@@ -1,4 +1,5 @@
 using aibabag.Models;
+using System.Security.Cryptography;
 
 namespace aibabag.Services;
 
@@ -6,9 +7,10 @@ public interface IAstrologyService
 {
     string GetZodiacSign(DateTime dateOfBirth);
     string GetChineseZodiac(DateTime dateOfBirth);
-    Task<Dictionary<string, object>> CalculatePersonalityInsights(User user, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, object>> CalculatePersonalityInsights(User user, string photoSignal, CancellationToken cancellationToken = default);
     int CalculateCompatibility(string zodiacSign1, string zodiacSign2);
-    Task<Dictionary<string, string>> GetMonthlyForecast(string zodiacSign, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, string>> GetMonthlyForecast(string zodiacSign, string photoSignal, CancellationToken cancellationToken = default);
+    string CreatePhotoSignal(User user);
 }
 
 public sealed class AstrologyService(
@@ -47,7 +49,7 @@ public sealed class AstrologyService(
         return zodiacs[index];
     }
 
-    public async Task<Dictionary<string, object>> CalculatePersonalityInsights(User user, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, object>> CalculatePersonalityInsights(User user, string photoSignal, CancellationToken cancellationToken = default)
     {
         var zodiac = user.ZodiacSign;
         var baselineTraits = GetTraits(zodiac);
@@ -56,7 +58,7 @@ public sealed class AstrologyService(
         var baselineElement = GetElement(zodiac);
 
         var aiSummary = await aiTextService.GenerateAsync(
-            $"You are an astrology assistant. For zodiac sign {zodiac}, provide 3 concise lines in this exact format:\n" +
+            $"You are an astrology assistant. For zodiac sign {zodiac} with visual signal '{photoSignal}', provide 3 concise lines in this exact format:\n" +
             "healthInsights: ...\ncareerInsights: ...\nloveInsights: ...",
             $"healthInsights: As a {zodiac}, prioritize consistent routines and healthy recovery.\n" +
             $"careerInsights: {zodiac} strengths support leadership, communication, and focused execution.\n" +
@@ -101,10 +103,10 @@ public sealed class AstrologyService(
         return 68;
     }
 
-    public async Task<Dictionary<string, string>> GetMonthlyForecast(string zodiacSign, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<string, string>> GetMonthlyForecast(string zodiacSign, string photoSignal, CancellationToken cancellationToken = default)
     {
         var aiForecast = await aiTextService.GenerateAsync(
-            $"Give a monthly forecast for zodiac sign {zodiacSign}. Return exactly 4 lines in this exact format:\n" +
+            $"Give a monthly forecast for zodiac sign {zodiacSign} with visual signal '{photoSignal}'. Return exactly 4 lines in this exact format:\n" +
             "love: ...\ncareer: ...\nhealth: ...\nfinance: ...",
             $"love: This month supports emotional clarity and balanced expectations for {zodiacSign}.\n" +
             "career: Steady progress comes from consistency and practical decisions.\n" +
@@ -121,6 +123,26 @@ public sealed class AstrologyService(
             ["health"] = GetOrFallback(parsed, "health", "Protect energy with better sleep, hydration, and sustainable routines."),
             ["finance"] = GetOrFallback(parsed, "finance", "Controlled spending and long-term planning are favored.")
         };
+    }
+
+    public string CreatePhotoSignal(User user)
+    {
+        if (user.PhotoData is null || user.PhotoData.Length == 0)
+        {
+            return "photo-unavailable";
+        }
+
+        using var sha256 = SHA256.Create();
+        var hash = sha256.ComputeHash(user.PhotoData);
+        var token = Convert.ToHexString(hash)[..12].ToLowerInvariant();
+        var brightnessBucket = user.PhotoData.Take(1000).DefaultIfEmpty((byte)0).Average(v => v);
+        var tone = brightnessBucket switch
+        {
+            < 85 => "moody",
+            < 170 => "balanced",
+            _ => "bright"
+        };
+        return $"face-{tone}-{token}";
     }
 
     private static string GetTraits(string zodiac) => zodiac switch
