@@ -4,23 +4,37 @@
     var isLocalMode = HostingEnvironment.IsDevelopment().ToString().ToLowerInvariant();
 }
 
-<div class="app-shell" id="appShell">
-    <section class="hero-section" id="heroSection">
-        <div class="hero-glow"></div>
-        <p class="hero-kicker">AIBABAG</p>
-        <h1>Discover your cosmic personality ✨</h1>
-        <p class="hero-sub">
-            Spotify Wrapped vibes, astrology humor, and playful cosmic energy in one beautiful scroll.
-        </p>
-        <div class="hero-actions">
-            <button id="googleBtn" class="cta-btn primary">Continue with Google</button>
-            <button id="guestBtn" class="cta-btn ghost">Try as Guest (Local / Dev)</button>
+<div class="onepage-shell">
+    <section class="hero-report">
+        <div class="hero-left">
+            <p class="kicker">AIBABAG COSMIC REPORT</p>
+            <h1>Discover your cosmic personality ✨</h1>
+            <p class="sub">
+                A playful one-page report experience with mood capture, astrology cards, and share-ready moments.
+            </p>
+            <div class="hero-actions">
+                <button id="googleBtn" class="btn primary">Continue with Google</button>
+                <button id="guestBtn" class="btn ghost">Try as Guest</button>
+            </div>
+            <p class="note">Just for fun. No biometrics. No image storage.</p>
         </div>
-        <p class="hero-note">Just for fun. No technical drama. No clutter.</p>
+        <aside class="hero-camera-stage">
+            <div class="camera-header">
+                <span>Cosmic Mood Capture</span>
+                <small>Optional</small>
+            </div>
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <div class="camera-controls">
+                <button id="captureVibeBtn" class="btn mini">Capture vibe ✨</button>
+                <button id="skipVibeBtn" class="btn mini ghost">Skip</button>
+            </div>
+            <div id="countdown" class="countdown hidden">3</div>
+            <p class="camera-note">Camera opens only if you tap capture.</p>
+        </aside>
     </section>
 
-    <main id="experience" class="hidden">
-        <section class="panel welcome">
+    <main id="report" class="report-stack">
+        <section class="card welcome">
             <div class="avatar-wrap">
                 <img id="avatarImage" class="avatar hidden" alt="Profile avatar" />
                 <div id="avatarFallback" class="avatar-fallback"></div>
@@ -29,86 +43,62 @@
                 <h2 id="welcomeTitle">Hey there 👋</h2>
                 <p>The universe has thoughts about you.</p>
             </div>
-            <button id="logoutBtn" class="tiny-btn hidden">Logout</button>
+            <div class="top-actions">
+                <button id="logoutBtn" class="btn mini ghost hidden">Logout</button>
+            </div>
         </section>
 
-        <section class="panel mood">
+        <section class="card mood">
             <p class="section-tag">TODAY'S COSMIC MOOD</p>
             <h3 id="moodTitle">🌞 Radiant Energy</h3>
             <p id="moodLine">You look like the main character and the soundtrack at the same time.</p>
-            <small>Just for fun. Not a biometric or medical reading.</small>
+            <small>Just for fun — no emotional or medical claims.</small>
         </section>
 
-        <section class="panel snapshot">
+        <section class="card">
             <p class="section-tag">ASTRO SNAPSHOT</p>
-            <div class="snapshot-grid" id="snapshotGrid"></div>
+            <div id="snapshotGrid" class="grid-4"></div>
         </section>
 
-        <section class="panel spirit">
+        <section class="card spirit">
             <p class="section-tag">SPIRIT ANIMAL</p>
             <h3 id="spiritAnimalTitle">🦊 Chill Fox</h3>
-            <p id="spiritAnimalLine">Clever, observant, and pretending not to care.</p>
+            <p id="spiritAnimalLine">Clever, observant, pretending not to care.</p>
         </section>
 
-        <section class="panel birthdays">
+        <section class="card">
             <p class="section-tag">🎂 You share a birthday with legends</p>
-            <div id="birthdayCards" class="horizontal-cards"></div>
+            <div id="birthdayCards" class="horizontal"></div>
         </section>
 
-        <section class="panel personality">
+        <section class="card">
             <p class="section-tag">PERSONALITY INSIGHTS</p>
-            <div id="insightCards" class="insight-cards"></div>
+            <div id="insightCards" class="grid-3"></div>
         </section>
 
-        <section class="panel share">
+        <section class="card share">
             <p class="section-tag">SHARE MOMENT</p>
             <div id="sharePreview" class="share-preview">
                 I just discovered my cosmic personality ✨ <br />
                 Aibabag
             </div>
-            <div class="share-actions">
-                <button id="shareImageBtn" class="cta-btn primary">Share image</button>
-                <button id="copyLinkBtn" class="cta-btn ghost">Copy link</button>
-                <button id="downloadBtn" class="cta-btn ghost">Download</button>
-            </div>
-            <div class="social-actions">
-                <input id="facebookToken" placeholder="Facebook access token (optional)" />
-                <input id="facebookPageId" placeholder="Facebook page ID (optional)" />
-                <button id="facebookPostBtn" class="tiny-btn">Post to Facebook</button>
-                <input id="linkedInToken" placeholder="LinkedIn access token (optional)" />
-                <input id="linkedInUrn" placeholder="LinkedIn person URN (optional)" />
-                <button id="linkedInPostBtn" class="tiny-btn">Post to LinkedIn</button>
-                <p id="socialStatus" class="muted"></p>
+            <div class="hero-actions">
+                <button id="shareImageBtn" class="btn primary">Share image</button>
+                <button id="copyLinkBtn" class="btn ghost">Copy link</button>
+                <button id="downloadBtn" class="btn ghost">Download</button>
             </div>
         </section>
 
-        <section class="panel history">
+        <section class="card">
             <p class="section-tag">COSMIC MEMORY LANE</p>
-            <div id="historyCards" class="horizontal-cards"></div>
+            <div id="historyCards" class="horizontal"></div>
         </section>
     </main>
 </div>
 
-<div class="modal hidden" id="cameraModal">
-    <div class="modal-card">
-        <h3>Cosmic Mood Capture ✨</h3>
-        <p>
-            Want a more accurate cosmic reading?<br />
-            Let us capture your current vibe ✨<br />
-            <strong>(Just for fun — nothing stored)</strong>
-        </p>
-        <video id="cameraVideo" class="camera-video hidden" autoplay playsinline muted></video>
-        <div id="countdown" class="countdown hidden">3</div>
-        <div class="modal-actions">
-            <button id="captureVibeBtn" class="cta-btn primary">Capture my vibe ✨</button>
-            <button id="skipVibeBtn" class="cta-btn ghost">Skip (still magical)</button>
-        </div>
-    </div>
-</div>
-
 <script>
     const IS_LOCAL_MODE = @Html.Raw(isLocalMode);
-    const HISTORY_KEY = "aibabag-history-v1";
+    const HISTORY_KEY = "aibabag-history-v2";
     const MOODS = [
         "🌞 Radiant Energy",
         "🌊 Calm Energy",
@@ -119,47 +109,36 @@
 
     const state = {
         userId: null,
-        mode: "google",
         profile: null,
-        mood: null,
+        mood: "🌞 Radiant Energy",
         history: [],
         stream: null,
         generated: null
     };
 
     const ui = {
-        heroSection: document.getElementById("heroSection"),
-        experience: document.getElementById("experience"),
         googleBtn: document.getElementById("googleBtn"),
         guestBtn: document.getElementById("guestBtn"),
-        logoutBtn: document.getElementById("logoutBtn"),
+        captureVibeBtn: document.getElementById("captureVibeBtn"),
+        skipVibeBtn: document.getElementById("skipVibeBtn"),
+        countdown: document.getElementById("countdown"),
+        cameraVideo: document.getElementById("cameraVideo"),
         avatarImage: document.getElementById("avatarImage"),
         avatarFallback: document.getElementById("avatarFallback"),
+        logoutBtn: document.getElementById("logoutBtn"),
         welcomeTitle: document.getElementById("welcomeTitle"),
         moodTitle: document.getElementById("moodTitle"),
         moodLine: document.getElementById("moodLine"),
-        snapshotGrid: document.getElementById("snapshotGrid"),
         spiritAnimalTitle: document.getElementById("spiritAnimalTitle"),
         spiritAnimalLine: document.getElementById("spiritAnimalLine"),
+        snapshotGrid: document.getElementById("snapshotGrid"),
         birthdayCards: document.getElementById("birthdayCards"),
         insightCards: document.getElementById("insightCards"),
         sharePreview: document.getElementById("sharePreview"),
         shareImageBtn: document.getElementById("shareImageBtn"),
         copyLinkBtn: document.getElementById("copyLinkBtn"),
         downloadBtn: document.getElementById("downloadBtn"),
-        historyCards: document.getElementById("historyCards"),
-        cameraModal: document.getElementById("cameraModal"),
-        cameraVideo: document.getElementById("cameraVideo"),
-        countdown: document.getElementById("countdown"),
-        captureVibeBtn: document.getElementById("captureVibeBtn"),
-        skipVibeBtn: document.getElementById("skipVibeBtn"),
-        facebookToken: document.getElementById("facebookToken"),
-        facebookPageId: document.getElementById("facebookPageId"),
-        facebookPostBtn: document.getElementById("facebookPostBtn"),
-        linkedInToken: document.getElementById("linkedInToken"),
-        linkedInUrn: document.getElementById("linkedInUrn"),
-        linkedInPostBtn: document.getElementById("linkedInPostBtn"),
-        socialStatus: document.getElementById("socialStatus")
+        historyCards: document.getElementById("historyCards")
     };
 
     init();
@@ -170,7 +149,10 @@
             ui.guestBtn.classList.add("hidden");
         }
         loadHistory();
-        await hydrateAuth();
+        const isAuthed = await hydrateAuth();
+        if (!isAuthed) {
+            startGuestMode();
+        }
         renderHistory();
     }
 
@@ -179,16 +161,14 @@
             window.location.href = "/api/auth/login?returnUrl=/";
         });
         ui.guestBtn.addEventListener("click", startGuestMode);
+        ui.captureVibeBtn.addEventListener("click", captureVibeFlow);
+        ui.skipVibeBtn.addEventListener("click", skipVibeFlow);
         ui.logoutBtn.addEventListener("click", () => {
             window.location.href = "/api/auth/logout";
         });
-        ui.captureVibeBtn.addEventListener("click", captureVibeFlow);
-        ui.skipVibeBtn.addEventListener("click", skipVibeFlow);
         ui.shareImageBtn.addEventListener("click", shareImage);
         ui.copyLinkBtn.addEventListener("click", copyLink);
-        ui.downloadBtn.addEventListener("click", downloadShareCard);
-        ui.facebookPostBtn.addEventListener("click", () => postToSocial("facebook"));
-        ui.linkedInPostBtn.addEventListener("click", () => postToSocial("linkedin"));
+        ui.downloadBtn.addEventListener("click", downloadCard);
     }
 
     async function hydrateAuth() {
@@ -196,34 +176,55 @@
             const res = await fetch("/api/auth/status");
             const auth = await res.json();
             if (!auth?.isAuthenticated) {
-                return;
+                return false;
             }
 
             state.userId = auth.userId;
-            state.mode = "google";
-            const dob = await fetchGoogleBirthday();
-            const randomDob = randomDateString();
+            const googleDob = await fetchGoogleBirthday();
             state.profile = {
                 name: auth.userName || "Cosmic Human",
-                email: auth.email || "unknown@aibabag.com",
-                dateOfBirth: dob || auth.dateOfBirth || randomDob,
+                dateOfBirth: googleDob || auth.dateOfBirth || randomDateString(),
                 avatar: auth.profileImageUrl || "",
                 isGuest: false
             };
-
+            ui.logoutBtn.classList.remove("hidden");
             await loadServerHistory();
-            launchExperience();
+            renderProfile();
+            await skipVibeFlow();
+            return true;
         } catch {
-            // Landing stays visible when auth check fails.
+            return false;
+        }
+    }
+
+    function startGuestMode() {
+        state.profile = {
+            name: randomItem(["Luna Spark", "Nova Bloom", "Solar Jinx", "Astra Vibe", "Mira Orbit"]),
+            dateOfBirth: randomDateString(),
+            avatar: "",
+            isGuest: true
+        };
+        renderProfile();
+        skipVibeFlow();
+    }
+
+    function renderProfile() {
+        ui.welcomeTitle.textContent = `Hey ${state.profile.name} 👋`;
+        if (state.profile.avatar) {
+            ui.avatarImage.src = state.profile.avatar;
+            ui.avatarImage.classList.remove("hidden");
+            ui.avatarFallback.classList.add("hidden");
+        } else {
+            ui.avatarImage.classList.add("hidden");
+            ui.avatarFallback.classList.remove("hidden");
+            ui.avatarFallback.textContent = initials(state.profile.name);
         }
     }
 
     async function fetchGoogleBirthday() {
         try {
             const response = await fetch("/api/auth/google-birthday");
-            if (!response.ok) {
-                return null;
-            }
+            if (!response.ok) return null;
             const payload = await response.json();
             return payload?.birthDate ? String(payload.birthDate).slice(0, 10) : null;
         } catch {
@@ -231,66 +232,23 @@
         }
     }
 
-    function startGuestMode() {
-        state.mode = "guest";
-        state.profile = {
-            name: randomItem(["Luna Spark", "Nova Bloom", "Solar Jinx", "Astra Vibe", "Mira Orbit"]),
-            email: "guest@local.dev",
-            dateOfBirth: randomDateString(),
-            avatar: "",
-            isGuest: true
-        };
-        launchExperience();
-    }
-
-    function launchExperience() {
-        ui.heroSection.classList.add("hidden");
-        ui.experience.classList.remove("hidden");
-        ui.logoutBtn.classList.toggle("hidden", state.profile?.isGuest ?? true);
-        ui.welcomeTitle.textContent = `Hey ${state.profile.name} 👋`;
-        renderAvatar();
-        openCameraModal();
-    }
-
-    function renderAvatar() {
-        const avatarUrl = state.profile?.avatar;
-        if (avatarUrl) {
-            ui.avatarImage.src = avatarUrl;
-            ui.avatarImage.classList.remove("hidden");
-            ui.avatarFallback.classList.add("hidden");
-            return;
-        }
-
-        ui.avatarImage.classList.add("hidden");
-        ui.avatarFallback.classList.remove("hidden");
-        ui.avatarFallback.textContent = initials(state.profile.name);
-    }
-
-    function openCameraModal() {
-        ui.cameraModal.classList.remove("hidden");
-    }
-
     async function skipVibeFlow() {
         state.mood = randomItem(MOODS);
-        closeCameraModal();
         await generateAndRender();
     }
 
     async function captureVibeFlow() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (!navigator.mediaDevices?.getUserMedia) {
             await skipVibeFlow();
             return;
         }
 
         try {
             state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-            ui.cameraVideo.classList.remove("hidden");
             ui.cameraVideo.srcObject = state.stream;
             await runCountdown();
-            const label = captureMoodLabel(ui.cameraVideo);
+            state.mood = captureMoodLabel(ui.cameraVideo);
             stopCamera();
-            state.mood = label;
-            closeCameraModal();
             await generateAndRender();
         } catch {
             stopCamera();
@@ -299,22 +257,19 @@
     }
 
     function stopCamera() {
-        if (!state.stream) {
-            return;
-        }
+        if (!state.stream) return;
         for (const track of state.stream.getTracks()) {
             track.stop();
         }
         state.stream = null;
         ui.cameraVideo.srcObject = null;
-        ui.cameraVideo.classList.add("hidden");
     }
 
     async function runCountdown() {
         ui.countdown.classList.remove("hidden");
         for (const n of [3, 2, 1]) {
             ui.countdown.textContent = String(n);
-            await delay(500);
+            await delay(450);
         }
         ui.countdown.classList.add("hidden");
     }
@@ -322,225 +277,92 @@
     function captureMoodLabel(video) {
         const canvas = document.createElement("canvas");
         canvas.width = video.videoWidth || 480;
-        canvas.height = video.videoHeight || 360;
+        canvas.height = video.videoHeight || 320;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        let brightness = 0;
-        for (let i = 0; i < data.length; i += 32) {
-            brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+        const pixel = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let score = 0;
+        for (let i = 0; i < pixel.length; i += 64) {
+            score += pixel[i] + pixel[i + 1] + pixel[i + 2];
         }
-        const score = Math.floor(brightness) % 5;
-        return MOODS[score];
-    }
-
-    function closeCameraModal() {
-        ui.cameraModal.classList.add("hidden");
+        return MOODS[Math.floor(score) % MOODS.length];
     }
 
     async function generateAndRender() {
         const zodiac = zodiacFromDate(state.profile.dateOfBirth);
         const chinese = chineseZodiacFromDate(state.profile.dateOfBirth);
         const element = elementFromZodiac(zodiac);
-        const destiny = destinyVibe(zodiac);
         const spirit = spiritAnimal(zodiac, state.mood);
-        const famousPeople = getBirthdayCelebs(state.profile.dateOfBirth);
-        const funInsights = personalityInsights(zodiac, state.mood);
-
-        let quickInsights = {
-            personalityTraits: funInsights.traitLine,
-            healthInsights: funInsights.healthLine,
-            careerInsights: funInsights.careerLine,
-            loveInsights: funInsights.loveLine
-        };
+        const famous = birthdayLegends(state.profile.dateOfBirth);
+        const lines = personalityLines(zodiac, state.mood);
 
         if (!state.profile.isGuest && state.userId) {
             try {
-                const res = await fetch("/api/insights/generate", {
+                await fetch("/api/insights/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        dateOfBirth: state.profile.dateOfBirth,
-                        photoHint: state.mood
-                    })
+                    body: JSON.stringify({ dateOfBirth: state.profile.dateOfBirth, photoHint: state.mood })
                 });
-                if (res.ok) {
-                    const payload = await res.json();
-                    quickInsights = payload?.data?.insights ?? quickInsights;
-                }
             } catch {
-                // Keep local generated copy when API call fails.
+                // keep local render path
             }
         }
 
         state.generated = {
             createdAt: new Date().toISOString(),
-            name: state.profile.name,
-            dateOfBirth: state.profile.dateOfBirth,
-            mood: state.mood,
             zodiac,
             chinese,
             element,
-            destiny,
             spirit,
-            quickInsights,
-            famousPeople,
-            funInsights
+            lines,
+            famous
         };
 
-        renderGenerated();
+        renderCards();
         persistHistory();
     }
 
-    function renderGenerated() {
+    function renderCards() {
         const g = state.generated;
-        ui.moodTitle.textContent = `${g.mood}`;
-        ui.moodLine.textContent = moodOneLiner(g.mood);
-
+        ui.moodTitle.textContent = state.mood;
+        ui.moodLine.textContent = moodOneLiner(state.mood);
         ui.snapshotGrid.innerHTML = [
-            ["♈", "Zodiac sign", g.zodiac],
-            ["🐉", "Chinese zodiac", g.chinese],
+            ["♈", "Zodiac", g.zodiac],
+            ["🐉", "Chinese Zodiac", g.chinese],
             ["🔥", "Element", g.element],
-            ["✨", "Destiny vibe", g.destiny]
-        ].map(([emoji, label, value]) => card(emoji, label, value)).join("");
+            ["✨", "Destiny Vibe", destinyVibe(g.zodiac)]
+        ].map(([emoji, title, value]) => `<article class="snap"><p>${emoji} ${title}</p><h4>${value}</h4></article>`).join("");
 
         ui.spiritAnimalTitle.textContent = `${g.spirit.emoji} Spirit Animal Today: ${g.spirit.name}`;
         ui.spiritAnimalLine.textContent = g.spirit.line;
 
-        ui.birthdayCards.innerHTML = g.famousPeople
-            .map(person => `
-                <article class="person-card">
-                    <div class="person-photo">${person.photo}</div>
-                    <h4>${escapeHtml(person.name)}</h4>
-                    <p>${escapeHtml(person.trait)}</p>
-                </article>`)
-            .join("");
+        ui.birthdayCards.innerHTML = g.famous.map(p => `
+            <article class="legend-card">
+                <div class="legend-photo">${p.photo}</div>
+                <h4>${escapeHtml(p.name)}</h4>
+                <p>${escapeHtml(p.trait)}</p>
+            </article>`).join("");
 
         ui.insightCards.innerHTML = [
-            ["💡 Hidden strength", g.funInsights.hiddenStrength],
-            ["🌪 Chaos trait", g.funInsights.chaosTrait],
-            ["😶 Misunderstood vibe", g.funInsights.misunderstood]
-        ]
-            .map(([title, line]) => `
-                <article class="insight-card">
-                    <h4>${title}</h4>
-                    <p>${escapeHtml(line)}</p>
-                </article>`)
-            .join("");
+            ["💡 Hidden strength", g.lines.hiddenStrength],
+            ["🌪 Chaos trait", g.lines.chaosTrait],
+            ["😶 Misunderstood", g.lines.misunderstood]
+        ].map(([t, v]) => `<article class="insight"><h4>${t}</h4><p>${escapeHtml(v)}</p></article>`).join("");
 
         ui.sharePreview.innerHTML =
-            `I just discovered my cosmic personality ✨<br/>` +
-            `${escapeHtml(g.name)} • ${escapeHtml(g.mood)} • ${escapeHtml(g.zodiac)}<br/>` +
-            `Aibabag`;
-    }
-
-    async function postToSocial(provider) {
-        const accessToken = provider === "facebook" ? ui.facebookToken.value.trim() : ui.linkedInToken.value.trim();
-        if (!accessToken) {
-            ui.socialStatus.textContent = `Add your ${provider} token first.`;
-            return;
-        }
-
-        const message = `I just discovered my cosmic personality ✨ ${state.generated?.mood || ""} #Aibabag`;
-        const body = {
-            provider,
-            message,
-            accessToken,
-            facebookPageId: ui.facebookPageId.value.trim(),
-            linkedInPersonUrn: ui.linkedInUrn.value.trim()
-        };
-
-        ui.socialStatus.textContent = `Posting to ${provider}...`;
-
-        try {
-            const response = await fetch("/api/social/post", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            });
-            const payload = await response.json();
-            if (!response.ok || !payload.success) {
-                throw new Error(payload.message || "Post failed.");
-            }
-            ui.socialStatus.textContent = `${provider} post successful ✨`;
-        } catch (error) {
-            ui.socialStatus.textContent = error.message || "Post failed.";
-        }
-    }
-
-    async function shareImage() {
-        const blob = await createShareImageBlob();
-        if (!blob) {
-            return;
-        }
-        const file = new File([blob], "aibabag-share.png", { type: "image/png" });
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: "AIBABAG",
-                text: "I just discovered my cosmic personality ✨"
-            });
-            return;
-        }
-        await copyLink();
-    }
-
-    async function copyLink() {
-        await navigator.clipboard.writeText(window.location.href);
-    }
-
-    async function downloadShareCard() {
-        const blob = await createShareImageBlob();
-        if (!blob) {
-            return;
-        }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "aibabag-cosmic-share.png";
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    async function createShareImageBlob() {
-        if (!state.generated) {
-            return null;
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = 1080;
-        canvas.height = 1080;
-        const ctx = canvas.getContext("2d");
-        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, "#4b2dff");
-        gradient.addColorStop(0.5, "#a347ff");
-        gradient.addColorStop(1, "#ff7a8a");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.fillRect(70, 110, 940, 860);
-        ctx.fillStyle = "#1f2052";
-        ctx.font = "700 56px Inter, sans-serif";
-        ctx.fillText("I just discovered my cosmic personality ✨", 120, 250);
-        ctx.font = "500 44px Inter, sans-serif";
-        ctx.fillText(`${state.generated.name} • ${state.generated.zodiac}`, 120, 360);
-        ctx.fillText(`${state.generated.mood}`, 120, 430);
-        ctx.font = "600 46px Inter, sans-serif";
-        ctx.fillText("AIBABAG", 120, 810);
-
-        return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+            `I just discovered my cosmic personality ✨<br/>${escapeHtml(state.profile.name)} • ${escapeHtml(state.mood)} • ${escapeHtml(g.zodiac)}<br/>Aibabag`;
     }
 
     function persistHistory() {
-        const entry = {
+        const item = {
             id: crypto.randomUUID(),
             at: state.generated.createdAt,
-            mood: state.generated.mood,
+            mood: state.mood,
             zodiac: state.generated.zodiac,
-            name: state.generated.name,
-            line: state.generated.funInsights.hiddenStrength
+            name: state.profile.name,
+            line: state.generated.lines.hiddenStrength
         };
-        state.history = dedupeHistory([entry, ...state.history]).slice(0, 12);
+        state.history = dedupe([item, ...state.history]).slice(0, 12);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history));
         renderHistory();
     }
@@ -555,176 +377,197 @@
     }
 
     async function loadServerHistory() {
-        if (!state.userId || state.profile?.isGuest) {
-            return;
-        }
-
+        if (!state.userId || state.profile?.isGuest) return;
         try {
-            const response = await fetch("/api/insights/history");
-            if (!response.ok) {
-                return;
-            }
-
-            const payload = await response.json();
-            if (!payload?.success || !Array.isArray(payload.history)) {
-                return;
-            }
-
-            const mapped = payload.history.map(item => ({
-                id: item.id ? `server-${item.id}` : crypto.randomUUID(),
-                at: item.calculatedAt || new Date().toISOString(),
-                mood: item.luckyColor ? `✨ ${item.luckyColor}` : "✨ Cosmic Energy",
-                zodiac: item.zodiacSign || "Unknown",
-                name: state.profile?.name || "Cosmic Human",
-                line: item.personalityTraits || item.careerInsights || "Cosmic memory unlocked."
+            const res = await fetch("/api/insights/history");
+            if (!res.ok) return;
+            const payload = await res.json();
+            if (!payload?.success || !Array.isArray(payload.history)) return;
+            const mapped = payload.history.map(h => ({
+                id: `srv-${h.id}`,
+                at: h.calculatedAt || new Date().toISOString(),
+                mood: h.luckyColor ? `✨ ${h.luckyColor}` : "✨ Cosmic Energy",
+                zodiac: h.zodiacSign || "Unknown",
+                name: state.profile.name,
+                line: h.personalityTraits || h.careerInsights || "Cosmic memory unlocked."
             }));
-
-            state.history = dedupeHistory([...mapped, ...state.history]).slice(0, 12);
+            state.history = dedupe([...mapped, ...state.history]).slice(0, 12);
             localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history));
         } catch {
-            // Silent fallback to local history.
+            // local fallback
         }
-    }
-
-    function dedupeHistory(items) {
-        const seen = new Set();
-        return items.filter(item => {
-            const key = `${item.at}|${item.mood}|${item.zodiac}|${item.line}`;
-            if (seen.has(key)) {
-                return false;
-            }
-            seen.add(key);
-            return true;
-        });
     }
 
     function renderHistory() {
         if (!state.history.length) {
-            ui.historyCards.innerHTML = `<article class="memory-card">Your next cosmic read will appear here ✨</article>`;
+            ui.historyCards.innerHTML = `<article class="memory-card">Your next cosmic read appears here ✨</article>`;
             return;
         }
+        ui.historyCards.innerHTML = state.history.map(h => `
+            <article class="memory-card">
+                <h4>${escapeHtml(h.mood)}</h4>
+                <p>${escapeHtml(h.name)} • ${escapeHtml(h.zodiac)}</p>
+                <small>${escapeHtml(h.line)}</small>
+            </article>`).join("");
+    }
 
-        ui.historyCards.innerHTML = state.history
-            .map(item => `
-                <article class="memory-card">
-                    <h4>${escapeHtml(item.mood)}</h4>
-                    <p>${escapeHtml(item.name)} • ${escapeHtml(item.zodiac)}</p>
-                    <small>${escapeHtml(item.line)}</small>
-                </article>`)
-            .join("");
+    async function shareImage() {
+        const blob = await createShareBlob();
+        if (!blob) return;
+        const file = new File([blob], "aibabag-share.png", { type: "image/png" });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: "AIBABAG", text: "I just discovered my cosmic personality ✨" });
+            return;
+        }
+        await copyLink();
+    }
+
+    async function copyLink() {
+        await navigator.clipboard.writeText(window.location.href);
+    }
+
+    async function downloadCard() {
+        const blob = await createShareBlob();
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "aibabag-cosmic-share.png";
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function createShareBlob() {
+        if (!state.generated) return null;
+        const canvas = document.createElement("canvas");
+        canvas.width = 1080;
+        canvas.height = 1080;
+        const ctx = canvas.getContext("2d");
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, "#4e38ff");
+        grad.addColorStop(0.5, "#8f4aff");
+        grad.addColorStop(1, "#ff6fa4");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.fillRect(80, 120, 920, 820);
+        ctx.fillStyle = "#20234f";
+        ctx.font = "700 56px Inter, sans-serif";
+        ctx.fillText("I discovered my cosmic personality ✨", 120, 250);
+        ctx.font = "500 42px Inter, sans-serif";
+        ctx.fillText(`${state.profile.name} • ${state.generated.zodiac}`, 120, 360);
+        ctx.fillText(`${state.mood}`, 120, 430);
+        ctx.font = "700 52px Inter, sans-serif";
+        ctx.fillText("AIBABAG", 120, 820);
+        return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
     }
 
     function zodiacFromDate(dateText) {
-        const date = new Date(dateText);
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Aries";
-        if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Taurus";
-        if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "Gemini";
-        if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Cancer";
-        if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Leo";
-        if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Virgo";
-        if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Libra";
-        if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Scorpio";
-        if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Sagittarius";
-        if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Capricorn";
-        if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Aquarius";
+        const d = new Date(dateText);
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        if ((m === 3 && day >= 21) || (m === 4 && day <= 19)) return "Aries";
+        if ((m === 4 && day >= 20) || (m === 5 && day <= 20)) return "Taurus";
+        if ((m === 5 && day >= 21) || (m === 6 && day <= 20)) return "Gemini";
+        if ((m === 6 && day >= 21) || (m === 7 && day <= 22)) return "Cancer";
+        if ((m === 7 && day >= 23) || (m === 8 && day <= 22)) return "Leo";
+        if ((m === 8 && day >= 23) || (m === 9 && day <= 22)) return "Virgo";
+        if ((m === 9 && day >= 23) || (m === 10 && day <= 22)) return "Libra";
+        if ((m === 10 && day >= 23) || (m === 11 && day <= 21)) return "Scorpio";
+        if ((m === 11 && day >= 22) || (m === 12 && day <= 21)) return "Sagittarius";
+        if ((m === 12 && day >= 22) || (m === 1 && day <= 19)) return "Capricorn";
+        if ((m === 1 && day >= 20) || (m === 2 && day <= 18)) return "Aquarius";
         return "Pisces";
     }
 
     function chineseZodiacFromDate(dateText) {
         const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
-        const year = new Date(dateText).getFullYear();
-        return animals[(year - 1900) % 12];
+        const y = new Date(dateText).getFullYear();
+        return animals[(y - 1900) % 12];
     }
 
-    function elementFromZodiac(zodiac) {
-        if (["Aries", "Leo", "Sagittarius"].includes(zodiac)) return "Fire";
-        if (["Taurus", "Virgo", "Capricorn"].includes(zodiac)) return "Earth";
-        if (["Gemini", "Libra", "Aquarius"].includes(zodiac)) return "Air";
+    function elementFromZodiac(z) {
+        if (["Aries", "Leo", "Sagittarius"].includes(z)) return "Fire";
+        if (["Taurus", "Virgo", "Capricorn"].includes(z)) return "Earth";
+        if (["Gemini", "Libra", "Aquarius"].includes(z)) return "Air";
         return "Water";
     }
 
-    function destinyVibe(zodiac) {
+    function destinyVibe(z) {
         const map = {
-            Aries: "Born to launch things before anyone asks.",
-            Taurus: "Luxury with a side of unstoppable focus.",
-            Gemini: "Multiplayer brain with sparkle mode on.",
-            Cancer: "Soft heart, tactical instincts, deep memory.",
-            Leo: "Main stage energy with loyal leadership.",
-            Virgo: "Precision, wit, and low-key world domination.",
-            Libra: "Style, balance, and social diplomacy.",
-            Scorpio: "Mysterious magnetism with laser focus.",
-            Sagittarius: "Adventure energy with truth bombs.",
-            Capricorn: "Quiet ambition with premium execution.",
-            Aquarius: "Future mind, rebel heart, big ideas.",
-            Pisces: "Dreamy intuition with artistic chaos."
+            Aries: "You text destiny first.",
+            Taurus: "Luxury, then world domination.",
+            Gemini: "Multiplayer brain mode.",
+            Cancer: "Soft voice, sharp instincts.",
+            Leo: "Main-character charisma.",
+            Virgo: "Precision with sparkle.",
+            Libra: "Style with strategy.",
+            Scorpio: "Magnetic mystery.",
+            Sagittarius: "Adventure + truth bombs.",
+            Capricorn: "Quiet premium ambition.",
+            Aquarius: "Future-minded rebel.",
+            Pisces: "Dreamy creative chaos."
         };
-        return map[zodiac] || "Cosmic wildcard vibes.";
+        return map[z] || "Cosmic wildcard";
     }
 
     function spiritAnimal(zodiac, mood) {
-        const moodKey = mood || randomItem(MOODS);
         const picks = {
-            "🌞 Radiant Energy": { emoji: "🦁", name: "Solar Lion", line: "You enter rooms like a soundtrack drop." },
-            "🌊 Calm Energy": { emoji: "🦦", name: "Peace Otter", line: "Soft energy, strategic brain, zero panic." },
-            "⚡ Expressive Energy": { emoji: "🦜", name: "Electric Parrot", line: "Colorful thoughts and no boring sentences." },
-            "🌙 Reflective Energy": { emoji: "🦊", name: "Night Fox", line: "Quiet outside, plotting greatness inside." },
-            "🔥 Intense Energy": { emoji: "🐅", name: "Wild Tiger", line: "Focused fire with magnetic confidence." }
+            "🌞 Radiant Energy": { emoji: "🦁", name: "Solar Lion", line: "Room-entry soundtrack energy." },
+            "🌊 Calm Energy": { emoji: "🦦", name: "Peace Otter", line: "Calm outside, strategic inside." },
+            "⚡ Expressive Energy": { emoji: "🦜", name: "Electric Parrot", line: "Colorful thoughts. Zero boring lines." },
+            "🌙 Reflective Energy": { emoji: "🦊", name: "Night Fox", line: "Quiet face, dangerous intuition." },
+            "🔥 Intense Energy": { emoji: "🐅", name: "Wild Tiger", line: "Focused fire with polite chaos." }
         };
-        return picks[moodKey];
+        return picks[mood] || picks["🌞 Radiant Energy"];
     }
 
-    function getBirthdayCelebs(dateText) {
-        const key = dateText.slice(5);
+    function birthdayLegends(dateText) {
+        const key = String(dateText).slice(5);
         const map = {
             "01-17": [
                 { photo: "🎤", name: "Legend Singer", trait: "Known for dangerous creativity." },
-                { photo: "🎬", name: "Iconic Actor", trait: "Turns dramatic moments into memes." }
+                { photo: "🎬", name: "Iconic Actor", trait: "Turns drama into memes." }
             ],
             "06-01": [
-                { photo: "⚽", name: "Famous Athlete", trait: "Competitive with suspiciously calm confidence." },
+                { photo: "⚽", name: "Famous Athlete", trait: "Competitive with calm confidence." },
                 { photo: "🎧", name: "Top Producer", trait: "Makes chaos sound expensive." }
-            ],
-            "10-31": [
-                { photo: "👑", name: "Cult Favorite Star", trait: "Charming in a slightly chaotic way." },
-                { photo: "📚", name: "Brilliant Author", trait: "Emotionally devastating one-liners." }
             ]
         };
-        return map[key] ?? [
-            { photo: "🎭", name: "Global Entertainer", trait: "Known for instant scene-stealing." },
-            { photo: "🚀", name: "Visionary Founder", trait: "Builds wild ideas like daily routine." },
-            { photo: "🎨", name: "Creative Icon", trait: "Makes minimal effort look iconic." }
+        return map[key] || [
+            { photo: "🎭", name: "Global Entertainer", trait: "Instant scene-stealing presence." },
+            { photo: "🚀", name: "Visionary Founder", trait: "Builds wild ideas before lunch." },
+            { photo: "🎨", name: "Creative Icon", trait: "Minimal effort, maximum style." }
         ];
     }
 
-    function personalityInsights(zodiac, mood) {
-        const tone = moodOneLiner(mood);
+    function personalityLines(zodiac, mood) {
         return {
-            hiddenStrength: `${zodiac} power move: you stay cool while everyone else reloads emotionally.`,
-            chaosTrait: `You call it spontaneity. Your calendar calls it performance art.`,
-            misunderstood: `People think you're chill. You're actually in premium strategy mode.`,
-            traitLine: `${zodiac} with ${mood} feels like charisma with a plot twist.`,
-            healthLine: `Your vibe says: hydrate, breathe, and stop over-booking your soul.`,
-            careerLine: `Today favors bold asks and tiny dramatic exits from boring tasks.`,
-            loveLine: `Your cosmic signal says romance improves when you text first and overthink less.`,
-            moodLine: tone
+            hiddenStrength: `${zodiac} power move: cool face, wild strategy.`,
+            chaosTrait: "You call it spontaneity. Your calendar calls it performance art.",
+            misunderstood: "People think you're chill. You are in premium planning mode."
         };
     }
 
     function moodOneLiner(mood) {
         const lines = {
-            "🌞 Radiant Energy": "Bright aura. You could compliment a plant and it would bloom faster.",
-            "🌊 Calm Energy": "Calm ocean energy. You look peaceful, which scares your enemies.",
-            "⚡ Expressive Energy": "Electric vibe. Your personality has subtitles and sound effects.",
-            "🌙 Reflective Energy": "Moonlit energy. Deep thoughts, soft voice, dangerous intuition.",
-            "🔥 Intense Energy": "Fire mode. You are politely unstoppable today."
+            "🌞 Radiant Energy": "Bright aura. Plants would grow faster around you.",
+            "🌊 Calm Energy": "Calm ocean energy. Your peace scares your enemies.",
+            "⚡ Expressive Energy": "Electric vibe. Your personality has subtitles.",
+            "🌙 Reflective Energy": "Moonlit energy. Deep thoughts, soft voice.",
+            "🔥 Intense Energy": "Fire mode. Politely unstoppable today."
         };
         return lines[mood] || "Cosmic sparkle detected.";
     }
 
-    function card(emoji, label, value) {
-        return `<article class="snap-card"><p>${emoji} ${escapeHtml(label)}</p><h4>${escapeHtml(value)}</h4></article>`;
+    function dedupe(items) {
+        const seen = new Set();
+        return items.filter(item => {
+            const key = `${item.at}|${item.mood}|${item.zodiac}|${item.line}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
     }
 
     function randomDateString() {
@@ -739,7 +582,7 @@
     }
 
     function initials(name) {
-        return name.split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
+        return String(name).split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
     }
 
     function delay(ms) {
@@ -772,99 +615,117 @@
         margin: 0;
         font-family: Inter, "Segoe UI", sans-serif;
         color: var(--ink);
-        background: radial-gradient(circle at 20% 0%, #ffe4fb 0%, #efeaff 25%, #e7eeff 45%, #f8f9ff 100%);
+        background: #f4f6ff;
     }
 
-    .app-shell {
-        max-width: 860px;
+    .onepage-shell {
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 20px 16px 80px;
+        padding: 20px 16px 70px;
     }
 
-    .hero-section {
-        border-radius: 32px;
-        padding: 42px 26px;
+    .hero-report {
+        background: linear-gradient(135deg, #4f3dff 0%, #7f45ff 42%, #f765a4 100%);
+        border-radius: 28px;
         color: #fff;
-        background: linear-gradient(135deg, #5142ff 0%, #8e44ff 45%, #ff5f92 100%);
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 22px 60px rgba(77, 45, 170, 0.35);
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 1.35fr 0.95fr;
+        gap: 16px;
+        box-shadow: 0 18px 46px rgba(73, 53, 170, 0.35);
     }
 
-    .hero-glow {
-        position: absolute;
-        right: -70px;
-        top: -40px;
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.16);
-        filter: blur(4px);
-    }
-
-    .hero-kicker {
+    .kicker {
         letter-spacing: 0.18em;
         font-size: 0.72rem;
+        margin: 0 0 8px;
         opacity: 0.9;
     }
 
-    .hero-section h1 {
-        font-size: clamp(2rem, 7vw, 3rem);
-        margin: 10px 0 12px;
-        line-height: 1.1;
+    .hero-left h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.9rem, 5vw, 2.8rem);
     }
 
-    .hero-sub {
+    .sub {
         margin: 0;
         color: rgba(255, 255, 255, 0.9);
-        max-width: 520px;
     }
 
     .hero-actions {
         display: flex;
+        gap: 8px;
         flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 28px;
+        margin-top: 16px;
     }
 
-    .hero-note {
-        margin-top: 16px;
-        font-size: 0.85rem;
+    .note {
+        font-size: 0.82rem;
+        margin-top: 12px;
         color: rgba(255, 255, 255, 0.9);
     }
 
-    .cta-btn {
-        border: 0;
-        border-radius: 999px;
-        padding: 12px 20px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: transform 0.2s ease;
+    .hero-camera-stage {
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        border-radius: 18px;
+        padding: 12px;
     }
 
-    .cta-btn:hover {
-        transform: translateY(-1px);
+    .camera-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.86rem;
     }
 
-    .cta-btn.primary {
-        background: #fff;
-        color: #3f31dd;
+    #cameraVideo {
+        width: 100%;
+        min-height: 220px;
+        border-radius: 12px;
+        background: rgba(10, 13, 35, 0.75);
+        object-fit: cover;
     }
 
-    .cta-btn.ghost {
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.7);
-        color: #fff;
+    .camera-controls {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
     }
 
-    .panel {
-        margin-top: 18px;
+    .camera-note {
+        margin: 8px 0 0;
+        font-size: 0.76rem;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .countdown {
+        margin-top: 8px;
+        font-size: 2rem;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .report-stack {
+        margin-top: 16px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .card {
         background: var(--panel);
         border: 1px solid var(--line);
-        border-radius: 24px;
-        padding: 18px;
-        box-shadow: 0 10px 34px rgba(45, 42, 112, 0.08);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 8px 24px rgba(38, 46, 99, 0.08);
+    }
+
+    .section-tag {
+        margin: 0 0 8px;
+        font-size: 0.74rem;
+        letter-spacing: 0.14em;
+        color: #7177aa;
+        font-weight: 700;
     }
 
     .welcome {
@@ -892,22 +753,104 @@
         font-weight: 700;
     }
 
-    .tiny-btn {
-        border: 1px solid #ccd4ff;
-        background: #f7f8ff;
-        color: #2f3b88;
-        border-radius: 999px;
-        padding: 8px 12px;
-        cursor: pointer;
-        font-weight: 600;
+    .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
     }
 
-    .section-tag {
-        margin: 0 0 10px;
-        font-size: 0.74rem;
-        letter-spacing: 0.14em;
-        color: #7177aa;
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .snap,
+    .insight,
+    .legend-card,
+    .memory-card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px;
+        background: #fcfdff;
+    }
+
+    .snap p,
+    .insight p,
+    .legend-card p,
+    .memory-card p,
+    .memory-card small {
+        margin: 0;
+        color: #616993;
+    }
+
+    .snap h4,
+    .insight h4,
+    .legend-card h4,
+    .memory-card h4 {
+        margin: 0 0 6px;
+    }
+
+    .horizontal {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(190px, 230px);
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .legend-photo {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(140deg, #5c4dff, #fd70ae);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        margin-bottom: 6px;
+    }
+
+    .share-preview {
+        border-radius: 14px;
+        padding: 14px;
+        color: #fff;
+        background: linear-gradient(135deg, #5c46ff, #f466a0);
+        font-weight: 600;
+        line-height: 1.45;
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 14px;
         font-weight: 700;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn.primary {
+        background: #fff;
+        color: #3f31dd;
+    }
+
+    .btn.ghost {
+        border: 1px solid #ccd3ff;
+        background: #f8f9ff;
+        color: #2f3b88;
+    }
+
+    .btn.mini {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        background: #fff;
+        color: #4335df;
+    }
+
+    .top-actions {
+        display: flex;
+        gap: 8px;
     }
 
     .mood {
@@ -915,237 +858,32 @@
     }
 
     .mood h3 {
-        margin: 0 0 10px;
+        margin: 0 0 8px;
         font-size: 1.45rem;
     }
 
     .mood p {
         margin: 0;
-        font-size: 1rem;
     }
 
     .mood small {
         display: block;
-        margin-top: 10px;
+        margin-top: 8px;
         color: var(--muted);
-    }
-
-    .snapshot-grid,
-    .insight-cards {
-        display: grid;
-        gap: 10px;
-    }
-
-    .snapshot-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .snap-card {
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        padding: 12px;
-        background: #fcfdff;
-    }
-
-    .snap-card p {
-        margin: 0;
-        color: #737ba6;
-        font-size: 0.84rem;
-    }
-
-    .snap-card h4 {
-        margin: 6px 0 0;
-        font-size: 1rem;
-        line-height: 1.35;
-    }
-
-    .spirit {
-        background: linear-gradient(145deg, #f4efff, #fff9f0);
-    }
-
-    .spirit h3 {
-        margin: 0 0 8px;
-        font-size: 1.4rem;
-    }
-
-    .spirit p {
-        margin: 0;
-    }
-
-    .horizontal-cards {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(190px, 240px);
-        gap: 10px;
-        overflow-x: auto;
-        padding-bottom: 6px;
-    }
-
-    .person-card,
-    .memory-card {
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        background: #fcfdff;
-        padding: 12px;
-    }
-
-    .person-photo {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: linear-gradient(140deg, #5c4dff, #fd70ae);
-        color: #fff;
-        display: grid;
-        place-items: center;
-        margin-bottom: 8px;
-        font-size: 1.2rem;
-    }
-
-    .person-card h4,
-    .memory-card h4 {
-        margin: 0 0 6px;
-    }
-
-    .person-card p,
-    .memory-card p,
-    .memory-card small {
-        margin: 0;
-        color: #616993;
-    }
-
-    .insight-cards {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .insight-card {
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        padding: 12px;
-        background: #fff;
-    }
-
-    .insight-card h4 {
-        margin: 0 0 8px;
-        font-size: 0.95rem;
-    }
-
-    .insight-card p {
-        margin: 0;
-        color: #59608a;
-    }
-
-    .share-preview {
-        border-radius: 18px;
-        padding: 18px;
-        color: #fff;
-        background: linear-gradient(135deg, #5c46ff, #f466a0);
-        font-weight: 600;
-        line-height: 1.5;
-        margin-bottom: 12px;
-    }
-
-    .share-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .share-actions .cta-btn.primary {
-        background: #4e43f7;
-        color: #fff;
-    }
-
-    .share-actions .cta-btn.ghost {
-        border: 1px solid #cfd6ff;
-        color: #384189;
-    }
-
-    .social-actions {
-        margin-top: 14px;
-        display: grid;
-        gap: 8px;
-    }
-
-    .social-actions input {
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        padding: 10px;
-        width: 100%;
-    }
-
-    .muted {
-        color: #6f779f;
-        margin: 2px 0 0;
-    }
-
-    .modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(16, 14, 36, 0.62);
-        display: grid;
-        place-items: center;
-        padding: 16px;
-        z-index: 20;
-    }
-
-    .modal-card {
-        width: min(540px, 100%);
-        border-radius: 24px;
-        background: #fff;
-        border: 1px solid #e7eafe;
-        padding: 20px;
-        text-align: center;
-    }
-
-    .modal-card h3 {
-        margin-top: 0;
-    }
-
-    .modal-card p {
-        color: #656d98;
-        line-height: 1.5;
-    }
-
-    .camera-video {
-        width: 100%;
-        border-radius: 16px;
-        margin: 10px 0 8px;
-        background: #11172b;
-        min-height: 220px;
-        object-fit: cover;
-    }
-
-    .countdown {
-        font-size: 2.4rem;
-        font-weight: 800;
-        color: #4b41e6;
-        margin: 8px 0;
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        flex-wrap: wrap;
     }
 
     .hidden {
         display: none !important;
     }
 
-    @media (max-width: 740px) {
-        .welcome {
-            grid-template-columns: auto 1fr;
-        }
-
-        .insight-cards,
-        .snapshot-grid {
+    @@media (max-width: 900px) {
+        .hero-report {
             grid-template-columns: 1fr;
         }
 
-        .hero-section {
-            padding: 34px 18px;
-            border-radius: 24px;
+        .grid-4,
+        .grid-3 {
+            grid-template-columns: 1fr;
         }
     }
 </style>
