@@ -6,12 +6,14 @@ public interface IAstrologyService
 {
     string GetZodiacSign(DateTime dateOfBirth);
     string GetChineseZodiac(DateTime dateOfBirth);
-    Dictionary<string, object> CalculatePersonalityInsights(User user);
+    Task<Dictionary<string, object>> CalculatePersonalityInsights(User user, CancellationToken cancellationToken = default);
     int CalculateCompatibility(string zodiacSign1, string zodiacSign2);
-    Dictionary<string, string> GetMonthlyForecast(string zodiacSign);
+    Task<Dictionary<string, string>> GetMonthlyForecast(string zodiacSign, CancellationToken cancellationToken = default);
 }
 
-public class AstrologyService : IAstrologyService
+public sealed class AstrologyService(
+    IAiTextService aiTextService,
+    ILogger<AstrologyService> logger) : IAstrologyService
 {
     public string GetZodiacSign(DateTime dateOfBirth)
     {
@@ -45,18 +47,34 @@ public class AstrologyService : IAstrologyService
         return zodiacs[index];
     }
 
-    public Dictionary<string, object> CalculatePersonalityInsights(User user)
+    public async Task<Dictionary<string, object>> CalculatePersonalityInsights(User user, CancellationToken cancellationToken = default)
     {
+        var zodiac = user.ZodiacSign;
+        var baselineTraits = GetTraits(zodiac);
+        var baselineLuckyNumbers = GetLuckyNumbers(zodiac);
+        var baselineLuckyColor = GetLuckyColor(zodiac);
+        var baselineElement = GetElement(zodiac);
+
+        var aiSummary = await aiTextService.GenerateAsync(
+            $"You are an astrology assistant. For zodiac sign {zodiac}, provide 3 concise lines in this exact format:\n" +
+            "healthInsights: ...\ncareerInsights: ...\nloveInsights: ...",
+            $"healthInsights: As a {zodiac}, prioritize consistent routines and healthy recovery.\n" +
+            $"careerInsights: {zodiac} strengths support leadership, communication, and focused execution.\n" +
+            $"loveInsights: {zodiac} energy supports meaningful and emotionally honest relationships.",
+            cancellationToken);
+
+        var parsedSummary = ParseKeyValueLines(aiSummary);
+
         return new Dictionary<string, object>
         {
-            ["zodiacSign"] = user.ZodiacSign,
-            ["personalityTraits"] = GetTraits(user.ZodiacSign),
-            ["luckyNumbers"] = GetLuckyNumbers(user.ZodiacSign),
-            ["luckyColor"] = GetLuckyColor(user.ZodiacSign),
-            ["element"] = GetElement(user.ZodiacSign),
-            ["healthInsights"] = $"As a {user.ZodiacSign}, focus on consistency and rest.",
-            ["careerInsights"] = $"Your {user.ZodiacSign} strengths support leadership and growth.",
-            ["loveInsights"] = $"{user.ZodiacSign} energy attracts deep and meaningful connections."
+            ["zodiacSign"] = zodiac,
+            ["personalityTraits"] = baselineTraits,
+            ["luckyNumbers"] = baselineLuckyNumbers,
+            ["luckyColor"] = baselineLuckyColor,
+            ["element"] = baselineElement,
+            ["healthInsights"] = GetOrFallback(parsedSummary, "healthInsights", $"As a {zodiac}, prioritize consistent routines and healthy recovery."),
+            ["careerInsights"] = GetOrFallback(parsedSummary, "careerInsights", $"{zodiac} strengths support leadership, communication, and focused execution."),
+            ["loveInsights"] = GetOrFallback(parsedSummary, "loveInsights", $"{zodiac} energy supports meaningful and emotionally honest relationships.")
         };
     }
 
@@ -83,14 +101,25 @@ public class AstrologyService : IAstrologyService
         return 68;
     }
 
-    public Dictionary<string, string> GetMonthlyForecast(string zodiacSign)
+    public async Task<Dictionary<string, string>> GetMonthlyForecast(string zodiacSign, CancellationToken cancellationToken = default)
     {
+        var aiForecast = await aiTextService.GenerateAsync(
+            $"Give a monthly forecast for zodiac sign {zodiacSign}. Return exactly 4 lines in this exact format:\n" +
+            "love: ...\ncareer: ...\nhealth: ...\nfinance: ...",
+            $"love: This month supports emotional clarity and balanced expectations for {zodiacSign}.\n" +
+            "career: Steady progress comes from consistency and practical decisions.\n" +
+            "health: Protect energy with better sleep, hydration, and sustainable routines.\n" +
+            "finance: Controlled spending and long-term planning are favored.",
+            cancellationToken);
+
+        var parsed = ParseKeyValueLines(aiForecast);
+
         return new Dictionary<string, string>
         {
-            ["love"] = $"This month supports emotional clarity for {zodiacSign}.",
-            ["career"] = "You may see progress through focused execution.",
-            ["health"] = "Protect your energy and keep routines stable.",
-            ["finance"] = "Budget discipline and steady decisions are favored."
+            ["love"] = GetOrFallback(parsed, "love", $"This month supports emotional clarity and balanced expectations for {zodiacSign}."),
+            ["career"] = GetOrFallback(parsed, "career", "Steady progress comes from consistency and practical decisions."),
+            ["health"] = GetOrFallback(parsed, "health", "Protect energy with better sleep, hydration, and sustainable routines."),
+            ["finance"] = GetOrFallback(parsed, "finance", "Controlled spending and long-term planning are favored.")
         };
     }
 
@@ -149,4 +178,43 @@ public class AstrologyService : IAstrologyService
         "Gemini" or "Libra" or "Aquarius" => "Air",
         _ => "Water"
     };
+
+    private static Dictionary<string, string> ParseKeyValueLines(string input)
+    {
+        var output = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return output;
+        }
+
+        var lines = input.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var line in lines)
+        {
+            var separatorIndex = line.IndexOf(':');
+            if (separatorIndex <= 0 || separatorIndex >= line.Length - 1)
+            {
+                continue;
+            }
+
+            var key = line[..separatorIndex].Trim();
+            var value = line[(separatorIndex + 1)..].Trim();
+            if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(value))
+            {
+                output[key] = value;
+            }
+        }
+
+        return output;
+    }
+
+    private string GetOrFallback(Dictionary<string, string> parsed, string key, string fallback)
+    {
+        if (parsed.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        logger.LogWarning("Free AI response missing key '{Key}', using fallback.", key);
+        return fallback;
+    }
 }

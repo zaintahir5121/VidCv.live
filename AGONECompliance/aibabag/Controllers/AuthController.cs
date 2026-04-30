@@ -78,7 +78,8 @@ public sealed class AuthController(
                     Email = email,
                     FullName = fullName,
                     ProfileImageUrl = profileImageUrl,
-                    CreatedAt = DateTimeOffset.UtcNow
+                    CreatedAtUtc = DateTime.UtcNow,
+                    UpdatedAtUtc = DateTime.UtcNow
                 };
                 context.Users.Add(existing);
             }
@@ -87,7 +88,7 @@ public sealed class AuthController(
                 existing.Email = email;
                 existing.FullName = fullName;
                 existing.ProfileImageUrl = profileImageUrl;
-                existing.UpdatedAt = DateTimeOffset.UtcNow;
+                existing.UpdatedAtUtc = DateTime.UtcNow;
                 context.Users.Update(existing);
             }
 
@@ -129,7 +130,7 @@ public sealed class AuthController(
                 ? request.PhotoData.Split(',')[1]
                 : request.PhotoData;
             user.PhotoData = Convert.FromBase64String(base64);
-            user.UpdatedAt = DateTimeOffset.UtcNow;
+            user.UpdatedAtUtc = DateTime.UtcNow;
             context.Users.Update(user);
             await context.SaveChangesAsync(cancellationToken);
 

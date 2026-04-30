@@ -1,13 +1,13 @@
-using CosmicMatch.Data;
-using CosmicMatch.Services;
+using aibabag.Data;
+using aibabag.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace CosmicMatch.Controllers;
+namespace aibabag.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DashboardController : ControllerBase
+public sealed class DashboardController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly IDetailedAstrologyService _detailedService;
@@ -24,23 +24,23 @@ public class DashboardController : ControllerBase
     }
 
     [HttpGet("full/{userId:int}")]
-    public async Task<IActionResult> GetFullDashboard(int userId)
+    public async Task<IActionResult> GetFullDashboard(int userId, CancellationToken cancellationToken)
     {
         try
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
             if (user is null)
             {
                 return NotFound(new { message = "User not found." });
             }
 
             var detail = await _context.DetailedAstrologyInsights
-                .FirstOrDefaultAsync(d => d.UserId == userId);
+                .FirstOrDefaultAsync(d => d.UserId == userId, cancellationToken);
             if (detail is null)
             {
-                detail = _detailedService.GenerateDetailedInsights(user, user.ZodiacSign);
+                detail = await _detailedService.GenerateDetailedInsights(user, user.ZodiacSign, cancellationToken);
                 _context.DetailedAstrologyInsights.Add(detail);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
             return Ok(new

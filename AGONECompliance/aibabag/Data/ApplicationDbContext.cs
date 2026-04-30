@@ -27,6 +27,13 @@ public sealed class ApplicationDbContext : DbContext
             .HasIndex(x => x.GoogleId)
             .IsUnique();
 
+        modelBuilder.Entity<CompatibilityMatch>()
+            .HasIndex(x => new { x.UserId, x.TargetZodiacSign, x.CalculatedAt });
+
+        modelBuilder.Entity<DetailedAstrologyInsight>()
+            .HasIndex(x => x.UserId)
+            .IsUnique();
+
         modelBuilder.Entity<User>()
             .HasMany(x => x.Insights)
             .WithOne(x => x.User)

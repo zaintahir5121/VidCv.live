@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Aibabag.Models;
+namespace aibabag.Models;
 
 public sealed class User
 {

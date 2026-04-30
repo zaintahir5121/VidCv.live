@@ -1,15 +1,15 @@
-using CosmicMatch.Data;
-using CosmicMatch.Models;
-using CosmicMatch.Services;
+using aibabag.Data;
+using aibabag.Models;
+using aibabag.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace CosmicMatch.Controllers;
+namespace aibabag.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class InsightsController(
+public sealed class InsightsController(
     ApplicationDbContext context,
     IAstrologyService astrologyService,
     ILogger<InsightsController> logger) : ControllerBase
@@ -32,12 +32,12 @@ public class InsightsController(
             }
 
             user.DateOfBirth = request.DateOfBirth;
-            user.ZodiacSign = astrologyService.GetZodiacSign(user.DateOfBirth);
-            user.ChineseZodiac = astrologyService.GetChineseZodiac(user.DateOfBirth);
-            user.UpdatedAt = DateTime.UtcNow;
+            user.ZodiacSign = astrologyService.GetZodiacSign(request.DateOfBirth);
+            user.ChineseZodiac = astrologyService.GetChineseZodiac(request.DateOfBirth);
+            user.UpdatedAtUtc = DateTime.UtcNow;
 
-            var personalityInsights = astrologyService.CalculatePersonalityInsights(user);
-            var monthlyForecast = astrologyService.GetMonthlyForecast(user.ZodiacSign);
+            var personalityInsights = await astrologyService.CalculatePersonalityInsights(user);
+            var monthlyForecast = await astrologyService.GetMonthlyForecast(user.ZodiacSign);
 
             var insight = new AstrologyInsight
             {
@@ -53,7 +53,7 @@ public class InsightsController(
                 CalculatedAt = DateTime.UtcNow
             };
 
-            context.Users.Update(user);
+            user.Insights.Add(insight);
             context.AstrologyInsights.Add(insight);
             await context.SaveChangesAsync();
 

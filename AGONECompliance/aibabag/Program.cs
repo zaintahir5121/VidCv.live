@@ -31,6 +31,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<IAstrologyService, AstrologyService>();
 builder.Services.AddScoped<IDetailedAstrologyService, DetailedAstrologyService>();
+builder.Services.Configure<AiProviderOptions>(builder.Configuration.GetSection("Ai"));
+builder.Services.AddHttpClient<IAiTextService, PollinationsAiTextService>();
 
 var app = builder.Build();
 
