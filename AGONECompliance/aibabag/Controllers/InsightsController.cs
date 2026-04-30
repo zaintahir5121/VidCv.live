@@ -13,6 +13,7 @@ public sealed class InsightsController(
     ApplicationDbContext context,
     IAstrologyService astrologyService,
     IFamousBirthdayService famousBirthdayService,
+    IAiTextService aiTextService,
     ILogger<InsightsController> logger) : ControllerBase
 {
     [HttpPost("generate")]
@@ -178,6 +179,110 @@ public sealed class InsightsController(
         var people = await famousBirthdayService.GetByDateAsync(dob.Value, cancellationToken);
         return Ok(new { success = true, people });
     }
+
+    [HttpPost("ai-fallback")]
+    public async Task<IActionResult> GenerateAiFallback([FromBody] AIFallbackRequest request, CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId is null)
+        {
+            return Unauthorized(new { message = "User not authenticated" });
+        }
+
+        var zodiac = string.IsNullOrWhiteSpace(request.ZodiacSign) ? "Leo" : request.ZodiacSign.Trim();
+        var dobText = string.IsNullOrWhiteSpace(request.DateOfBirth) ? "unknown" : request.DateOfBirth.Trim();
+        var prompt =
+            $"You are AibabaG, an AI that writes concise personality guidance.\n" +
+            $"User zodiac: {zodiac}\nBirthday: {dobText}\n" +
+            "Return exactly these keys with short friendly lines:\n" +
+            "summary: ...\n" +
+            "animalLine: ...\n" +
+            "foodLine: ...\n" +
+            "travelLine: ...\n" +
+            "careerLine: ...\n" +
+            "loveLine: ...\n" +
+            "familyLine: ...\n" +
+            "futureLine: ...\n" +
+            "moneyLine: ...\n" +
+            "educationLine: ...\n" +
+            "healthLine: ...\n" +
+            "purposeLine: ...";
+
+        var fallback =
+            $"summary: You are a natural {zodiac} leader with balanced heart and bold ideas.\n" +
+            "animalLine: Confident and protective with strong instincts.\n" +
+            "foodLine: You enjoy vibrant flavors and expressive choices.\n" +
+            "travelLine: New places recharge your mind and motivation.\n" +
+            "careerLine: Leadership and ownership roles suit you well.\n" +
+            "loveLine: You value loyalty and emotional honesty.\n" +
+            "familyLine: You bring stability and warmth to your circle.\n" +
+            "futureLine: Your future opens through consistent self-growth.\n" +
+            "moneyLine: Smart planning helps you build durable wealth.\n" +
+            "educationLine: You learn quickly with practical application.\n" +
+            "healthLine: Daily routines keep your energy centered.\n" +
+            "purposeLine: You are here to inspire and uplift people.";
+
+        var aiResult = await aiTextService.GenerateAsync(prompt, fallback, cancellationToken);
+        var parsed = ParseAiKeyValue(aiResult);
+
+        return Ok(new
+        {
+            success = true,
+            data = new
+            {
+                summary = GetOrFallback(parsed, "summary", $"You are a natural {zodiac} leader with balanced heart and bold ideas."),
+                animalLine = GetOrFallback(parsed, "animalLine", "Confident and protective with strong instincts."),
+                foodLine = GetOrFallback(parsed, "foodLine", "You enjoy vibrant flavors and expressive choices."),
+                travelLine = GetOrFallback(parsed, "travelLine", "New places recharge your mind and motivation."),
+                careerLine = GetOrFallback(parsed, "careerLine", "Leadership and ownership roles suit you well."),
+                loveLine = GetOrFallback(parsed, "loveLine", "You value loyalty and emotional honesty."),
+                familyLine = GetOrFallback(parsed, "familyLine", "You bring stability and warmth to your circle."),
+                futureLine = GetOrFallback(parsed, "futureLine", "Your future opens through consistent self-growth."),
+                moneyLine = GetOrFallback(parsed, "moneyLine", "Smart planning helps you build durable wealth."),
+                educationLine = GetOrFallback(parsed, "educationLine", "You learn quickly with practical application."),
+                healthLine = GetOrFallback(parsed, "healthLine", "Daily routines keep your energy centered."),
+                purposeLine = GetOrFallback(parsed, "purposeLine", "You are here to inspire and uplift people.")
+            }
+        });
+    }
+
+    private static Dictionary<string, string> ParseAiKeyValue(string value)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return result;
+        }
+
+        var lines = value.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var line in lines)
+        {
+            var separatorIndex = line.IndexOf(':');
+            if (separatorIndex <= 0 || separatorIndex >= line.Length - 1)
+            {
+                continue;
+            }
+
+            var key = line[..separatorIndex].Trim();
+            var content = line[(separatorIndex + 1)..].Trim();
+            if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(content))
+            {
+                result[key] = content;
+            }
+        }
+
+        return result;
+    }
+
+    private static string GetOrFallback(Dictionary<string, string> source, string key, string fallback)
+    {
+        if (source.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        return fallback;
+    }
 }
 
 public sealed class InsightRequest
@@ -189,4 +294,10 @@ public sealed class InsightRequest
 public sealed class CompatibilityRequest
 {
     public string TargetZodiacSign { get; set; } = string.Empty;
+}
+
+public sealed class AIFallbackRequest
+{
+    public string? ZodiacSign { get; set; }
+    public string? DateOfBirth { get; set; }
 }

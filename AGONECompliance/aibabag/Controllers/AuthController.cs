@@ -162,6 +162,40 @@ public sealed class AuthController(
         });
     }
 
+    [HttpPost("set-birthday")]
+    public async Task<IActionResult> SetBirthday([FromBody] ManualBirthdayRequest request, CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
+        {
+            return Unauthorized(new { message = "User not authenticated." });
+        }
+
+        if (!DateTime.TryParse(request.DateOfBirth, out var parsedDate))
+        {
+            return BadRequest(new { message = "Invalid date format. Use yyyy-MM-dd." });
+        }
+
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == userId.Value, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        user.DateOfBirth = parsedDate.Date;
+        user.BirthDateSource = "manual-entry";
+        user.BirthDateRawText = parsedDate.ToString("yyyy-MM-dd");
+        user.UpdatedAtUtc = DateTime.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+
+        return Ok(new
+        {
+            success = true,
+            birthDate = user.DateOfBirth?.ToString("yyyy-MM-dd"),
+            source = user.BirthDateSource
+        });
+    }
+
     [HttpPost("upload-photo")]
     public async Task<IActionResult> UploadPhoto([FromBody] PhotoUploadRequest request, CancellationToken cancellationToken)
     {
@@ -213,4 +247,9 @@ public sealed class AuthController(
 public sealed class PhotoUploadRequest
 {
     public string PhotoData { get; set; } = string.Empty;
+}
+
+public sealed class ManualBirthdayRequest
+{
+    public string DateOfBirth { get; set; } = string.Empty;
 }

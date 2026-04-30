@@ -1,14 +1,27 @@
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostingEnvironment
 @{
-    ViewData["Title"] = "AstroAI Insight";
+    ViewData["Title"] = "AibabaG";
 }
 
 <div id="loginGate" class="login-gate">
     <div class="login-panel">
-        <p class="brand-kicker">AstroAI Insight</p>
-        <h1>Login with Google to view your full cosmic report</h1>
-        <p class="gate-note">Google login is mandatory for this experience.</p>
+        <p class="brand-kicker">AibabaG</p>
+        <h1>Welcome to AibabaG Master Personality AI</h1>
+        <p class="gate-note">Sign in with Google to unlock your personalized personality intelligence dashboard.</p>
         <button id="googleBtn" class="primary-btn">Continue with Google</button>
+    </div>
+</div>
+
+<div id="dobGate" class="login-gate hidden">
+    <div class="login-panel">
+        <p class="brand-kicker">AibabaG</p>
+        <h1>Add your birth date to continue</h1>
+        <p class="gate-note">We could not fetch birthday from Gmail. Please enter DOB manually before opening dashboard.</p>
+        <div class="dob-form">
+            <input id="manualDobInput" type="date" />
+            <button id="manualDobSaveBtn" class="primary-btn">Save and Open Dashboard</button>
+        </div>
+        <p id="manualDobError" class="manual-dob-error hidden"></p>
     </div>
 </div>
 
@@ -17,8 +30,8 @@
         <div class="logo-block">
             <div class="logo-dot">✦</div>
             <div>
-                <h1>AstroAI Insight</h1>
-                <p>AI + Astrology, All About You</p>
+                <h1>AibabaG</h1>
+                <p>Master Personality AI</p>
             </div>
         </div>
         <div class="top-right">
@@ -46,7 +59,7 @@
             </div>
             <div class="profile-main">
                 <h2 id="welcomeTitle">Hello, Rahul! ✨</h2>
-                <p id="heroLine">Here is your personalized AI + Astrology insights report.</p>
+                <p id="heroLine">Here is your personalized AibabaG personality intelligence report.</p>
                 <div class="meta-row">
                     <span id="dobBadge">15 August 1996</span>
                     <span id="timeBadge">10:30 AM</span>
@@ -65,7 +78,7 @@
         </article>
 
         <article class="card summary-card">
-            <h3>Your Cosmic Summary</h3>
+            <h3>Your Personality Summary</h3>
             <p id="cosmicSummary">You are a natural-born leader with a creative soul and a kind heart. You inspire people and love deeply.</p>
         </article>
     </section>
@@ -202,7 +215,7 @@
 
     <section class="bottom-strip">
         <article class="strip-card">
-            <p>AI Insight</p>
+            <p>AibabaG Insight</p>
             <h4>Birth + Personality Model</h4>
         </article>
         <article class="strip-card">
@@ -217,24 +230,29 @@
             <p>Happiness Index</p>
             <h4>85%</h4>
         </article>
-        <button class="download-btn">Download Full Report</button>
+        <button class="download-btn">Download AibabaG Report</button>
     </section>
 </div>
 
 <script>
+    const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=500&q=80";
+    const DEFAULT_CARD_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
+
     const state = {
         userId: null,
         profile: null,
-        mood: "🌞 Radiant Energy",
-        stream: null,
         famous: []
     };
 
     const ui = {
         loginGate: document.getElementById("loginGate"),
+        dobGate: document.getElementById("dobGate"),
         appShell: document.getElementById("appShell"),
         googleBtn: document.getElementById("googleBtn"),
         logoutBtn: document.getElementById("logoutBtn"),
+        manualDobInput: document.getElementById("manualDobInput"),
+        manualDobSaveBtn: document.getElementById("manualDobSaveBtn"),
+        manualDobError: document.getElementById("manualDobError"),
         avatarImage: document.getElementById("avatarImage"),
         avatarFallback: document.getElementById("avatarFallback"),
         topUserImage: document.getElementById("topUserImage"),
@@ -251,7 +269,18 @@
         ascSign: document.getElementById("ascSign"),
         cosmicSummary: document.getElementById("cosmicSummary"),
         famousGrid: document.getElementById("famousGrid"),
-        luckyList: document.getElementById("luckyList")
+        luckyList: document.getElementById("luckyList"),
+        animalLine: document.getElementById("animalLine"),
+        foodLine: document.getElementById("foodLine"),
+        travelLine: document.getElementById("travelLine"),
+        careerLine: document.getElementById("careerLine"),
+        loveLine: document.getElementById("loveLine"),
+        familyLine: document.getElementById("familyLine"),
+        futureLine: document.getElementById("futureLine"),
+        moneyLine: document.getElementById("moneyLine"),
+        educationLine: document.getElementById("educationLine"),
+        healthLine: document.getElementById("healthLine"),
+        purposeLine: document.getElementById("purposeLine")
     };
 
     const imageMap = {
@@ -275,9 +304,15 @@
         applyStaticImages();
         const authed = await hydrateAuth();
         if (!authed) {
-            showGate();
+            showLoginGate();
             return;
         }
+
+        if (!state.profile.dateOfBirth) {
+            showDobGate();
+            return;
+        }
+
         showApp();
         await renderReport();
     }
@@ -289,14 +324,20 @@
         ui.logoutBtn.addEventListener("click", () => {
             window.location.href = "/api/auth/logout";
         });
+        ui.manualDobSaveBtn.addEventListener("click", submitManualDob);
     }
 
     function applyStaticImages() {
         for (const [id, value] of Object.entries(imageMap)) {
             const el = document.getElementById(id);
-            if (el) {
-                el.src = value;
+            if (!el) {
+                continue;
             }
+
+            el.src = value;
+            el.onerror = () => {
+                el.src = DEFAULT_CARD_IMAGE;
+            };
         }
     }
 
@@ -306,6 +347,7 @@
             if (!response.ok) {
                 return false;
             }
+
             const auth = await response.json();
             if (!auth?.isAuthenticated) {
                 return false;
@@ -314,8 +356,8 @@
             state.userId = auth.userId;
             const dobFromGoogle = await fetchGoogleBirthday();
             state.profile = {
-                name: auth.userName || "Cosmic User",
-                dateOfBirth: dobFromGoogle || auth.dateOfBirth || "1996-08-15",
+                name: auth.userName || "AibabaG User",
+                dateOfBirth: dobFromGoogle || auth.dateOfBirth || null,
                 avatar: auth.profileImageUrl || "",
                 email: auth.email || "user@gmail.com",
                 city: "New Delhi, India",
@@ -338,13 +380,58 @@
         }
     }
 
-    function showGate() {
+    async function submitManualDob() {
+        const dob = ui.manualDobInput.value;
+        if (!dob) {
+            ui.manualDobError.classList.remove("hidden");
+            ui.manualDobError.textContent = "Please select your date of birth.";
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/auth/set-birthday", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dateOfBirth: dob })
+            });
+            if (!response.ok) {
+                ui.manualDobError.classList.remove("hidden");
+                ui.manualDobError.textContent = "Could not save DOB. Please try again.";
+                return;
+            }
+
+            const payload = await response.json();
+            if (!payload?.success || !payload?.birthDate) {
+                ui.manualDobError.classList.remove("hidden");
+                ui.manualDobError.textContent = "Could not save DOB. Please try again.";
+                return;
+            }
+
+            state.profile.dateOfBirth = String(payload.birthDate).slice(0, 10);
+            ui.manualDobError.classList.add("hidden");
+            showApp();
+            await renderReport();
+        } catch {
+            ui.manualDobError.classList.remove("hidden");
+            ui.manualDobError.textContent = "Network error while saving DOB.";
+        }
+    }
+
+    function showLoginGate() {
         ui.loginGate.classList.remove("hidden");
+        ui.dobGate.classList.add("hidden");
+        ui.appShell.classList.add("hidden");
+    }
+
+    function showDobGate() {
+        ui.loginGate.classList.add("hidden");
+        ui.dobGate.classList.remove("hidden");
         ui.appShell.classList.add("hidden");
     }
 
     function showApp() {
         ui.loginGate.classList.add("hidden");
+        ui.dobGate.classList.add("hidden");
         ui.appShell.classList.remove("hidden");
     }
 
@@ -354,18 +441,19 @@
         const moon = moonSignFromDate(state.profile.dateOfBirth);
         const asc = ascendantFromDate(state.profile.dateOfBirth);
         const lucky = luckyEssentialsFromSign(zodiac);
+        const aiText = await getAiFallbackText(zodiac, state.profile.dateOfBirth);
 
         ui.welcomeTitle.textContent = `Hello, ${state.profile.name}! ✨`;
         ui.topUserName.textContent = state.profile.name;
         ui.topUserEmail.textContent = state.profile.email || "user@gmail.com";
-        ui.heroLine.textContent = "Here is your personalized AI + Astrology insights report.";
+        ui.heroLine.textContent = "Here is your personalized AibabaG personality intelligence report.";
         ui.dobBadge.textContent = formatDateLong(dob);
         ui.timeBadge.textContent = state.profile.birthTime;
         ui.cityBadge.textContent = state.profile.city;
         ui.sunSign.textContent = `${zodiac} ${symbolForSign(zodiac)}`;
         ui.moonSign.textContent = `${moon} ${symbolForSign(moon)}`;
         ui.ascSign.textContent = `${asc} ${symbolForSign(asc)}`;
-        ui.cosmicSummary.textContent = buildSummary(zodiac);
+        ui.cosmicSummary.textContent = aiText.summary || buildSummary(zodiac);
         ui.luckyList.innerHTML = `
             <li>Lucky Color: ${escapeHtml(lucky.color)}</li>
             <li>Lucky Number: ${escapeHtml(lucky.number)}</li>
@@ -373,24 +461,62 @@
             <li>Lucky Gem: ${escapeHtml(lucky.gem)}</li>
         `;
 
-        if (state.profile.avatar) {
-            ui.avatarImage.src = state.profile.avatar;
-            ui.avatarImage.classList.remove("hidden");
-            ui.avatarFallback.classList.add("hidden");
-            ui.topUserImage.src = state.profile.avatar;
-            ui.topUserImage.classList.remove("hidden");
-            ui.topUserFallback.classList.add("hidden");
-        } else {
+        setText(ui.animalLine, aiText.animalLine, "Confident and protective with strong instincts.");
+        setText(ui.foodLine, aiText.foodLine, "You enjoy vibrant flavors and expressive choices.");
+        setText(ui.travelLine, aiText.travelLine, "New places recharge your mind and motivation.");
+        setText(ui.careerLine, aiText.careerLine, "Leadership and ownership roles suit you well.");
+        setText(ui.loveLine, aiText.loveLine, "You value loyalty and emotional honesty.");
+        setText(ui.familyLine, aiText.familyLine, "You bring stability and warmth to your circle.");
+        setText(ui.futureLine, aiText.futureLine, "Your future opens through consistent self-growth.");
+        setText(ui.moneyLine, aiText.moneyLine, "Smart planning helps you build durable wealth.");
+        setText(ui.educationLine, aiText.educationLine, "You learn quickly with practical application.");
+        setText(ui.healthLine, aiText.healthLine, "Daily routines keep your energy centered.");
+        setText(ui.purposeLine, aiText.purposeLine, "You are here to inspire and uplift people.");
+
+        applyProfileImage();
+        await fetchAndRenderFamous(state.profile.dateOfBirth);
+    }
+
+    async function getAiFallbackText(zodiacSign, dob) {
+        try {
+            const response = await fetch("/api/insights/ai-fallback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ zodiacSign, dateOfBirth: dob })
+            });
+            if (!response.ok) {
+                return {};
+            }
+            const payload = await response.json();
+            return payload?.success && payload?.data ? payload.data : {};
+        } catch {
+            return {};
+        }
+    }
+
+    function applyProfileImage() {
+        const profileImage = state.profile.avatar && state.profile.avatar.trim().length > 0
+            ? state.profile.avatar
+            : DEFAULT_PROFILE_IMAGE;
+        const initialsText = initials(state.profile.name);
+
+        ui.avatarImage.src = profileImage;
+        ui.topUserImage.src = profileImage;
+        ui.avatarImage.classList.remove("hidden");
+        ui.topUserImage.classList.remove("hidden");
+        ui.avatarFallback.classList.add("hidden");
+        ui.topUserFallback.classList.add("hidden");
+
+        ui.avatarImage.onerror = () => {
             ui.avatarImage.classList.add("hidden");
             ui.avatarFallback.classList.remove("hidden");
-            const two = initials(state.profile.name);
-            ui.avatarFallback.textContent = two;
+            ui.avatarFallback.textContent = initialsText;
+        };
+        ui.topUserImage.onerror = () => {
             ui.topUserImage.classList.add("hidden");
             ui.topUserFallback.classList.remove("hidden");
-            ui.topUserFallback.textContent = two;
-        }
-
-        await fetchAndRenderFamous(state.profile.dateOfBirth);
+            ui.topUserFallback.textContent = initialsText;
+        };
     }
 
     async function fetchAndRenderFamous(dob) {
@@ -400,14 +526,16 @@
                 renderFamous(fallbackFamous());
                 return;
             }
+
             const payload = await response.json();
             if (!payload?.success || !Array.isArray(payload.people) || !payload.people.length) {
                 renderFamous(fallbackFamous());
                 return;
             }
+
             renderFamous(payload.people.slice(0, 8).map(person => ({
                 name: person.name || "Famous Personality",
-                summary: person.summary || "Shares your birthday cosmic energy.",
+                summary: person.summary || "Shares your birthday personality energy.",
                 imageUrl: safeImage(person.imageUrl),
                 articleUrl: person.articleUrl || ""
             })));
@@ -419,7 +547,7 @@
     function renderFamous(items) {
         ui.famousGrid.innerHTML = items.map(item => `
             <article class="famous-card">
-                <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+                <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.src='${DEFAULT_CARD_IMAGE}'" />
                 <div class="famous-body">
                     <h4>${escapeHtml(item.name)}</h4>
                     <p>${escapeHtml(item.summary)}</p>
@@ -514,12 +642,12 @@
 
     function safeImage(url) {
         if (typeof url !== "string") {
-            return "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+            return DEFAULT_CARD_IMAGE;
         }
         if (url.startsWith("http://") || url.startsWith("https://")) {
             return url;
         }
-        return "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+        return DEFAULT_CARD_IMAGE;
     }
 
     function formatDateLong(date) {
@@ -528,6 +656,16 @@
             month: "long",
             year: "numeric"
         });
+    }
+
+    function setText(element, value, fallback) {
+        if (!element) {
+            return;
+        }
+
+        element.textContent = typeof value === "string" && value.trim().length > 0
+            ? value
+            : fallback;
     }
 
     function initials(name) {
@@ -607,6 +745,28 @@
     .gate-note {
         margin: 0 0 18px;
         color: var(--text-soft);
+    }
+
+    .dob-form {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .dob-form input[type="date"] {
+        border: 1px solid rgba(131, 155, 255, 0.3);
+        background: rgba(140, 157, 255, 0.1);
+        color: #f0f4ff;
+        border-radius: 10px;
+        padding: 9px 11px;
+        min-width: 200px;
+    }
+
+    .manual-dob-error {
+        color: #ff9ea9;
+        font-size: 0.86rem;
+        margin-top: 10px;
     }
 
     .primary-btn,
