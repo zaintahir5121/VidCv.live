@@ -38,6 +38,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IAstrologyService, AstrologyService>();
 builder.Services.AddScoped<IDetailedAstrologyService, DetailedAstrologyService>();
 builder.Services.AddScoped<ISocialPublisherService, SocialPublisherService>();
+builder.Services.AddHttpClient<IFamousBirthdayService, WikimediaFamousBirthdayService>();
 builder.Services.Configure<AiProviderOptions>(builder.Configuration.GetSection("Ai"));
 builder.Services.AddHttpClient<IAiTextService, PollinationsAiTextService>();
 builder.Services.AddHttpClient<IGooglePeopleProfileService, GooglePeopleProfileService>();

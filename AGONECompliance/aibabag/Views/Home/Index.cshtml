@@ -4,108 +4,111 @@
     var isLocalMode = HostingEnvironment.IsDevelopment().ToString().ToLowerInvariant();
 }
 
-<div class="onepage-shell">
-    <section class="hero-report">
-        <div class="hero-left">
-            <p class="kicker">AIBABAG COSMIC REPORT</p>
-            <h1>Discover your cosmic personality ✨</h1>
-            <p class="sub">
-                A playful one-page report experience with mood capture, astrology cards, and share-ready moments.
-            </p>
-            <div class="hero-actions">
-                <button id="googleBtn" class="btn primary">Continue with Google</button>
-                <button id="guestBtn" class="btn ghost">Try as Guest</button>
-            </div>
-            <p class="note">Just for fun. No biometrics. No image storage.</p>
+<div class="simple-shell">
+    <section class="top-card">
+        <div class="top-title">
+            <p class="tiny">AIBABAG</p>
+            <h1>Your simple cosmic report ✨</h1>
+            <p class="muted">Famous personalities by your birth date + visual cards for spirit animal, best friend, and lucky fruit/veggie.</p>
         </div>
-        <aside class="hero-camera-stage">
-            <div class="camera-header">
-                <span>Cosmic Mood Capture</span>
-                <small>Optional</small>
-            </div>
-            <video id="cameraVideo" autoplay playsinline muted></video>
-            <div class="camera-controls">
-                <button id="captureVibeBtn" class="btn mini">Capture vibe ✨</button>
-                <button id="skipVibeBtn" class="btn mini ghost">Skip</button>
-            </div>
-            <div id="countdown" class="countdown hidden">3</div>
-            <p class="camera-note">Camera opens only if you tap capture.</p>
-        </aside>
+        <div class="top-actions">
+            <button id="googleBtn" class="btn primary">Google Login</button>
+            <button id="guestBtn" class="btn soft">Guest</button>
+            <button id="logoutBtn" class="btn soft hidden">Logout</button>
+        </div>
     </section>
 
-    <main id="report" class="report-stack">
-        <section class="card welcome">
-            <div class="avatar-wrap">
-                <img id="avatarImage" class="avatar hidden" alt="Profile avatar" />
-                <div id="avatarFallback" class="avatar-fallback"></div>
-            </div>
+    <section class="profile-card">
+        <div class="profile-left">
+            <img id="avatarImage" class="avatar hidden" alt="Profile photo" />
+            <div id="avatarFallback" class="avatar-fallback"></div>
             <div>
-                <h2 id="welcomeTitle">Hey there 👋</h2>
-                <p>The universe has thoughts about you.</p>
+                <h2 id="welcomeTitle">Hey Cosmic Friend 👋</h2>
+                <p id="profileLine" class="muted">Your report loads instantly.</p>
             </div>
-            <div class="top-actions">
-                <button id="logoutBtn" class="btn mini ghost hidden">Logout</button>
+        </div>
+        <div class="camera-box">
+            <video id="cameraVideo" autoplay playsinline muted class="hidden"></video>
+            <div id="countdown" class="countdown hidden">3</div>
+            <div class="camera-actions">
+                <button id="captureVibeBtn" class="btn soft">Capture Mood</button>
+                <button id="skipVibeBtn" class="btn soft">Skip</button>
             </div>
-        </section>
+            <small>Camera is optional and nothing is stored.</small>
+        </div>
+    </section>
 
-        <section class="card mood">
-            <p class="section-tag">TODAY'S COSMIC MOOD</p>
+    <section class="mini-grid">
+        <article class="mini-card">
+            <p class="tiny">MOOD</p>
             <h3 id="moodTitle">🌞 Radiant Energy</h3>
-            <p id="moodLine">You look like the main character and the soundtrack at the same time.</p>
-            <small>Just for fun — no emotional or medical claims.</small>
-        </section>
+            <p id="moodLine" class="muted">Bright aura today.</p>
+        </article>
+        <article class="mini-card">
+            <p class="tiny">ZODIAC</p>
+            <h3 id="zodiacValue">Aries</h3>
+            <p id="snapshotLine" class="muted">Element + destiny vibe.</p>
+        </article>
+    </section>
 
-        <section class="card">
-            <p class="section-tag">ASTRO SNAPSHOT</p>
-            <div id="snapshotGrid" class="grid-4"></div>
-        </section>
+    <section class="card-section">
+        <div class="section-head">
+            <h3>🎂 Famous personalities born on your day</h3>
+        </div>
+        <div id="birthdayCards" class="photo-grid"></div>
+    </section>
 
-        <section class="card spirit">
-            <p class="section-tag">SPIRIT ANIMAL</p>
-            <h3 id="spiritAnimalTitle">🦊 Chill Fox</h3>
-            <p id="spiritAnimalLine">Clever, observant, pretending not to care.</p>
-        </section>
-
-        <section class="card">
-            <p class="section-tag">🎂 You share a birthday with legends</p>
-            <div id="birthdayCards" class="horizontal"></div>
-        </section>
-
-        <section class="card">
-            <p class="section-tag">PERSONALITY INSIGHTS</p>
-            <div id="insightCards" class="grid-3"></div>
-        </section>
-
-        <section class="card share">
-            <p class="section-tag">SHARE MOMENT</p>
-            <div id="sharePreview" class="share-preview">
-                I just discovered my cosmic personality ✨ <br />
-                Aibabag
+    <section class="card-section three-up">
+        <article class="visual-card">
+            <img id="spiritImage" alt="Spirit animal image" />
+            <div class="visual-body">
+                <p class="tiny">SPIRIT ANIMAL</p>
+                <h4 id="spiritTitle">Fox</h4>
+                <p id="spiritLine" class="muted">Calm and clever.</p>
             </div>
-            <div class="hero-actions">
-                <button id="shareImageBtn" class="btn primary">Share image</button>
-                <button id="copyLinkBtn" class="btn ghost">Copy link</button>
-                <button id="downloadBtn" class="btn ghost">Download</button>
+        </article>
+        <article class="visual-card">
+            <img id="friendImage" alt="Best friend vibe image" />
+            <div class="visual-body">
+                <p class="tiny">BEST FRIEND VIBE</p>
+                <h4 id="friendTitle">Golden Retriever Friend</h4>
+                <p id="friendLine" class="muted">Supportive and playful.</p>
             </div>
-        </section>
+        </article>
+        <article class="visual-card">
+            <img id="fruitImage" alt="Lucky fruit and veggie image" />
+            <div class="visual-body">
+                <p class="tiny">LUCKY FRUIT / VEGGIE</p>
+                <h4 id="fruitTitle">Mango + Carrot</h4>
+                <p id="fruitLine" class="muted">Sweet confidence + grounded focus.</p>
+            </div>
+        </article>
+    </section>
 
-        <section class="card">
-            <p class="section-tag">COSMIC MEMORY LANE</p>
-            <div id="historyCards" class="horizontal"></div>
-        </section>
-    </main>
+    <section class="card-section">
+        <div class="section-head">
+            <h3>Share this report</h3>
+        </div>
+        <div id="sharePreview" class="share-preview">I discovered my cosmic personality ✨</div>
+        <div class="top-actions">
+            <button id="shareImageBtn" class="btn primary">Share image</button>
+            <button id="copyLinkBtn" class="btn soft">Copy link</button>
+            <button id="downloadBtn" class="btn soft">Download</button>
+        </div>
+    </section>
+
+    <section class="card-section">
+        <div class="section-head">
+            <h3>Recent cosmic history</h3>
+        </div>
+        <div id="historyCards" class="history-grid"></div>
+    </section>
 </div>
 
 <script>
     const IS_LOCAL_MODE = @Html.Raw(isLocalMode);
-    const HISTORY_KEY = "aibabag-history-v2";
-    const MOODS = [
-        "🌞 Radiant Energy",
-        "🌊 Calm Energy",
-        "⚡ Expressive Energy",
-        "🌙 Reflective Energy",
-        "🔥 Intense Energy"
-    ];
+    const HISTORY_KEY = "aibabag-history-v3";
+    const MOODS = ["🌞 Radiant Energy", "🌊 Calm Energy", "⚡ Expressive Energy", "🌙 Reflective Energy", "🔥 Intense Energy"];
 
     const state = {
         userId: null,
@@ -119,21 +122,29 @@
     const ui = {
         googleBtn: document.getElementById("googleBtn"),
         guestBtn: document.getElementById("guestBtn"),
-        captureVibeBtn: document.getElementById("captureVibeBtn"),
-        skipVibeBtn: document.getElementById("skipVibeBtn"),
-        countdown: document.getElementById("countdown"),
-        cameraVideo: document.getElementById("cameraVideo"),
+        logoutBtn: document.getElementById("logoutBtn"),
         avatarImage: document.getElementById("avatarImage"),
         avatarFallback: document.getElementById("avatarFallback"),
-        logoutBtn: document.getElementById("logoutBtn"),
         welcomeTitle: document.getElementById("welcomeTitle"),
+        profileLine: document.getElementById("profileLine"),
+        captureVibeBtn: document.getElementById("captureVibeBtn"),
+        skipVibeBtn: document.getElementById("skipVibeBtn"),
+        cameraVideo: document.getElementById("cameraVideo"),
+        countdown: document.getElementById("countdown"),
         moodTitle: document.getElementById("moodTitle"),
         moodLine: document.getElementById("moodLine"),
-        spiritAnimalTitle: document.getElementById("spiritAnimalTitle"),
-        spiritAnimalLine: document.getElementById("spiritAnimalLine"),
-        snapshotGrid: document.getElementById("snapshotGrid"),
+        zodiacValue: document.getElementById("zodiacValue"),
+        snapshotLine: document.getElementById("snapshotLine"),
         birthdayCards: document.getElementById("birthdayCards"),
-        insightCards: document.getElementById("insightCards"),
+        spiritImage: document.getElementById("spiritImage"),
+        spiritTitle: document.getElementById("spiritTitle"),
+        spiritLine: document.getElementById("spiritLine"),
+        friendImage: document.getElementById("friendImage"),
+        friendTitle: document.getElementById("friendTitle"),
+        friendLine: document.getElementById("friendLine"),
+        fruitImage: document.getElementById("fruitImage"),
+        fruitTitle: document.getElementById("fruitTitle"),
+        fruitLine: document.getElementById("fruitLine"),
         sharePreview: document.getElementById("sharePreview"),
         shareImageBtn: document.getElementById("shareImageBtn"),
         copyLinkBtn: document.getElementById("copyLinkBtn"),
@@ -148,24 +159,22 @@
         if (!IS_LOCAL_MODE) {
             ui.guestBtn.classList.add("hidden");
         }
+
         loadHistory();
         const isAuthed = await hydrateAuth();
         if (!isAuthed) {
             startGuestMode();
         }
+
         renderHistory();
     }
 
     function bindEvents() {
-        ui.googleBtn.addEventListener("click", () => {
-            window.location.href = "/api/auth/login?returnUrl=/";
-        });
+        ui.googleBtn.addEventListener("click", () => window.location.href = "/api/auth/login?returnUrl=/");
         ui.guestBtn.addEventListener("click", startGuestMode);
+        ui.logoutBtn.addEventListener("click", () => window.location.href = "/api/auth/logout");
         ui.captureVibeBtn.addEventListener("click", captureVibeFlow);
         ui.skipVibeBtn.addEventListener("click", skipVibeFlow);
-        ui.logoutBtn.addEventListener("click", () => {
-            window.location.href = "/api/auth/logout";
-        });
         ui.shareImageBtn.addEventListener("click", shareImage);
         ui.copyLinkBtn.addEventListener("click", copyLink);
         ui.downloadBtn.addEventListener("click", downloadCard);
@@ -173,23 +182,23 @@
 
     async function hydrateAuth() {
         try {
-            const res = await fetch("/api/auth/status");
-            const auth = await res.json();
-            if (!auth?.isAuthenticated) {
-                return false;
-            }
+            const response = await fetch("/api/auth/status");
+            if (!response.ok) return false;
+            const auth = await response.json();
+            if (!auth?.isAuthenticated) return false;
 
             state.userId = auth.userId;
-            const googleDob = await fetchGoogleBirthday();
+            const dobFromGoogle = await fetchGoogleBirthday();
             state.profile = {
                 name: auth.userName || "Cosmic Human",
-                dateOfBirth: googleDob || auth.dateOfBirth || randomDateString(),
+                dateOfBirth: dobFromGoogle || auth.dateOfBirth || randomDateString(),
                 avatar: auth.profileImageUrl || "",
                 isGuest: false
             };
+
             ui.logoutBtn.classList.remove("hidden");
-            await loadServerHistory();
             renderProfile();
+            await loadServerHistory();
             await skipVibeFlow();
             return true;
         } catch {
@@ -199,7 +208,7 @@
 
     function startGuestMode() {
         state.profile = {
-            name: randomItem(["Luna Spark", "Nova Bloom", "Solar Jinx", "Astra Vibe", "Mira Orbit"]),
+            name: randomItem(["Luna Spark", "Nova Bloom", "Astra Flow", "Mira Glow"]),
             dateOfBirth: randomDateString(),
             avatar: "",
             isGuest: true
@@ -210,6 +219,8 @@
 
     function renderProfile() {
         ui.welcomeTitle.textContent = `Hey ${state.profile.name} 👋`;
+        ui.profileLine.textContent = `DOB: ${state.profile.dateOfBirth} • Simple visual report mode`;
+
         if (state.profile.avatar) {
             ui.avatarImage.src = state.profile.avatar;
             ui.avatarImage.classList.remove("hidden");
@@ -244,6 +255,7 @@
         }
 
         try {
+            ui.cameraVideo.classList.remove("hidden");
             state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
             ui.cameraVideo.srcObject = state.stream;
             await runCountdown();
@@ -263,27 +275,28 @@
         }
         state.stream = null;
         ui.cameraVideo.srcObject = null;
+        ui.cameraVideo.classList.add("hidden");
     }
 
     async function runCountdown() {
         ui.countdown.classList.remove("hidden");
         for (const n of [3, 2, 1]) {
             ui.countdown.textContent = String(n);
-            await delay(450);
+            await delay(400);
         }
         ui.countdown.classList.add("hidden");
     }
 
     function captureMoodLabel(video) {
         const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth || 480;
-        canvas.height = video.videoHeight || 320;
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 220;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const pixel = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let score = 0;
-        for (let i = 0; i < pixel.length; i += 64) {
-            score += pixel[i] + pixel[i + 1] + pixel[i + 2];
+        for (let i = 0; i < pixels.length; i += 64) {
+            score += pixels[i] + pixels[i + 1] + pixels[i + 2];
         }
         return MOODS[Math.floor(score) % MOODS.length];
     }
@@ -292,9 +305,10 @@
         const zodiac = zodiacFromDate(state.profile.dateOfBirth);
         const chinese = chineseZodiacFromDate(state.profile.dateOfBirth);
         const element = elementFromZodiac(zodiac);
-        const spirit = spiritAnimal(zodiac, state.mood);
-        const famous = birthdayLegends(state.profile.dateOfBirth);
-        const lines = personalityLines(zodiac, state.mood);
+        const spirit = pickSpiritAnimal(state.mood);
+        const bestFriend = pickBestFriend(zodiac);
+        const luckyFood = pickLuckyFruitVeg(element);
+        const famous = await fetchFamousPersonalities(state.profile.dateOfBirth);
 
         if (!state.profile.isGuest && state.userId) {
             try {
@@ -304,7 +318,7 @@
                     body: JSON.stringify({ dateOfBirth: state.profile.dateOfBirth, photoHint: state.mood })
                 });
             } catch {
-                // keep local render path
+                // Keep UX smooth even if API call fails.
             }
         }
 
@@ -314,7 +328,8 @@
             chinese,
             element,
             spirit,
-            lines,
+            bestFriend,
+            luckyFood,
             famous
         };
 
@@ -322,35 +337,83 @@
         persistHistory();
     }
 
+    async function fetchFamousPersonalities(dob) {
+        try {
+            const response = await fetch(`/api/insights/famous-by-birthday?dob=${encodeURIComponent(dob)}`);
+            if (!response.ok) {
+                return fallbackFamous();
+            }
+
+            const payload = await response.json();
+            if (!payload?.success || !Array.isArray(payload.people) || !payload.people.length) {
+                return fallbackFamous();
+            }
+
+            return payload.people.slice(0, 8).map(person => ({
+                name: person.name || "Famous Personality",
+                summary: person.summary || "Shares your birthday energy.",
+                imageUrl: safeUrl(person.imageUrl, "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg"),
+                articleUrl: safeUrl(person.articleUrl, "")
+            }));
+        } catch {
+            return fallbackFamous();
+        }
+    }
+
+    function fallbackFamous() {
+        return [
+            {
+                name: "Maya Angelou",
+                summary: "Poet and storyteller with timeless voice.",
+                imageUrl: "https://upload.wikimedia.org/wikipedia/commons/0/09/Dr._Maya_Angelou.jpg",
+                articleUrl: "https://en.wikipedia.org/wiki/Maya_Angelou"
+            },
+            {
+                name: "Gal Gadot",
+                summary: "Actor with powerful screen presence.",
+                imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/eb/Gal_Gadot_2018.jpg",
+                articleUrl: "https://en.wikipedia.org/wiki/Gal_Gadot"
+            },
+            {
+                name: "Akon",
+                summary: "Singer and producer known worldwide.",
+                imageUrl: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Akon_2009.jpg",
+                articleUrl: "https://en.wikipedia.org/wiki/Akon"
+            }
+        ];
+    }
+
     function renderCards() {
         const g = state.generated;
         ui.moodTitle.textContent = state.mood;
         ui.moodLine.textContent = moodOneLiner(state.mood);
-        ui.snapshotGrid.innerHTML = [
-            ["♈", "Zodiac", g.zodiac],
-            ["🐉", "Chinese Zodiac", g.chinese],
-            ["🔥", "Element", g.element],
-            ["✨", "Destiny Vibe", destinyVibe(g.zodiac)]
-        ].map(([emoji, title, value]) => `<article class="snap"><p>${emoji} ${title}</p><h4>${value}</h4></article>`).join("");
+        ui.zodiacValue.textContent = `${g.zodiac} • ${g.chinese}`;
+        ui.snapshotLine.textContent = `${g.element} sign energy • ${destinyVibe(g.zodiac)}`;
 
-        ui.spiritAnimalTitle.textContent = `${g.spirit.emoji} Spirit Animal Today: ${g.spirit.name}`;
-        ui.spiritAnimalLine.textContent = g.spirit.line;
+        ui.spiritImage.src = g.spirit.image;
+        ui.spiritTitle.textContent = `${g.spirit.emoji} ${g.spirit.name}`;
+        ui.spiritLine.textContent = g.spirit.line;
 
-        ui.birthdayCards.innerHTML = g.famous.map(p => `
-            <article class="legend-card">
-                <div class="legend-photo">${p.photo}</div>
-                <h4>${escapeHtml(p.name)}</h4>
-                <p>${escapeHtml(p.trait)}</p>
-            </article>`).join("");
+        ui.friendImage.src = g.bestFriend.image;
+        ui.friendTitle.textContent = g.bestFriend.name;
+        ui.friendLine.textContent = g.bestFriend.line;
 
-        ui.insightCards.innerHTML = [
-            ["💡 Hidden strength", g.lines.hiddenStrength],
-            ["🌪 Chaos trait", g.lines.chaosTrait],
-            ["😶 Misunderstood", g.lines.misunderstood]
-        ].map(([t, v]) => `<article class="insight"><h4>${t}</h4><p>${escapeHtml(v)}</p></article>`).join("");
+        ui.fruitImage.src = g.luckyFood.image;
+        ui.fruitTitle.textContent = g.luckyFood.name;
+        ui.fruitLine.textContent = g.luckyFood.line;
 
-        ui.sharePreview.innerHTML =
-            `I just discovered my cosmic personality ✨<br/>${escapeHtml(state.profile.name)} • ${escapeHtml(state.mood)} • ${escapeHtml(g.zodiac)}<br/>Aibabag`;
+        ui.birthdayCards.innerHTML = g.famous.map(person => `
+            <article class="person-card">
+                <img src="${escapeHtml(person.imageUrl)}" alt="${escapeHtml(person.name)}" loading="lazy" />
+                <div class="person-body">
+                    <h4>${escapeHtml(person.name)}</h4>
+                    <p>${escapeHtml(person.summary)}</p>
+                    ${person.articleUrl ? `<a href="${escapeHtml(person.articleUrl)}" target="_blank" rel="noreferrer noopener">View profile</a>` : ""}
+                </div>
+            </article>
+        `).join("");
+
+        ui.sharePreview.innerHTML = `I discovered my cosmic personality ✨<br>${escapeHtml(state.profile.name)} • ${escapeHtml(g.zodiac)} • ${escapeHtml(state.mood)}`;
     }
 
     function persistHistory() {
@@ -359,8 +422,7 @@
             at: state.generated.createdAt,
             mood: state.mood,
             zodiac: state.generated.zodiac,
-            name: state.profile.name,
-            line: state.generated.lines.hiddenStrength
+            line: state.generated.spirit.line
         };
         state.history = dedupe([item, ...state.history]).slice(0, 12);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history));
@@ -383,32 +445,35 @@
             if (!res.ok) return;
             const payload = await res.json();
             if (!payload?.success || !Array.isArray(payload.history)) return;
+
             const mapped = payload.history.map(h => ({
                 id: `srv-${h.id}`,
                 at: h.calculatedAt || new Date().toISOString(),
-                mood: h.luckyColor ? `✨ ${h.luckyColor}` : "✨ Cosmic Energy",
+                mood: h.luckyColor ? `✨ ${h.luckyColor}` : "✨ Cosmic",
                 zodiac: h.zodiacSign || "Unknown",
-                name: state.profile.name,
-                line: h.personalityTraits || h.careerInsights || "Cosmic memory unlocked."
+                line: h.personalityTraits || "Cosmic memory"
             }));
+
             state.history = dedupe([...mapped, ...state.history]).slice(0, 12);
             localStorage.setItem(HISTORY_KEY, JSON.stringify(state.history));
         } catch {
-            // local fallback
+            // Local history only.
         }
     }
 
     function renderHistory() {
         if (!state.history.length) {
-            ui.historyCards.innerHTML = `<article class="memory-card">Your next cosmic read appears here ✨</article>`;
+            ui.historyCards.innerHTML = `<article class="history-card">No history yet. Generate a mood and your cards will appear here.</article>`;
             return;
         }
-        ui.historyCards.innerHTML = state.history.map(h => `
-            <article class="memory-card">
-                <h4>${escapeHtml(h.mood)}</h4>
-                <p>${escapeHtml(h.name)} • ${escapeHtml(h.zodiac)}</p>
-                <small>${escapeHtml(h.line)}</small>
-            </article>`).join("");
+
+        ui.historyCards.innerHTML = state.history.map(item => `
+            <article class="history-card">
+                <h4>${escapeHtml(item.mood)}</h4>
+                <p>${escapeHtml(item.zodiac)}</p>
+                <small>${escapeHtml(item.line)}</small>
+            </article>
+        `).join("");
     }
 
     async function shareImage() {
@@ -416,7 +481,7 @@
         if (!blob) return;
         const file = new File([blob], "aibabag-share.png", { type: "image/png" });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: "AIBABAG", text: "I just discovered my cosmic personality ✨" });
+            await navigator.share({ files: [file], title: "AIBABAG", text: "I discovered my cosmic personality ✨" });
             return;
         }
         await copyLink();
@@ -439,26 +504,29 @@
 
     async function createShareBlob() {
         if (!state.generated) return null;
+
         const canvas = document.createElement("canvas");
-        canvas.width = 1080;
-        canvas.height = 1080;
+        canvas.width = 1000;
+        canvas.height = 1000;
         const ctx = canvas.getContext("2d");
-        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, "#4e38ff");
-        grad.addColorStop(0.5, "#8f4aff");
-        grad.addColorStop(1, "#ff6fa4");
-        ctx.fillStyle = grad;
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, "#5b45ff");
+        gradient.addColorStop(1, "#f56aa8");
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.fillRect(80, 120, 920, 820);
-        ctx.fillStyle = "#20234f";
-        ctx.font = "700 56px Inter, sans-serif";
-        ctx.fillText("I discovered my cosmic personality ✨", 120, 250);
-        ctx.font = "500 42px Inter, sans-serif";
-        ctx.fillText(`${state.profile.name} • ${state.generated.zodiac}`, 120, 360);
-        ctx.fillText(`${state.mood}`, 120, 430);
-        ctx.font = "700 52px Inter, sans-serif";
-        ctx.fillText("AIBABAG", 120, 820);
+        ctx.fillRect(70, 100, 860, 800);
+        ctx.fillStyle = "#21244f";
+        ctx.font = "700 48px Inter, sans-serif";
+        ctx.fillText("My Cosmic Report ✨", 120, 230);
+        ctx.font = "500 36px Inter, sans-serif";
+        ctx.fillText(`${state.profile.name}`, 120, 330);
+        ctx.fillText(`${state.generated.zodiac} • ${state.mood}`, 120, 390);
+        ctx.fillText(`${state.generated.spirit.name}`, 120, 460);
+        ctx.font = "700 44px Inter, sans-serif";
+        ctx.fillText("AIBABAG", 120, 780);
+
         return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
     }
 
@@ -482,82 +550,130 @@
 
     function chineseZodiacFromDate(dateText) {
         const animals = ["Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig"];
-        const y = new Date(dateText).getFullYear();
-        return animals[(y - 1900) % 12];
+        const year = new Date(dateText).getFullYear();
+        return animals[(year - 1900) % 12];
     }
 
-    function elementFromZodiac(z) {
-        if (["Aries", "Leo", "Sagittarius"].includes(z)) return "Fire";
-        if (["Taurus", "Virgo", "Capricorn"].includes(z)) return "Earth";
-        if (["Gemini", "Libra", "Aquarius"].includes(z)) return "Air";
+    function elementFromZodiac(zodiac) {
+        if (["Aries", "Leo", "Sagittarius"].includes(zodiac)) return "Fire";
+        if (["Taurus", "Virgo", "Capricorn"].includes(zodiac)) return "Earth";
+        if (["Gemini", "Libra", "Aquarius"].includes(zodiac)) return "Air";
         return "Water";
     }
 
-    function destinyVibe(z) {
+    function pickSpiritAnimal(mood) {
         const map = {
-            Aries: "You text destiny first.",
-            Taurus: "Luxury, then world domination.",
-            Gemini: "Multiplayer brain mode.",
-            Cancer: "Soft voice, sharp instincts.",
-            Leo: "Main-character charisma.",
-            Virgo: "Precision with sparkle.",
-            Libra: "Style with strategy.",
-            Scorpio: "Magnetic mystery.",
-            Sagittarius: "Adventure + truth bombs.",
-            Capricorn: "Quiet premium ambition.",
-            Aquarius: "Future-minded rebel.",
-            Pisces: "Dreamy creative chaos."
+            "🌞 Radiant Energy": {
+                emoji: "🦁",
+                name: "Solar Lion",
+                line: "Confident, warm, and visible in every room.",
+                image: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=900&q=80"
+            },
+            "🌊 Calm Energy": {
+                emoji: "🦦",
+                name: "Ocean Otter",
+                line: "Peaceful outside, very smart inside.",
+                image: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?auto=format&fit=crop&w=900&q=80"
+            },
+            "⚡ Expressive Energy": {
+                emoji: "🦜",
+                name: "Color Parrot",
+                line: "Loud ideas, bright confidence, fun chaos.",
+                image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=900&q=80"
+            },
+            "🌙 Reflective Energy": {
+                emoji: "🦊",
+                name: "Night Fox",
+                line: "Quiet face, sharp instincts.",
+                image: "https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=900&q=80"
+            },
+            "🔥 Intense Energy": {
+                emoji: "🐅",
+                name: "Wild Tiger",
+                line: "Focused power with bold action.",
+                image: "https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=900&q=80"
+            }
         };
-        return map[z] || "Cosmic wildcard";
+        return map[mood] || map["🌞 Radiant Energy"];
     }
 
-    function spiritAnimal(zodiac, mood) {
-        const picks = {
-            "🌞 Radiant Energy": { emoji: "🦁", name: "Solar Lion", line: "Room-entry soundtrack energy." },
-            "🌊 Calm Energy": { emoji: "🦦", name: "Peace Otter", line: "Calm outside, strategic inside." },
-            "⚡ Expressive Energy": { emoji: "🦜", name: "Electric Parrot", line: "Colorful thoughts. Zero boring lines." },
-            "🌙 Reflective Energy": { emoji: "🦊", name: "Night Fox", line: "Quiet face, dangerous intuition." },
-            "🔥 Intense Energy": { emoji: "🐅", name: "Wild Tiger", line: "Focused fire with polite chaos." }
-        };
-        return picks[mood] || picks["🌞 Radiant Energy"];
-    }
-
-    function birthdayLegends(dateText) {
-        const key = String(dateText).slice(5);
+    function pickBestFriend(zodiac) {
         const map = {
-            "01-17": [
-                { photo: "🎤", name: "Legend Singer", trait: "Known for dangerous creativity." },
-                { photo: "🎬", name: "Iconic Actor", trait: "Turns drama into memes." }
-            ],
-            "06-01": [
-                { photo: "⚽", name: "Famous Athlete", trait: "Competitive with calm confidence." },
-                { photo: "🎧", name: "Top Producer", trait: "Makes chaos sound expensive." }
-            ]
+            Aries: { name: "Golden Retriever Friend", line: "Always ready, always positive.", image: "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=900&q=80" },
+            Taurus: { name: "Panda Friend", line: "Calm loyalty and soft comfort.", image: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?auto=format&fit=crop&w=900&q=80" },
+            Gemini: { name: "Parrot Friend", line: "Talkative, witty, never boring.", image: "https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?auto=format&fit=crop&w=900&q=80" },
+            Cancer: { name: "Dolphin Friend", line: "Emotionally smart and playful.", image: "https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=900&q=80" },
+            Leo: { name: "Lion Friend", line: "Protective and high-energy support.", image: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?auto=format&fit=crop&w=900&q=80" },
+            Virgo: { name: "Owl Friend", line: "Quiet advice, always correct.", image: "https://images.unsplash.com/photo-1501706362039-c6e08f4bbfff?auto=format&fit=crop&w=900&q=80" },
+            Libra: { name: "Swan Friend", line: "Balanced, graceful, diplomatic.", image: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&w=900&q=80" },
+            Scorpio: { name: "Wolf Friend", line: "Deep loyalty, zero fake energy.", image: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=900&q=80" },
+            Sagittarius: { name: "Horse Friend", line: "Adventure partner forever.", image: "https://images.unsplash.com/photo-1593179357196-705d543377a8?auto=format&fit=crop&w=900&q=80" },
+            Capricorn: { name: "Elephant Friend", line: "Solid support, long memory.", image: "https://images.unsplash.com/photo-1557053910-d9eadeed1c58?auto=format&fit=crop&w=900&q=80" },
+            Aquarius: { name: "Husky Friend", line: "Independent but always there.", image: "https://images.unsplash.com/photo-1605568427561-40dd23c2acea?auto=format&fit=crop&w=900&q=80" },
+            Pisces: { name: "Sea Turtle Friend", line: "Gentle and wise companion.", image: "https://images.unsplash.com/photo-1560275619-4662e36fa65c?auto=format&fit=crop&w=900&q=80" }
         };
-        return map[key] || [
-            { photo: "🎭", name: "Global Entertainer", trait: "Instant scene-stealing presence." },
-            { photo: "🚀", name: "Visionary Founder", trait: "Builds wild ideas before lunch." },
-            { photo: "🎨", name: "Creative Icon", trait: "Minimal effort, maximum style." }
-        ];
+        return map[zodiac] || map.Aries;
     }
 
-    function personalityLines(zodiac, mood) {
-        return {
-            hiddenStrength: `${zodiac} power move: cool face, wild strategy.`,
-            chaosTrait: "You call it spontaneity. Your calendar calls it performance art.",
-            misunderstood: "People think you're chill. You are in premium planning mode."
+    function pickLuckyFruitVeg(element) {
+        const map = {
+            Fire: {
+                name: "Mango + Chili",
+                line: "Sweet confidence and bold spark.",
+                image: "https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&w=900&q=80"
+            },
+            Earth: {
+                name: "Avocado + Carrot",
+                line: "Grounded energy and stable focus.",
+                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80"
+            },
+            Air: {
+                name: "Apple + Mint",
+                line: "Fresh thinking and light creativity.",
+                image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=900&q=80"
+            },
+            Water: {
+                name: "Blueberry + Cucumber",
+                line: "Cool mood and emotional balance.",
+                image: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&w=900&q=80"
+            }
         };
+        return map[element] || map.Fire;
+    }
+
+    function destinyVibe(zodiac) {
+        const map = {
+            Aries: "moves first",
+            Taurus: "builds steady",
+            Gemini: "thinks fast",
+            Cancer: "feels deep",
+            Leo: "shines bright",
+            Virgo: "plans smart",
+            Libra: "balances all",
+            Scorpio: "reads energy",
+            Sagittarius: "chases adventure",
+            Capricorn: "wins slowly",
+            Aquarius: "creates new ideas",
+            Pisces: "imagines magic"
+        };
+        return map[zodiac] || "cosmic";
     }
 
     function moodOneLiner(mood) {
-        const lines = {
-            "🌞 Radiant Energy": "Bright aura. Plants would grow faster around you.",
-            "🌊 Calm Energy": "Calm ocean energy. Your peace scares your enemies.",
-            "⚡ Expressive Energy": "Electric vibe. Your personality has subtitles.",
-            "🌙 Reflective Energy": "Moonlit energy. Deep thoughts, soft voice.",
-            "🔥 Intense Energy": "Fire mode. Politely unstoppable today."
+        const map = {
+            "🌞 Radiant Energy": "Bright energy. People notice your vibe quickly.",
+            "🌊 Calm Energy": "Calm energy. Your peace is powerful.",
+            "⚡ Expressive Energy": "Expressive energy. Your presence feels alive.",
+            "🌙 Reflective Energy": "Reflective energy. Quiet but deeply aware.",
+            "🔥 Intense Energy": "Intense energy. Focused and unstoppable."
         };
-        return lines[mood] || "Cosmic sparkle detected.";
+        return map[mood] || "Cosmic mood detected.";
+    }
+
+    function safeUrl(url, fallback) {
+        if (!url || typeof url !== "string") return fallback;
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return fallback;
     }
 
     function dedupe(items) {
@@ -601,10 +717,11 @@
 
 <style>
     :root {
-        --ink: #161833;
-        --muted: #6e7399;
+        --bg: #f4f6ff;
         --panel: #ffffff;
-        --line: #e4e7fb;
+        --line: #e4e9ff;
+        --text: #1d224e;
+        --muted: #66709b;
     }
 
     * {
@@ -614,261 +731,284 @@
     body {
         margin: 0;
         font-family: Inter, "Segoe UI", sans-serif;
-        color: var(--ink);
-        background: #f4f6ff;
+        background: var(--bg);
+        color: var(--text);
     }
 
-    .onepage-shell {
-        max-width: 1100px;
+    .simple-shell {
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 20px 16px 70px;
-    }
-
-    .hero-report {
-        background: linear-gradient(135deg, #4f3dff 0%, #7f45ff 42%, #f765a4 100%);
-        border-radius: 28px;
-        color: #fff;
-        padding: 24px;
-        display: grid;
-        grid-template-columns: 1.35fr 0.95fr;
-        gap: 16px;
-        box-shadow: 0 18px 46px rgba(73, 53, 170, 0.35);
-    }
-
-    .kicker {
-        letter-spacing: 0.18em;
-        font-size: 0.72rem;
-        margin: 0 0 8px;
-        opacity: 0.9;
-    }
-
-    .hero-left h1 {
-        margin: 0 0 10px;
-        font-size: clamp(1.9rem, 5vw, 2.8rem);
-    }
-
-    .sub {
-        margin: 0;
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .hero-actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 16px;
-    }
-
-    .note {
-        font-size: 0.82rem;
-        margin-top: 12px;
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    .hero-camera-stage {
-        background: rgba(255, 255, 255, 0.16);
-        border: 1px solid rgba(255, 255, 255, 0.34);
-        border-radius: 18px;
-        padding: 12px;
-    }
-
-    .camera-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 0.86rem;
-    }
-
-    #cameraVideo {
-        width: 100%;
-        min-height: 220px;
-        border-radius: 12px;
-        background: rgba(10, 13, 35, 0.75);
-        object-fit: cover;
-    }
-
-    .camera-controls {
-        display: flex;
-        gap: 8px;
-        margin-top: 10px;
-    }
-
-    .camera-note {
-        margin: 8px 0 0;
-        font-size: 0.76rem;
-        color: rgba(255, 255, 255, 0.88);
-    }
-
-    .countdown {
-        margin-top: 8px;
-        font-size: 2rem;
-        font-weight: 800;
-        text-align: center;
-    }
-
-    .report-stack {
-        margin-top: 16px;
+        padding: 18px 14px 60px;
         display: grid;
         gap: 12px;
     }
 
-    .card {
+    .top-card,
+    .profile-card,
+    .mini-card,
+    .card-section,
+    .history-card {
         background: var(--panel);
         border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 16px;
-        box-shadow: 0 8px 24px rgba(38, 46, 99, 0.08);
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(40, 47, 109, 0.08);
     }
 
-    .section-tag {
-        margin: 0 0 8px;
-        font-size: 0.74rem;
-        letter-spacing: 0.14em;
-        color: #7177aa;
-        font-weight: 700;
-    }
-
-    .welcome {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 12px;
+    .top-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
         align-items: center;
-    }
-
-    .avatar {
-        width: 62px;
-        height: 62px;
-        border-radius: 18px;
-        object-fit: cover;
-    }
-
-    .avatar-fallback {
-        width: 62px;
-        height: 62px;
-        border-radius: 18px;
-        background: linear-gradient(140deg, #5f4fff, #fb6ca8);
-        display: grid;
-        place-items: center;
+        padding: 18px;
+        background: linear-gradient(135deg, #5545ff 0%, #7955ff 45%, #f26aa5 100%);
         color: #fff;
-        font-weight: 700;
     }
 
-    .grid-4 {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .grid-3 {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .snap,
-    .insight,
-    .legend-card,
-    .memory-card {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 10px;
-        background: #fcfdff;
-    }
-
-    .snap p,
-    .insight p,
-    .legend-card p,
-    .memory-card p,
-    .memory-card small {
-        margin: 0;
-        color: #616993;
-    }
-
-    .snap h4,
-    .insight h4,
-    .legend-card h4,
-    .memory-card h4 {
+    .top-title h1 {
         margin: 0 0 6px;
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
     }
 
-    .horizontal {
-        display: grid;
-        grid-auto-flow: column;
-        grid-auto-columns: minmax(190px, 230px);
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 4px;
-    }
-
-    .legend-photo {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: linear-gradient(140deg, #5c4dff, #fd70ae);
-        color: #fff;
-        display: grid;
-        place-items: center;
-        margin-bottom: 6px;
-    }
-
-    .share-preview {
-        border-radius: 14px;
-        padding: 14px;
-        color: #fff;
-        background: linear-gradient(135deg, #5c46ff, #f466a0);
-        font-weight: 600;
-        line-height: 1.45;
-        margin-bottom: 10px;
-    }
-
-    .btn {
-        border: none;
-        border-radius: 999px;
-        padding: 10px 14px;
-        font-weight: 700;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-
-    .btn.primary {
-        background: #fff;
-        color: #3f31dd;
-    }
-
-    .btn.ghost {
-        border: 1px solid #ccd3ff;
-        background: #f8f9ff;
-        color: #2f3b88;
-    }
-
-    .btn.mini {
-        padding: 8px 12px;
-        font-size: 0.8rem;
-        background: #fff;
-        color: #4335df;
+    .top-title .muted {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+        max-width: 680px;
     }
 
     .top-actions {
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
     }
 
-    .mood {
-        background: linear-gradient(130deg, #fff7fb, #f5f7ff);
+    .profile-card {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 12px;
+        padding: 14px;
     }
 
-    .mood h3 {
-        margin: 0 0 8px;
-        font-size: 1.45rem;
+    .profile-left {
+        display: flex;
+        gap: 12px;
+        align-items: center;
     }
 
-    .mood p {
+    .avatar,
+    .avatar-fallback {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+    }
+
+    .avatar {
+        object-fit: cover;
+    }
+
+    .avatar-fallback {
+        background: linear-gradient(140deg, #5b45ff, #f26aa5);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .camera-box {
+        border: 1px dashed var(--line);
+        border-radius: 14px;
+        padding: 10px;
+        background: #fcfdff;
+    }
+
+    .camera-box video {
+        width: 100%;
+        max-height: 170px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-bottom: 8px;
+        background: #151934;
+    }
+
+    .camera-actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .countdown {
+        font-size: 1.8rem;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .mini-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mini-card {
+        padding: 14px;
+    }
+
+    .mini-card h3 {
+        margin: 4px 0 6px;
+    }
+
+    .card-section {
+        padding: 14px;
+    }
+
+    .section-head h3 {
+        margin: 0 0 10px;
+        font-size: 1.12rem;
+    }
+
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+    }
+
+    .person-card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fcfdff;
+    }
+
+    .person-card img {
+        width: 100%;
+        height: 170px;
+        object-fit: cover;
+        display: block;
+        background: #edf0ff;
+    }
+
+    .person-body {
+        padding: 10px;
+        display: grid;
+        gap: 6px;
+    }
+
+    .person-body h4 {
         margin: 0;
     }
 
-    .mood small {
+    .person-body p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .person-body a {
+        color: #4d44eb;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .three-up {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .visual-card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fcfdff;
+    }
+
+    .visual-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
         display: block;
-        margin-top: 8px;
+    }
+
+    .visual-body {
+        padding: 10px;
+    }
+
+    .visual-body h4 {
+        margin: 5px 0;
+    }
+
+    .visual-body p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.4;
+    }
+
+    .share-preview {
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 10px;
+        background: linear-gradient(130deg, #5948ff, #f26ca7);
+        color: #fff;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    .history-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+    }
+
+    .history-card {
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+    }
+
+    .history-card h4 {
+        margin: 0 0 6px;
+        font-size: 0.95rem;
+    }
+
+    .history-card p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .history-card small {
+        color: var(--muted);
+    }
+
+    .btn {
+        border: none;
+        border-radius: 999px;
+        padding: 9px 13px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+    }
+
+    .btn.primary {
+        background: #fff;
+        color: #4539e1;
+    }
+
+    .btn.soft {
+        background: #f1f4ff;
+        color: #2f3d8e;
+        border: 1px solid #d8dfff;
+    }
+
+    .tiny {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        font-weight: 700;
+        opacity: 0.85;
+    }
+
+    .muted {
         color: var(--muted);
     }
 
@@ -876,13 +1016,15 @@
         display: none !important;
     }
 
-    @@media (max-width: 900px) {
-        .hero-report {
+    @@media (max-width: 960px) {
+        .top-card,
+        .profile-card {
             grid-template-columns: 1fr;
+            display: grid;
         }
 
-        .grid-4,
-        .grid-3 {
+        .three-up,
+        .mini-grid {
             grid-template-columns: 1fr;
         }
     }

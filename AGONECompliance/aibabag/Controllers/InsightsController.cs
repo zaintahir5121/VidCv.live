@@ -12,6 +12,7 @@ namespace aibabag.Controllers;
 public sealed class InsightsController(
     ApplicationDbContext context,
     IAstrologyService astrologyService,
+    IFamousBirthdayService famousBirthdayService,
     ILogger<InsightsController> logger) : ControllerBase
 {
     [HttpPost("generate")]
@@ -164,6 +165,18 @@ public sealed class InsightsController(
             logger.LogError(ex, "Error checking compatibility.");
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("famous-by-birthday")]
+    public async Task<IActionResult> FamousByBirthday([FromQuery] DateTime? dob, CancellationToken cancellationToken)
+    {
+        if (!dob.HasValue)
+        {
+            return BadRequest(new { message = "Query parameter 'dob' is required. Example: ?dob=1996-05-12" });
+        }
+
+        var people = await famousBirthdayService.GetByDateAsync(dob.Value, cancellationToken);
+        return Ok(new { success = true, people });
     }
 }
 
