@@ -1,310 +1,316 @@
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostingEnvironment
 @{
-    ViewData["Title"] = "AibabaG";
+    ViewData["Title"] = "AI-BABA-G";
+    var isLocalMode = HostingEnvironment.IsDevelopment().ToString().ToLowerInvariant();
 }
 
-<div id="loginGate" class="login-gate">
-    <div class="login-panel">
-        <p class="brand-kicker">AibabaG</p>
-        <h1>Welcome to AibabaG Master Personality AI</h1>
-        <p class="gate-note">Sign in with Google to unlock your personalized personality intelligence dashboard.</p>
-        <button id="googleBtn" class="primary-btn">Continue with Google</button>
-    </div>
-</div>
+<div id="appRoot" class="app-root">
+    <section id="landingView" class="landing-view">
+        <div class="stars-layer"></div>
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
 
-<div id="dobGate" class="login-gate hidden">
-    <div class="login-panel">
-        <p class="brand-kicker">AibabaG</p>
-        <h1>Add your birth date to continue</h1>
-        <p class="gate-note">We could not fetch birthday from Gmail. Please enter DOB manually before opening dashboard.</p>
-        <div class="dob-form">
-            <input id="manualDobInput" type="date" />
-            <button id="manualDobSaveBtn" class="primary-btn">Save and Open Dashboard</button>
-        </div>
-        <p id="manualDobError" class="manual-dob-error hidden"></p>
-    </div>
-</div>
-
-<div id="appShell" class="astro-shell hidden">
-    <header class="topbar">
-        <div class="logo-block">
-            <div class="logo-dot">✦</div>
-            <div>
-                <h1>AibabaG</h1>
-                <p>Master Personality AI</p>
-            </div>
-        </div>
-        <div class="top-right">
-            <div class="user-pill">
-                <img id="topUserImage" class="top-user-image hidden" alt="Top user photo" />
-                <div id="topUserFallback" class="top-user-fallback"></div>
+        <header class="landing-header glass">
+            <div class="brand-mark">
+                <span class="logo-planet">◎</span>
                 <div>
-                    <p id="topUserName">Rahul Sharma</p>
-                    <small id="topUserEmail">rahul@gmail.com</small>
-                </div>
-                <span class="pro-tag">Pro</span>
-            </div>
-        </div>
-        <div class="top-actions">
-            <button class="ghost-btn">Share Report</button>
-            <button id="logoutBtn" class="ghost-btn">Logout</button>
-        </div>
-    </header>
-
-    <section class="hero-grid">
-        <article class="card profile-card">
-            <div class="profile-photo-wrap">
-                <img id="avatarImage" class="profile-photo hidden" alt="Profile photo" />
-                <div id="avatarFallback" class="profile-photo-fallback"></div>
-            </div>
-            <div class="profile-main">
-                <h2 id="welcomeTitle">Hello, Rahul! ✨</h2>
-                <p id="heroLine">Here is your personalized AibabaG personality intelligence report.</p>
-                <div class="meta-row">
-                    <span id="dobBadge">15 August 1996</span>
-                    <span id="timeBadge">10:30 AM</span>
-                    <span id="cityBadge">New Delhi, India</span>
+                    <h1>AI-BABA-G</h1>
+                    <p>Your Master Personality AI</p>
                 </div>
             </div>
-        </article>
+            <span class="mode-tag" id="modeTag">Production mode</span>
+        </header>
 
-        <article class="card signs-card">
-            <h3 id="sunSign">Leo ♌</h3>
-            <p>Sun Sign</p>
-            <h3 id="moonSign">Taurus ♉</h3>
-            <p>Moon Sign</p>
-            <h3 id="ascSign">Virgo ♍</h3>
-            <p>Ascendant</p>
-        </article>
+        <div class="hero">
+            <article class="hero-copy glass">
+                <p class="hero-kicker">AI + Astrology + Feng Shui + Mood</p>
+                <h2>AI-BABA-G — Decode Your Cosmic Blueprint</h2>
+                <p class="hero-sub">Powered by AI. Inspired by Astrology. Built for Humans.</p>
+                <p class="hero-sub">
+                    We use your data only to personalize your experience:
+                    name for greeting, DOB for zodiac intelligence, location for place suggestions, mood for current energy.
+                </p>
+                <div class="hero-ctas">
+                    <button id="gmailBtn" class="btn btn-primary">Continue with Gmail</button>
+                    <button id="guestBtn" class="btn btn-secondary">Try Guest Mode (Dev)</button>
+                </div>
+            </article>
 
-        <article class="card summary-card">
-            <h3>Your Personality Summary</h3>
-            <p id="cosmicSummary">You are a natural-born leader with a creative soul and a kind heart. You inspire people and love deeply.</p>
+            <article class="hero-visual glass">
+                <div class="planet large"></div>
+                <div class="planet medium"></div>
+                <div class="planet tiny"></div>
+                <div class="energy-ring"></div>
+                <p>3D + 4D inspired visual zone</p>
+            </article>
+        </div>
+
+        <section class="trust-strip">
+            <article class="trust-card glass">
+                <span>🛡️</span>
+                <h4>No spam</h4>
+                <p>Only meaningful insights.</p>
+            </article>
+            <article class="trust-card glass">
+                <span>📷</span>
+                <h4>No images stored</h4>
+                <p>Camera is optional and temporary.</p>
+            </article>
+            <article class="trust-card glass">
+                <span>✨</span>
+                <h4>AI-powered, privacy-first</h4>
+                <p>Minimal, purpose-driven data use.</p>
+            </article>
+            <article class="trust-card glass">
+                <span>🔐</span>
+                <h4>Your data stays yours</h4>
+                <p>Built for trust and control.</p>
+            </article>
+        </section>
+    </section>
+
+    <section id="dobGateView" class="modal-view hidden">
+        <article class="modal-card glass">
+            <h3>Add your birthday to continue</h3>
+            <p>We could not find your birthday from Gmail. Please enter it manually before opening your dashboard.</p>
+            <input id="manualDobInput" type="date" />
+            <button id="saveDobBtn" class="btn btn-primary">Save birthday and continue</button>
+            <p id="manualDobError" class="error-line hidden"></p>
         </article>
     </section>
 
-    <section class="insight-grid">
-        <article class="insight-card">
-            <img id="animalImage" alt="Animal personality" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Animal Personality</p>
-                <h4 id="animalTitle">You are a Lion</h4>
-                <p id="animalLine">Confident, brave and naturally protective.</p>
+    <section id="dashboardView" class="dashboard hidden">
+        <header class="dashboard-top glass">
+            <div class="dash-brand">
+                <span class="logo-planet">◎</span>
+                <div>
+                    <h2>AI-BABA-G</h2>
+                    <p>Master Personality AI Experience</p>
+                </div>
             </div>
-        </article>
+            <div class="top-actions">
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </header>
 
-        <article class="insight-card">
-            <img id="foodImage" alt="Food personality" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Food Personality</p>
-                <h4 id="foodTitle">Spicy & Flavorful</h4>
-                <p id="foodLine">You love excitement and variety.</p>
+        <section class="welcome-card glass">
+            <div class="welcome-left">
+                <img id="profileImage" class="profile-image" alt="User avatar" />
+                <div>
+                    <h3 id="welcomeText">Hey User 👋 Welcome to Your AI-Cosmic Space</h3>
+                    <p id="dataWhyText">Name, birthday, mood, and location power this personalized experience.</p>
+                    <div class="meta-tags">
+                        <span id="dobTag">DOB: --</span>
+                        <span id="locationTag">Location: --</span>
+                        <span id="zodiacTag">Zodiac: --</span>
+                    </div>
+                </div>
             </div>
-        </article>
+            <div class="welcome-right">
+                <p class="tiny-label">Cosmic mode</p>
+                <h4 id="moodHeadline">🌊 Calm Ocean</h4>
+                <p id="moodLine">You are peaceful today — dangerous tomorrow.</p>
+                <div class="mood-actions">
+                    <button id="cameraMoodBtn" class="btn btn-secondary">Capture mood (optional)</button>
+                    <button id="randomMoodBtn" class="btn btn-secondary">Pick random mood</button>
+                </div>
+            </div>
+        </section>
 
-        <article class="insight-card">
-            <img id="travelImage" alt="Travel personality" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Travel Personality</p>
-                <h4 id="travelTitle">Explorer</h4>
-                <p id="travelLine">Mountains, open skies and new paths.</p>
-            </div>
-        </article>
+        <section class="grid-two">
+            <article class="big-visual glass">
+                <p class="tiny-label">Spirit Animal</p>
+                <img id="spiritImage" alt="Spirit animal" />
+                <h4 id="spiritTitle">🐯 Tiger</h4>
+                <p id="spiritLine">Quiet strength. Loud when needed.</p>
+            </article>
 
-        <article class="insight-card">
-            <img id="careerImage" alt="Career personality" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Career Personality</p>
-                <h4 id="careerTitle">Leader</h4>
-                <p id="careerLine">Best in leadership and entrepreneurship.</p>
-            </div>
-        </article>
+            <article class="big-visual glass">
+                <p class="tiny-label">Food Energy</p>
+                <div class="food-grid">
+                    <figure><img id="foodA" alt="Grounding food" /><figcaption>Grounding foods</figcaption></figure>
+                    <figure><img id="foodB" alt="High-energy food" /><figcaption>High-energy foods</figcaption></figure>
+                    <figure><img id="foodC" alt="Comfort food" /><figcaption>Comfort foods</figcaption></figure>
+                </div>
+            </article>
+        </section>
 
-        <article class="insight-card">
-            <img id="loveImage" alt="Love and marriage" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Love & Marriage</p>
-                <h4 id="loveTitle">Loyal Lover</h4>
-                <p id="loveLine">Deep loyalty and emotional depth.</p>
+        <section class="places glass">
+            <div class="section-title-row">
+                <h3>Places You Should Visit</h3>
+                <p id="placesHint">Based on your current region and today’s energy</p>
             </div>
-        </article>
+            <div id="placesGrid" class="places-grid"></div>
+        </section>
 
-        <article class="insight-card">
-            <img id="familyImage" alt="Family and relationships" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Family & Relationships</p>
-                <h4 id="familyTitle">Family Protector</h4>
-                <p id="familyLine">You value harmony and loyalty.</p>
+        <section class="life-flow glass">
+            <div class="section-title-row">
+                <h3>Life Flow</h3>
+                <p>Visual pulse across your focus areas</p>
             </div>
-        </article>
+            <div id="flowGrid" class="flow-grid"></div>
+        </section>
 
-        <article class="insight-card">
-            <img id="futureImage" alt="Children and future" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Children & Future</p>
-                <h4 id="futureTitle">Bright Future</h4>
-                <p id="futureLine">The future brings creative opportunities.</p>
+        <section class="famous glass">
+            <div class="section-title-row">
+                <h3>Famous Personalities</h3>
+                <p>Alive and historical figures linked to your birth energy</p>
             </div>
-        </article>
+            <h4>Alive Today</h4>
+            <div id="famousAlive" class="famous-grid"></div>
+            <h4>From History</h4>
+            <div id="famousHistory" class="famous-grid"></div>
+        </section>
 
-        <article class="insight-card">
-            <img id="moneyImage" alt="Wealth and finance" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Wealth & Finance</p>
-                <h4 id="moneyTitle">Steady Growth</h4>
-                <p id="moneyLine">Smart investments and consistency win.</p>
+        <section class="suggestion glass">
+            <div class="section-title-row">
+                <h3>Suggestion for Your Current Mode</h3>
+                <p>Playful actions based on energy, not medical advice</p>
             </div>
-        </article>
+            <div id="suggestionGrid" class="suggestion-grid"></div>
+        </section>
 
-        <article class="insight-card">
-            <img id="educationImage" alt="Education and college" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Education & College</p>
-                <h4 id="educationTitle">Knowledge Builder</h4>
-                <p id="educationLine">Strong learning with practical thinking.</p>
-            </div>
-        </article>
-
-        <article class="insight-card">
-            <img id="healthImage" alt="Health and wellness" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Health & Wellness</p>
-                <h4 id="healthTitle">Mind-Body Balance</h4>
-                <p id="healthLine">Meditation and routines suit you best.</p>
-            </div>
-        </article>
-
-        <article class="insight-card">
-            <img id="purposeImage" alt="Life purpose" />
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Life Purpose</p>
-                <h4 id="purposeTitle">To Inspire</h4>
-                <p id="purposeLine">Create positive impact in the world.</p>
-            </div>
-        </article>
-
-        <article class="insight-card essentials">
-            <div class="overlay"></div>
-            <div class="insight-body">
-                <p class="chip">Lucky Essentials</p>
-                <ul id="luckyList">
-                    <li>Lucky Color: Gold</li>
-                    <li>Lucky Number: 1, 3, 9</li>
-                    <li>Lucky Day: Sunday</li>
-                    <li>Lucky Gem: Ruby</li>
-                </ul>
-            </div>
-        </article>
+        <section class="share-box glass">
+            <h3>I just discovered my AI-BABA-G cosmic personality ✨</h3>
+            <p>Make it personal. Make it shareable.</p>
+        </section>
     </section>
 
-    <section class="card famous-section">
-        <h3>Famous personalities born on your same date</h3>
-        <div id="famousGrid" class="famous-grid"></div>
-    </section>
-
-    <section class="bottom-strip">
-        <article class="strip-card">
-            <p>AibabaG Insight</p>
-            <h4>Birth + Personality Model</h4>
-        </article>
-        <article class="strip-card">
-            <p>Personality Score</p>
-            <h4>92%</h4>
-        </article>
-        <article class="strip-card">
-            <p>Success Potential</p>
-            <h4>88%</h4>
-        </article>
-        <article class="strip-card">
-            <p>Happiness Index</p>
-            <h4>85%</h4>
-        </article>
-        <button class="download-btn">Download AibabaG Report</button>
-    </section>
+    <video id="cameraVideo" class="hidden" autoplay playsinline muted></video>
 </div>
 
 <script>
-    const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=500&q=80";
-    const DEFAULT_CARD_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80";
+    const IS_LOCAL_MODE = @Html.Raw(isLocalMode);
+    const DEFAULT_PROFILE_IMAGE = "https://images.unsplash.com/photo-1542206395-9feb3edaa68d?auto=format&fit=crop&w=800&q=80";
+
+    const ui = {
+        landingView: document.getElementById("landingView"),
+        dobGateView: document.getElementById("dobGateView"),
+        dashboardView: document.getElementById("dashboardView"),
+        modeTag: document.getElementById("modeTag"),
+        gmailBtn: document.getElementById("gmailBtn"),
+        guestBtn: document.getElementById("guestBtn"),
+        saveDobBtn: document.getElementById("saveDobBtn"),
+        manualDobInput: document.getElementById("manualDobInput"),
+        manualDobError: document.getElementById("manualDobError"),
+        logoutBtn: document.getElementById("logoutBtn"),
+        profileImage: document.getElementById("profileImage"),
+        welcomeText: document.getElementById("welcomeText"),
+        dataWhyText: document.getElementById("dataWhyText"),
+        dobTag: document.getElementById("dobTag"),
+        locationTag: document.getElementById("locationTag"),
+        zodiacTag: document.getElementById("zodiacTag"),
+        moodHeadline: document.getElementById("moodHeadline"),
+        moodLine: document.getElementById("moodLine"),
+        cameraMoodBtn: document.getElementById("cameraMoodBtn"),
+        randomMoodBtn: document.getElementById("randomMoodBtn"),
+        spiritImage: document.getElementById("spiritImage"),
+        spiritTitle: document.getElementById("spiritTitle"),
+        spiritLine: document.getElementById("spiritLine"),
+        foodA: document.getElementById("foodA"),
+        foodB: document.getElementById("foodB"),
+        foodC: document.getElementById("foodC"),
+        placesHint: document.getElementById("placesHint"),
+        placesGrid: document.getElementById("placesGrid"),
+        flowGrid: document.getElementById("flowGrid"),
+        famousAlive: document.getElementById("famousAlive"),
+        famousHistory: document.getElementById("famousHistory"),
+        suggestionGrid: document.getElementById("suggestionGrid"),
+        cameraVideo: document.getElementById("cameraVideo")
+    };
 
     const state = {
         userId: null,
         profile: null,
-        famous: []
+        mood: "🌊 Calm Ocean",
+        location: "Unknown",
+        stream: null,
+        fallbackText: {}
     };
 
-    const ui = {
-        loginGate: document.getElementById("loginGate"),
-        dobGate: document.getElementById("dobGate"),
-        appShell: document.getElementById("appShell"),
-        googleBtn: document.getElementById("googleBtn"),
-        logoutBtn: document.getElementById("logoutBtn"),
-        manualDobInput: document.getElementById("manualDobInput"),
-        manualDobSaveBtn: document.getElementById("manualDobSaveBtn"),
-        manualDobError: document.getElementById("manualDobError"),
-        avatarImage: document.getElementById("avatarImage"),
-        avatarFallback: document.getElementById("avatarFallback"),
-        topUserImage: document.getElementById("topUserImage"),
-        topUserFallback: document.getElementById("topUserFallback"),
-        topUserName: document.getElementById("topUserName"),
-        topUserEmail: document.getElementById("topUserEmail"),
-        welcomeTitle: document.getElementById("welcomeTitle"),
-        heroLine: document.getElementById("heroLine"),
-        dobBadge: document.getElementById("dobBadge"),
-        timeBadge: document.getElementById("timeBadge"),
-        cityBadge: document.getElementById("cityBadge"),
-        sunSign: document.getElementById("sunSign"),
-        moonSign: document.getElementById("moonSign"),
-        ascSign: document.getElementById("ascSign"),
-        cosmicSummary: document.getElementById("cosmicSummary"),
-        famousGrid: document.getElementById("famousGrid"),
-        luckyList: document.getElementById("luckyList"),
-        animalLine: document.getElementById("animalLine"),
-        foodLine: document.getElementById("foodLine"),
-        travelLine: document.getElementById("travelLine"),
-        careerLine: document.getElementById("careerLine"),
-        loveLine: document.getElementById("loveLine"),
-        familyLine: document.getElementById("familyLine"),
-        futureLine: document.getElementById("futureLine"),
-        moneyLine: document.getElementById("moneyLine"),
-        educationLine: document.getElementById("educationLine"),
-        healthLine: document.getElementById("healthLine"),
-        purposeLine: document.getElementById("purposeLine")
+    const moodPool = [
+        "🌊 Calm Ocean",
+        "🔥 Bold Fire",
+        "⚡ Electric Focus",
+        "🌙 Reflective Moon",
+        "🌞 Bright Rise"
+    ];
+
+    const spiritByMood = {
+        "🌊 Calm Ocean": {
+            emoji: "🦢",
+            name: "Swan",
+            line: "Graceful balance under pressure.",
+            image: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=1200&q=80"
+        },
+        "🔥 Bold Fire": {
+            emoji: "🐅",
+            name: "Tiger",
+            line: "Quiet strength. Loud when needed.",
+            image: "https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=1200&q=80"
+        },
+        "⚡ Electric Focus": {
+            emoji: "🦅",
+            name: "Eagle",
+            line: "Laser focus and fearless decisions.",
+            image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80"
+        },
+        "🌙 Reflective Moon": {
+            emoji: "🦉",
+            name: "Owl",
+            line: "Deep intuition, subtle power.",
+            image: "https://images.unsplash.com/photo-1501706362039-c6e08f4bbfff?auto=format&fit=crop&w=1200&q=80"
+        },
+        "🌞 Bright Rise": {
+            emoji: "🦁",
+            name: "Lion",
+            line: "Warm confidence with natural leadership.",
+            image: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1200&q=80"
+        }
     };
 
-    const imageMap = {
-        animalImage: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1200&q=80",
-        foodImage: "https://images.unsplash.com/photo-1627308595181-d1b5d67129c4?auto=format&fit=crop&w=1200&q=80",
-        travelImage: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
-        careerImage: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80",
-        loveImage: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80",
-        familyImage: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=80",
-        futureImage: "https://images.unsplash.com/photo-1503919005314-30d93d07d823?auto=format&fit=crop&w=1200&q=80",
-        moneyImage: "https://images.unsplash.com/photo-1624969862644-791f3dc98927?auto=format&fit=crop&w=1200&q=80",
-        educationImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80",
-        healthImage: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
-        purposeImage: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80"
-    };
+    const foodImages = [
+        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80"
+    ];
+
+    const placeThemes = [
+        { icon: "🌿", label: "Nature", image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80" },
+        { icon: "☕", label: "Cafe", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1000&q=80" },
+        { icon: "🕉️", label: "Spiritual", image: "https://images.unsplash.com/photo-1476231682828-37e571bc172f?auto=format&fit=crop&w=1000&q=80" },
+        { icon: "✈️", label: "Travel", image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=1000&q=80" }
+    ];
+
+    const flowItems = [
+        { icon: "👑", label: "Leadership" },
+        { icon: "📈", label: "Growth" },
+        { icon: "💼", label: "Career" },
+        { icon: "📚", label: "Knowledge" },
+        { icon: "🧘", label: "Mind & Body" },
+        { icon: "❤️", label: "Relationships" },
+        { icon: "💡", label: "Inspiration" },
+        { icon: "🍀", label: "Lucky Elements" }
+    ];
 
     init();
 
     async function init() {
         wireEvents();
-        applyStaticImages();
-        const authed = await hydrateAuth();
-        if (!authed) {
-            showLoginGate();
+        ui.modeTag.textContent = IS_LOCAL_MODE ? "Dev mode enabled" : "Production mode";
+        if (!IS_LOCAL_MODE) {
+            ui.guestBtn.classList.add("hidden");
+        }
+
+        if (IS_LOCAL_MODE) {
+            startGuestFlow();
+            return;
+        }
+
+        const auth = await hydrateAuth();
+        if (!auth) {
+            showLanding();
             return;
         }
 
@@ -313,56 +319,56 @@
             return;
         }
 
-        showApp();
-        await renderReport();
+        await openDashboard();
     }
 
     function wireEvents() {
-        ui.googleBtn.addEventListener("click", () => {
+        ui.gmailBtn.addEventListener("click", () => {
             window.location.href = "/api/auth/login?returnUrl=/";
         });
+        ui.guestBtn.addEventListener("click", startGuestFlow);
+        ui.saveDobBtn.addEventListener("click", saveManualDob);
         ui.logoutBtn.addEventListener("click", () => {
             window.location.href = "/api/auth/logout";
         });
-        ui.manualDobSaveBtn.addEventListener("click", submitManualDob);
+        ui.randomMoodBtn.addEventListener("click", async () => {
+            state.mood = randomItem(moodPool);
+            await openDashboard();
+        });
+        ui.cameraMoodBtn.addEventListener("click", detectMoodFromCamera);
     }
 
-    function applyStaticImages() {
-        for (const [id, value] of Object.entries(imageMap)) {
-            const el = document.getElementById(id);
-            if (!el) {
-                continue;
-            }
-
-            el.src = value;
-            el.onerror = () => {
-                el.src = DEFAULT_CARD_IMAGE;
-            };
-        }
+    function startGuestFlow() {
+        state.userId = 0;
+        state.profile = {
+            name: randomItem(["Luna Ray", "Nova Sky", "Astra Joy", "Mira Flux"]),
+            email: "guest@local.dev",
+            dateOfBirth: randomDate(),
+            avatar: "",
+            zodiacSign: ""
+        };
+        state.location = "Local Dev City";
+        state.mood = randomItem(moodPool);
+        openDashboard();
     }
 
     async function hydrateAuth() {
         try {
             const response = await fetch("/api/auth/status");
-            if (!response.ok) {
-                return false;
-            }
-
+            if (!response.ok) return false;
             const auth = await response.json();
-            if (!auth?.isAuthenticated) {
-                return false;
-            }
+            if (!auth?.isAuthenticated) return false;
 
             state.userId = auth.userId;
-            const dobFromGoogle = await fetchGoogleBirthday();
+            const googleDob = await fetchGoogleBirthday();
             state.profile = {
-                name: auth.userName || "AibabaG User",
-                dateOfBirth: dobFromGoogle || auth.dateOfBirth || null,
-                avatar: auth.profileImageUrl || "",
+                name: auth.userName || "AI-BABA-G User",
                 email: auth.email || "user@gmail.com",
-                city: "New Delhi, India",
-                birthTime: "10:30 AM"
+                dateOfBirth: googleDob || auth.dateOfBirth || "",
+                avatar: auth.profileImageUrl || "",
+                zodiacSign: ""
             };
+            await hydrateLocation();
             return true;
         } catch {
             return false;
@@ -372,19 +378,53 @@
     async function fetchGoogleBirthday() {
         try {
             const response = await fetch("/api/auth/google-birthday");
-            if (!response.ok) return null;
+            if (!response.ok) return "";
             const payload = await response.json();
-            return payload?.birthDate ? String(payload.birthDate).slice(0, 10) : null;
+            return payload?.birthDate ? String(payload.birthDate).slice(0, 10) : "";
         } catch {
-            return null;
+            return "";
         }
     }
 
-    async function submitManualDob() {
-        const dob = ui.manualDobInput.value;
-        if (!dob) {
+    async function hydrateLocation() {
+        try {
+            const response = await fetch("https://ipapi.co/json/");
+            if (!response.ok) {
+                state.location = "Unknown";
+                return;
+            }
+            const payload = await response.json();
+            const city = payload?.city || "Unknown";
+            const country = payload?.country_name || "";
+            state.location = country ? `${city}, ${country}` : city;
+        } catch {
+            state.location = "Unknown";
+        }
+    }
+
+    function showLanding() {
+        ui.landingView.classList.remove("hidden");
+        ui.dobGateView.classList.add("hidden");
+        ui.dashboardView.classList.add("hidden");
+    }
+
+    function showDobGate() {
+        ui.landingView.classList.add("hidden");
+        ui.dobGateView.classList.remove("hidden");
+        ui.dashboardView.classList.add("hidden");
+    }
+
+    function showDashboard() {
+        ui.landingView.classList.add("hidden");
+        ui.dobGateView.classList.add("hidden");
+        ui.dashboardView.classList.remove("hidden");
+    }
+
+    async function saveManualDob() {
+        const value = ui.manualDobInput.value;
+        if (!value) {
             ui.manualDobError.classList.remove("hidden");
-            ui.manualDobError.textContent = "Please select your date of birth.";
+            ui.manualDobError.textContent = "Please choose your date of birth.";
             return;
         }
 
@@ -392,192 +432,219 @@
             const response = await fetch("/api/auth/set-birthday", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ dateOfBirth: dob })
+                body: JSON.stringify({ dateOfBirth: value })
             });
             if (!response.ok) {
                 ui.manualDobError.classList.remove("hidden");
                 ui.manualDobError.textContent = "Could not save DOB. Please try again.";
                 return;
             }
-
             const payload = await response.json();
-            if (!payload?.success || !payload?.birthDate) {
-                ui.manualDobError.classList.remove("hidden");
-                ui.manualDobError.textContent = "Could not save DOB. Please try again.";
-                return;
-            }
-
-            state.profile.dateOfBirth = String(payload.birthDate).slice(0, 10);
+            state.profile.dateOfBirth = payload?.birthDate || value;
             ui.manualDobError.classList.add("hidden");
-            showApp();
-            await renderReport();
+            await openDashboard();
         } catch {
             ui.manualDobError.classList.remove("hidden");
-            ui.manualDobError.textContent = "Network error while saving DOB.";
+            ui.manualDobError.textContent = "Network issue while saving DOB.";
         }
     }
 
-    function showLoginGate() {
-        ui.loginGate.classList.remove("hidden");
-        ui.dobGate.classList.add("hidden");
-        ui.appShell.classList.add("hidden");
+    async function openDashboard() {
+        showDashboard();
+        const dob = state.profile.dateOfBirth || randomDate();
+        const zodiac = zodiacFromDate(dob);
+        state.profile.zodiacSign = zodiac;
+
+        ui.profileImage.src = safeImage(state.profile.avatar || DEFAULT_PROFILE_IMAGE);
+        ui.welcomeText.textContent = `Hey ${state.profile.name} 👋 Welcome to Your AI-Cosmic Space`;
+        ui.dataWhyText.textContent = "Data use: Name for greeting • DOB for astrology • IP location for place ideas • Mood for playful suggestions.";
+        ui.dobTag.textContent = `DOB: ${dob}`;
+        ui.locationTag.textContent = `Location: ${state.location}`;
+        ui.zodiacTag.textContent = `Zodiac: ${zodiac}`;
+
+        ui.moodHeadline.textContent = `Today’s Energy: ${state.mood}`;
+        ui.moodLine.textContent = moodOneLiner(state.mood);
+
+        await hydrateFallbackText(zodiac, dob);
+        renderSpiritAnimal();
+        renderFoodEnergy();
+        renderPlaces();
+        renderLifeFlow();
+        await renderFamous(dob);
+        renderSuggestions();
     }
 
-    function showDobGate() {
-        ui.loginGate.classList.add("hidden");
-        ui.dobGate.classList.remove("hidden");
-        ui.appShell.classList.add("hidden");
-    }
-
-    function showApp() {
-        ui.loginGate.classList.add("hidden");
-        ui.dobGate.classList.add("hidden");
-        ui.appShell.classList.remove("hidden");
-    }
-
-    async function renderReport() {
-        const dob = new Date(state.profile.dateOfBirth);
-        const zodiac = zodiacFromDate(state.profile.dateOfBirth);
-        const moon = moonSignFromDate(state.profile.dateOfBirth);
-        const asc = ascendantFromDate(state.profile.dateOfBirth);
-        const lucky = luckyEssentialsFromSign(zodiac);
-        const aiText = await getAiFallbackText(zodiac, state.profile.dateOfBirth);
-
-        ui.welcomeTitle.textContent = `Hello, ${state.profile.name}! ✨`;
-        ui.topUserName.textContent = state.profile.name;
-        ui.topUserEmail.textContent = state.profile.email || "user@gmail.com";
-        ui.heroLine.textContent = "Here is your personalized AibabaG personality intelligence report.";
-        ui.dobBadge.textContent = formatDateLong(dob);
-        ui.timeBadge.textContent = state.profile.birthTime;
-        ui.cityBadge.textContent = state.profile.city;
-        ui.sunSign.textContent = `${zodiac} ${symbolForSign(zodiac)}`;
-        ui.moonSign.textContent = `${moon} ${symbolForSign(moon)}`;
-        ui.ascSign.textContent = `${asc} ${symbolForSign(asc)}`;
-        ui.cosmicSummary.textContent = aiText.summary || buildSummary(zodiac);
-        ui.luckyList.innerHTML = `
-            <li>Lucky Color: ${escapeHtml(lucky.color)}</li>
-            <li>Lucky Number: ${escapeHtml(lucky.number)}</li>
-            <li>Lucky Day: ${escapeHtml(lucky.day)}</li>
-            <li>Lucky Gem: ${escapeHtml(lucky.gem)}</li>
-        `;
-
-        setText(ui.animalLine, aiText.animalLine, "Confident and protective with strong instincts.");
-        setText(ui.foodLine, aiText.foodLine, "You enjoy vibrant flavors and expressive choices.");
-        setText(ui.travelLine, aiText.travelLine, "New places recharge your mind and motivation.");
-        setText(ui.careerLine, aiText.careerLine, "Leadership and ownership roles suit you well.");
-        setText(ui.loveLine, aiText.loveLine, "You value loyalty and emotional honesty.");
-        setText(ui.familyLine, aiText.familyLine, "You bring stability and warmth to your circle.");
-        setText(ui.futureLine, aiText.futureLine, "Your future opens through consistent self-growth.");
-        setText(ui.moneyLine, aiText.moneyLine, "Smart planning helps you build durable wealth.");
-        setText(ui.educationLine, aiText.educationLine, "You learn quickly with practical application.");
-        setText(ui.healthLine, aiText.healthLine, "Daily routines keep your energy centered.");
-        setText(ui.purposeLine, aiText.purposeLine, "You are here to inspire and uplift people.");
-
-        applyProfileImage();
-        await fetchAndRenderFamous(state.profile.dateOfBirth);
-    }
-
-    async function getAiFallbackText(zodiacSign, dob) {
+    async function hydrateFallbackText(zodiac, dob) {
         try {
             const response = await fetch("/api/insights/ai-fallback", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ zodiacSign, dateOfBirth: dob })
+                body: JSON.stringify({ zodiacSign: zodiac, dateOfBirth: dob })
             });
             if (!response.ok) {
-                return {};
+                state.fallbackText = {};
+                return;
             }
             const payload = await response.json();
-            return payload?.success && payload?.data ? payload.data : {};
+            state.fallbackText = payload?.data || {};
         } catch {
-            return {};
+            state.fallbackText = {};
         }
     }
 
-    function applyProfileImage() {
-        const profileImage = state.profile.avatar && state.profile.avatar.trim().length > 0
-            ? state.profile.avatar
-            : DEFAULT_PROFILE_IMAGE;
-        const initialsText = initials(state.profile.name);
-
-        ui.avatarImage.src = profileImage;
-        ui.topUserImage.src = profileImage;
-        ui.avatarImage.classList.remove("hidden");
-        ui.topUserImage.classList.remove("hidden");
-        ui.avatarFallback.classList.add("hidden");
-        ui.topUserFallback.classList.add("hidden");
-
-        ui.avatarImage.onerror = () => {
-            ui.avatarImage.classList.add("hidden");
-            ui.avatarFallback.classList.remove("hidden");
-            ui.avatarFallback.textContent = initialsText;
-        };
-        ui.topUserImage.onerror = () => {
-            ui.topUserImage.classList.add("hidden");
-            ui.topUserFallback.classList.remove("hidden");
-            ui.topUserFallback.textContent = initialsText;
-        };
+    function renderSpiritAnimal() {
+        const spirit = spiritByMood[state.mood] || spiritByMood["🌊 Calm Ocean"];
+        ui.spiritImage.src = safeImage(spirit.image);
+        ui.spiritTitle.textContent = `${spirit.emoji} ${spirit.name}`;
+        ui.spiritLine.textContent = state.fallbackText?.animalLine || spirit.line;
     }
 
-    async function fetchAndRenderFamous(dob) {
-        try {
-            const response = await fetch(`/api/insights/famous-by-birthday?dob=${encodeURIComponent(dob)}`);
-            if (!response.ok) {
-                renderFamous(fallbackFamous());
-                return;
-            }
-
-            const payload = await response.json();
-            if (!payload?.success || !Array.isArray(payload.people) || !payload.people.length) {
-                renderFamous(fallbackFamous());
-                return;
-            }
-
-            renderFamous(payload.people.slice(0, 8).map(person => ({
-                name: person.name || "Famous Personality",
-                summary: person.summary || "Shares your birthday personality energy.",
-                imageUrl: safeImage(person.imageUrl),
-                articleUrl: person.articleUrl || ""
-            })));
-        } catch {
-            renderFamous(fallbackFamous());
-        }
+    function renderFoodEnergy() {
+        ui.foodA.src = safeImage(foodImages[0]);
+        ui.foodB.src = safeImage(foodImages[1]);
+        ui.foodC.src = safeImage(foodImages[2]);
     }
 
-    function renderFamous(items) {
-        ui.famousGrid.innerHTML = items.map(item => `
-            <article class="famous-card">
-                <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.src='${DEFAULT_CARD_IMAGE}'" />
-                <div class="famous-body">
-                    <h4>${escapeHtml(item.name)}</h4>
-                    <p>${escapeHtml(item.summary)}</p>
-                    ${item.articleUrl ? `<a href="${escapeHtml(item.articleUrl)}" target="_blank" rel="noreferrer noopener">View profile</a>` : ""}
+    function renderPlaces() {
+        ui.placesHint.textContent = `Based on IP region: ${state.location}`;
+        ui.placesGrid.innerHTML = placeThemes.map(place => `
+            <article class="place-card">
+                <img src="${escapeHtml(place.image)}" alt="${escapeHtml(place.label)}" />
+                <div>
+                    <h4>${place.icon} ${escapeHtml(place.label)}</h4>
+                    <p>${escapeHtml(state.location)} vibe pick</p>
                 </div>
             </article>
         `).join("");
     }
 
-    function fallbackFamous() {
-        return [
-            {
-                name: "Maya Angelou",
-                summary: "Poet and storyteller with timeless voice.",
-                imageUrl: "https://upload.wikimedia.org/wikipedia/commons/0/09/Dr._Maya_Angelou.jpg",
-                articleUrl: "https://en.wikipedia.org/wiki/Maya_Angelou"
-            },
-            {
-                name: "Gal Gadot",
-                summary: "Actor with powerful screen presence.",
-                imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/eb/Gal_Gadot_2018.jpg",
-                articleUrl: "https://en.wikipedia.org/wiki/Gal_Gadot"
-            },
-            {
-                name: "Akon",
-                summary: "Singer and producer known worldwide.",
-                imageUrl: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Akon_2009.jpg",
-                articleUrl: "https://en.wikipedia.org/wiki/Akon"
+    function renderLifeFlow() {
+        ui.flowGrid.innerHTML = flowItems.map((item, idx) => `
+            <article class="flow-item">
+                <span>${item.icon}</span>
+                <h4>${escapeHtml(item.label)}</h4>
+                <div class="flow-line" style="width:${70 + (idx % 4) * 8}%"></div>
+            </article>
+        `).join("");
+    }
+
+    async function renderFamous(dob) {
+        let people = [];
+        try {
+            const response = await fetch(`/api/insights/famous-by-birthday?dob=${encodeURIComponent(dob)}`);
+            if (response.ok) {
+                const payload = await response.json();
+                people = Array.isArray(payload?.people) ? payload.people : [];
             }
-        ];
+        } catch {
+            people = [];
+        }
+
+        if (!people.length) {
+            people = fallbackFamous();
+        }
+
+        const alive = people.slice(0, 4).map(person => ({
+            name: person.name || "Famous Personality",
+            image: safeImage(person.imageUrl),
+            line: person.summary || "Alive personality linked with your birth vibe."
+        }));
+
+        const history = people.slice(4, 8).map(person => ({
+            name: person.name || "Historic Personality",
+            image: safeImage(person.imageUrl),
+            line: person.summary || "Historic inspiration aligned to your energy."
+        }));
+
+        ui.famousAlive.innerHTML = alive.map(person => `
+            <article class="famous-card">
+                <img src="${escapeHtml(person.image)}" alt="${escapeHtml(person.name)}" />
+                <h4>${escapeHtml(person.name)}</h4>
+                <p>${escapeHtml(person.line)}</p>
+            </article>
+        `).join("");
+
+        ui.famousHistory.innerHTML = history.map(person => `
+            <article class="famous-card">
+                <img src="${escapeHtml(person.image)}" alt="${escapeHtml(person.name)}" />
+                <h4>${escapeHtml(person.name)}</h4>
+                <p>${escapeHtml(person.line)}</p>
+            </article>
+        `).join("");
+    }
+
+    function renderSuggestions() {
+        const map = {
+            "🌊 Calm Ocean": [
+                "5-minute breathing challenge",
+                "Slow stretch flow",
+                "Cozy puzzle game"
+            ],
+            "🔥 Bold Fire": [
+                "10-minute dance burst",
+                "Quick reaction game",
+                "Power walk challenge"
+            ],
+            "⚡ Electric Focus": [
+                "Focus sprint timer",
+                "Reflex mini-game",
+                "One-goal execution challenge"
+            ],
+            "🌙 Reflective Moon": [
+                "Journaling prompt",
+                "Moon breathing cycle",
+                "Silent art doodle"
+            ],
+            "🌞 Bright Rise": [
+                "Sun salutation set",
+                "Social gratitude message",
+                "Creative one-page vision board"
+            ]
+        };
+
+        const items = map[state.mood] || map["🌊 Calm Ocean"];
+        ui.suggestionGrid.innerHTML = items.map((item, idx) => `
+            <article class="suggestion-item">
+                <h4>${idx + 1}. ${escapeHtml(item)}</h4>
+                <p>${escapeHtml(state.fallbackText?.purposeLine || "Playful energy action based on your current mode.")}</p>
+            </article>
+        `).join("");
+    }
+
+    async function detectMoodFromCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            state.mood = randomItem(moodPool);
+            await openDashboard();
+            return;
+        }
+
+        const allow = window.confirm("Want a more accurate cosmic reading? Camera is just for fun and nothing is stored.");
+        if (!allow) {
+            state.mood = randomItem(moodPool);
+            await openDashboard();
+            return;
+        }
+
+        try {
+            state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+            ui.cameraVideo.srcObject = state.stream;
+            await delay(1100);
+            state.mood = randomItem(moodPool);
+        } catch {
+            state.mood = randomItem(moodPool);
+        } finally {
+            stopCamera();
+            await openDashboard();
+        }
+    }
+
+    function stopCamera() {
+        if (!state.stream) return;
+        for (const track of state.stream.getTracks()) {
+            track.stop();
+        }
+        state.stream = null;
+        ui.cameraVideo.srcObject = null;
     }
 
     function zodiacFromDate(dateText) {
@@ -598,78 +665,49 @@
         return "Pisces";
     }
 
-    function moonSignFromDate(dateText) {
-        const signs = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
-        const seed = new Date(dateText).getDate() % 12;
-        return signs[seed];
+    function fallbackFamous() {
+        return [
+            { name: "Emma Watson", summary: "Global icon with thoughtful influence.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Emma_Watson_2013.jpg" },
+            { name: "Keanu Reeves", summary: "Calm charisma and timeless presence.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Keanu_Reeves_2013.jpg" },
+            { name: "Beyonce", summary: "Creative force with commanding stage energy.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Beyonc%C3%A9_Knowles_2009.jpg" },
+            { name: "Tom Holland", summary: "Energetic performer with joyful vibe.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/0/03/Tom_Holland_2018.jpg" },
+            { name: "Maya Angelou", summary: "Historic storyteller who moved generations.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/0/09/Dr._Maya_Angelou.jpg" },
+            { name: "Nikola Tesla", summary: "Visionary mind ahead of his time.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d4/N.Tesla.JPG" },
+            { name: "Frida Kahlo", summary: "Bold artistic expression and resilience.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Frida_Kahlo%2C_by_Guillermo_Kahlo.jpg" },
+            { name: "Leonardo da Vinci", summary: "Master of creativity and curiosity.", imageUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e2/Leonardo_da_Vinci_-_presumed_self-portrait_-_WGA12798.jpg" }
+        ];
     }
 
-    function ascendantFromDate(dateText) {
-        const signs = ["Virgo", "Leo", "Cancer", "Gemini", "Taurus", "Aries", "Pisces", "Aquarius", "Capricorn", "Sagittarius", "Scorpio", "Libra"];
-        const seed = (new Date(dateText).getMonth() + new Date(dateText).getDate()) % 12;
-        return signs[seed];
-    }
-
-    function symbolForSign(sign) {
+    function moodOneLiner(mood) {
         const map = {
-            Aries: "♈", Taurus: "♉", Gemini: "♊", Cancer: "♋", Leo: "♌", Virgo: "♍",
-            Libra: "♎", Scorpio: "♏", Sagittarius: "♐", Capricorn: "♑", Aquarius: "♒", Pisces: "♓"
+            "🌊 Calm Ocean": "You are peaceful today — dangerous tomorrow.",
+            "🔥 Bold Fire": "Your confidence enters the room first.",
+            "⚡ Electric Focus": "Today, your focus can cut through noise.",
+            "🌙 Reflective Moon": "Soft tone, sharp intuition, strong choices.",
+            "🌞 Bright Rise": "Your energy can spark everyone nearby."
         };
-        return map[sign] || "✦";
-    }
-
-    function luckyEssentialsFromSign(sign) {
-        const map = {
-            Aries: { color: "Red", number: "1, 9", day: "Tuesday", gem: "Ruby" },
-            Taurus: { color: "Green", number: "2, 6", day: "Friday", gem: "Emerald" },
-            Gemini: { color: "Yellow", number: "5", day: "Wednesday", gem: "Topaz" },
-            Cancer: { color: "Silver", number: "2, 7", day: "Monday", gem: "Pearl" },
-            Leo: { color: "Gold", number: "1, 3, 9", day: "Sunday", gem: "Ruby" },
-            Virgo: { color: "Olive", number: "5, 7", day: "Wednesday", gem: "Peridot" },
-            Libra: { color: "Pink", number: "6, 8", day: "Friday", gem: "Opal" },
-            Scorpio: { color: "Maroon", number: "9", day: "Tuesday", gem: "Garnet" },
-            Sagittarius: { color: "Purple", number: "3, 12", day: "Thursday", gem: "Turquoise" },
-            Capricorn: { color: "Navy", number: "8", day: "Saturday", gem: "Onyx" },
-            Aquarius: { color: "Blue", number: "4, 11", day: "Saturday", gem: "Amethyst" },
-            Pisces: { color: "Sea Green", number: "3, 7", day: "Thursday", gem: "Aquamarine" }
-        };
-        return map[sign] || map.Leo;
-    }
-
-    function buildSummary(sign) {
-        return `You are a natural ${sign} leader with creative vision and deep empathy. You inspire people and love deeply.`;
+        return map[mood] || "Cosmic energy detected.";
     }
 
     function safeImage(url) {
-        if (typeof url !== "string") {
-            return DEFAULT_CARD_IMAGE;
-        }
-        if (url.startsWith("http://") || url.startsWith("https://")) {
-            return url;
-        }
-        return DEFAULT_CARD_IMAGE;
+        if (typeof url !== "string") return DEFAULT_PROFILE_IMAGE;
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return DEFAULT_PROFILE_IMAGE;
     }
 
-    function formatDateLong(date) {
-        return date.toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric"
-        });
+    function randomDate() {
+        const year = 1990 + Math.floor(Math.random() * 15);
+        const month = 1 + Math.floor(Math.random() * 12);
+        const day = 1 + Math.floor(Math.random() * 28);
+        return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     }
 
-    function setText(element, value, fallback) {
-        if (!element) {
-            return;
-        }
-
-        element.textContent = typeof value === "string" && value.trim().length > 0
-            ? value
-            : fallback;
+    function randomItem(items) {
+        return items[Math.floor(Math.random() * items.length)];
     }
 
-    function initials(name) {
-        return String(name).split(" ").map(x => x[0]).join("").slice(0, 2).toUpperCase();
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     function escapeHtml(text) {
@@ -684,14 +722,14 @@
 
 <style>
     :root {
-        --bg-main: #040814;
-        --bg-card: #0b1228;
-        --line: rgba(123, 150, 255, 0.28);
-        --text-main: #eef2ff;
-        --text-soft: #b7c3e5;
-        --accent: #6d5cff;
-        --accent2: #1dd7ff;
-        --chip: rgba(117, 140, 232, 0.2);
+        --bg: #050816;
+        --panel: rgba(12, 18, 44, 0.74);
+        --line: rgba(109, 139, 255, 0.35);
+        --text: #eef2ff;
+        --muted: #b8c4e7;
+        --accent: #7b61ff;
+        --accent2: #4be1ff;
+        --accent3: #ff7ac8;
     }
 
     * {
@@ -701,11 +739,12 @@
     body {
         margin: 0;
         font-family: Inter, "Segoe UI", sans-serif;
-        color: var(--text-main);
+        color: var(--text);
         background:
-            radial-gradient(circle at 18% 20%, rgba(74, 84, 210, 0.28), transparent 46%),
-            radial-gradient(circle at 80% 0%, rgba(126, 35, 167, 0.28), transparent 44%),
-            linear-gradient(180deg, #060a1b 0%, #02040c 100%);
+            radial-gradient(circle at 18% 24%, rgba(85, 94, 255, 0.28), transparent 40%),
+            radial-gradient(circle at 85% 10%, rgba(255, 102, 194, 0.2), transparent 35%),
+            radial-gradient(circle at 50% 120%, rgba(39, 219, 255, 0.18), transparent 45%),
+            var(--bg);
         min-height: 100vh;
     }
 
@@ -713,502 +752,647 @@
         display: none !important;
     }
 
-    .login-gate {
-        min-height: 100vh;
+    .app-root {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 14px 14px 56px;
         display: grid;
-        place-items: center;
-        padding: 20px;
+        gap: 14px;
     }
 
-    .login-panel {
-        width: min(720px, 100%);
-        background: rgba(8, 14, 33, 0.9);
+    .glass {
+        background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 20px;
-        padding: 32px;
-        text-align: center;
-        box-shadow: 0 20px 60px rgba(22, 35, 87, 0.45);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 46px rgba(4, 8, 25, 0.55);
     }
 
-    .brand-kicker {
-        margin: 0 0 12px;
-        letter-spacing: 0.18em;
-        font-size: 0.74rem;
-        color: var(--accent2);
-    }
-
-    .login-panel h1 {
-        margin: 0 0 12px;
-        font-size: clamp(1.5rem, 4vw, 2.2rem);
-    }
-
-    .gate-note {
-        margin: 0 0 18px;
-        color: var(--text-soft);
-    }
-
-    .dob-form {
-        display: flex;
-        gap: 8px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .dob-form input[type="date"] {
-        border: 1px solid rgba(131, 155, 255, 0.3);
-        background: rgba(140, 157, 255, 0.1);
-        color: #f0f4ff;
-        border-radius: 10px;
-        padding: 9px 11px;
-        min-width: 200px;
-    }
-
-    .manual-dob-error {
-        color: #ff9ea9;
-        font-size: 0.86rem;
-        margin-top: 10px;
-    }
-
-    .primary-btn,
-    .ghost-btn {
-        border: none;
-        border-radius: 999px;
-        padding: 10px 16px;
-        font-weight: 700;
-        cursor: pointer;
-        color: #fff;
-    }
-
-    .primary-btn {
-        background: linear-gradient(135deg, #6e63ff, #5ad0ff);
-        box-shadow: 0 8px 24px rgba(66, 135, 255, 0.35);
-    }
-
-    .ghost-btn {
-        background: rgba(140, 157, 255, 0.12);
-        border: 1px solid rgba(131, 155, 255, 0.3);
-    }
-
-    .astro-shell {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 14px 14px 28px;
+    .landing-view {
+        position: relative;
+        padding: 14px;
+        overflow: hidden;
+        min-height: 92vh;
         display: grid;
-        gap: 12px;
+        align-content: start;
+        gap: 14px;
     }
 
-    .topbar {
-        background: rgba(8, 14, 33, 0.78);
-        border: 1px solid var(--line);
-        border-radius: 16px;
+    .stars-layer {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(2px 2px at 12% 22%, rgba(255,255,255,.75) 45%, transparent 55%),
+            radial-gradient(1.5px 1.5px at 38% 66%, rgba(255,255,255,.68) 45%, transparent 55%),
+            radial-gradient(2px 2px at 74% 34%, rgba(255,255,255,.72) 45%, transparent 55%),
+            radial-gradient(1.5px 1.5px at 90% 70%, rgba(255,255,255,.62) 45%, transparent 55%);
+        pointer-events: none;
+        opacity: .7;
+    }
+
+    .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(8px);
+        opacity: .44;
+        pointer-events: none;
+        animation: floaty 8s ease-in-out infinite;
+    }
+
+    .orb-a {
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, rgba(124,96,255,.72), rgba(124,96,255,0));
+        top: -60px;
+        right: 60px;
+    }
+
+    .orb-b {
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(255,123,200,.66), rgba(255,123,200,0));
+        bottom: 90px;
+        left: -40px;
+    }
+
+    .orb-c {
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(71,227,255,.62), rgba(71,227,255,0));
+        top: 44%;
+        right: 28%;
+    }
+
+    .landing-header {
+        position: relative;
+        z-index: 2;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 14px;
-        backdrop-filter: blur(8px);
+        padding: 12px 16px;
     }
 
-    .logo-block {
+    .brand-mark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .logo-planet {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        box-shadow: 0 0 28px rgba(98, 180, 255, 0.55);
+        font-weight: 900;
+    }
+
+    .brand-mark h1,
+    .dash-brand h2 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .brand-mark p,
+    .dash-brand p,
+    .mode-tag {
+        margin: 0;
+        font-size: .78rem;
+        color: var(--muted);
+    }
+
+    .hero {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 14px;
+    }
+
+    .hero-copy,
+    .hero-visual {
+        padding: 20px;
+    }
+
+    .hero-kicker {
+        margin: 0 0 8px;
+        letter-spacing: .16em;
+        font-size: .72rem;
+        color: #bfe1ff;
+    }
+
+    .hero-copy h2 {
+        margin: 0 0 10px;
+        font-size: clamp(1.7rem, 3.3vw, 2.6rem);
+        line-height: 1.15;
+    }
+
+    .hero-sub {
+        margin: 0 0 10px;
+        color: var(--muted);
+        line-height: 1.45;
+        max-width: 690px;
+    }
+
+    .hero-ctas {
         display: flex;
         gap: 10px;
-        align-items: center;
-    }
-
-    .logo-dot {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #664fff, #20d4ff);
-        box-shadow: 0 0 24px rgba(61, 145, 255, 0.46);
-        font-weight: 800;
-    }
-
-    .logo-block h1 {
-        margin: 0;
-        font-size: 1.06rem;
-    }
-
-    .logo-block p {
-        margin: 0;
-        color: var(--text-soft);
-        font-size: 0.8rem;
-    }
-
-    .top-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .top-right {
-        margin-left: auto;
-        margin-right: 12px;
-    }
-
-    .user-pill {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        background: rgba(143, 159, 255, 0.12);
-        border: 1px solid rgba(143, 159, 255, 0.26);
-        border-radius: 999px;
-        padding: 6px 10px;
-    }
-
-    .top-user-image,
-    .top-user-fallback {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid rgba(152, 176, 255, 0.44);
-    }
-
-    .top-user-fallback {
-        display: grid;
-        place-items: center;
-        font-size: 0.76rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #6051ff, #15d4ff);
-    }
-
-    .user-pill p {
-        margin: 0;
-        font-size: 0.8rem;
-        font-weight: 700;
-        line-height: 1.1;
-    }
-
-    .user-pill small {
-        color: var(--text-soft);
-        font-size: 0.7rem;
-        line-height: 1;
-    }
-
-    .pro-tag {
-        padding: 3px 6px;
-        border-radius: 999px;
-        background: rgba(29, 222, 145, 0.18);
-        border: 1px solid rgba(29, 222, 145, 0.38);
-        color: #53efb4;
-        font-size: 0.68rem;
-        font-weight: 700;
-    }
-
-    .card {
-        background: rgba(9, 16, 38, 0.85);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        overflow: hidden;
-        position: relative;
-        box-shadow: 0 12px 28px rgba(7, 12, 28, 0.65);
-    }
-
-    .hero-grid {
-        display: grid;
-        grid-template-columns: 1.6fr 0.6fr 0.8fr;
-        gap: 12px;
-    }
-
-    .profile-card {
-        display: flex;
-        gap: 14px;
-        padding: 14px;
-        align-items: center;
-    }
-
-    .profile-photo-wrap {
-        width: 108px;
-        height: 108px;
-        border-radius: 50%;
-        border: 3px solid rgba(117, 133, 255, 0.68);
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-
-    .profile-photo,
-    .profile-photo-fallback {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .profile-photo-fallback {
-        display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #6051ff, #15d4ff);
-        font-weight: 800;
-        font-size: 1.4rem;
-    }
-
-    .profile-main h2 {
-        margin: 0 0 6px;
-        font-size: clamp(1.2rem, 2vw, 1.8rem);
-    }
-
-    .profile-main p {
-        margin: 0;
-        color: var(--text-soft);
-    }
-
-    .meta-row {
-        display: flex;
-        gap: 8px;
         flex-wrap: wrap;
-        margin-top: 10px;
+        margin-top: 14px;
     }
 
-    .meta-row span {
-        background: rgba(145, 164, 255, 0.12);
-        border: 1px solid rgba(145, 164, 255, 0.26);
+    .btn {
+        border: none;
         border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 0.8rem;
+        padding: 10px 16px;
+        font-size: .9rem;
+        font-weight: 700;
+        cursor: pointer;
     }
 
-    .signs-card {
-        padding: 14px;
-        display: grid;
-        align-content: center;
+    .btn-primary {
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        box-shadow: 0 10px 24px rgba(106, 140, 255, .4);
     }
 
-    .signs-card h3 {
+    .btn-secondary {
+        color: #dce5ff;
+        background: rgba(126, 145, 255, .16);
+        border: 1px solid rgba(126, 145, 255, .34);
+    }
+
+    .hero-visual {
+        position: relative;
+        overflow: hidden;
+        min-height: 270px;
+    }
+
+    .planet {
+        position: absolute;
+        border-radius: 50%;
+        animation: drift 10s ease-in-out infinite;
+    }
+
+    .planet.large {
+        width: 140px;
+        height: 140px;
+        background: radial-gradient(circle, rgba(131,112,255,.95), rgba(131,112,255,.2));
+        top: 32px;
+        right: 34px;
+    }
+
+    .planet.medium {
+        width: 96px;
+        height: 96px;
+        background: radial-gradient(circle, rgba(66,225,255,.88), rgba(66,225,255,.2));
+        bottom: 38px;
+        left: 26px;
+    }
+
+    .planet.tiny {
+        width: 46px;
+        height: 46px;
+        background: radial-gradient(circle, rgba(255,124,206,.92), rgba(255,124,206,.2));
+        top: 128px;
+        left: 52%;
+    }
+
+    .energy-ring {
+        position: absolute;
+        inset: 20px;
+        border-radius: 22px;
+        border: 1px dashed rgba(129, 170, 255, .35);
+        animation: spin 12s linear infinite;
+    }
+
+    .hero-visual p {
+        position: absolute;
+        left: 20px;
+        bottom: 16px;
         margin: 0;
-        color: #ffde7d;
+        color: var(--muted);
     }
 
-    .signs-card p {
-        margin: 0 0 8px;
-        color: var(--text-soft);
-        font-size: 0.82rem;
-    }
-
-    .summary-card {
-        padding: 14px;
-        display: grid;
-        align-content: center;
-        background:
-            radial-gradient(circle at 70% 40%, rgba(151, 77, 255, 0.32), transparent 45%),
-            rgba(9, 16, 38, 0.88);
-    }
-
-    .summary-card h3 {
-        margin: 0 0 8px;
-    }
-
-    .summary-card p {
-        margin: 0;
-        color: #d6dfff;
-        line-height: 1.45;
-    }
-
-    .insight-grid {
+    .trust-strip {
+        position: relative;
+        z-index: 2;
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
     }
 
-    .insight-card {
-        min-height: 186px;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        overflow: hidden;
-        position: relative;
-        background: rgba(13, 20, 46, 0.92);
-    }
-
-    .insight-card img {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .insight-card.essentials {
-        background:
-            radial-gradient(circle at 80% 20%, rgba(206, 65, 255, 0.26), transparent 55%),
-            rgba(12, 21, 47, 0.96);
-    }
-
-    .insight-card.essentials img {
-        display: none;
-    }
-
-    .overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(2, 8, 28, 0.14) 0%, rgba(2, 8, 24, 0.92) 100%);
-    }
-
-    .insight-body {
-        position: absolute;
-        inset: auto 0 0 0;
-        padding: 10px;
-        z-index: 2;
-    }
-
-    .chip {
-        margin: 0 0 6px;
-        display: inline-block;
-        font-size: 0.74rem;
-        border-radius: 999px;
-        padding: 4px 8px;
-        background: var(--chip);
-        border: 1px solid rgba(131, 150, 255, 0.32);
-        color: #d9e2ff;
-    }
-
-    .insight-body h4 {
-        margin: 0 0 4px;
-        font-size: 1.02rem;
-    }
-
-    .insight-body p {
-        margin: 0;
-        color: #d5def9;
-        font-size: 0.86rem;
-    }
-
-    .insight-body ul {
-        margin: 0;
-        padding-left: 16px;
-        color: #d6defd;
-        display: grid;
-        gap: 4px;
-        font-size: 0.86rem;
-    }
-
-    .famous-section {
+    .trust-card {
         padding: 14px;
     }
 
-    .famous-section h3 {
-        margin: 0 0 10px;
+    .trust-card span {
+        font-size: 1.2rem;
+    }
+
+    .trust-card h4 {
+        margin: 8px 0 5px;
+    }
+
+    .trust-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: .87rem;
+    }
+
+    .modal-view {
+        min-height: 72vh;
+        display: grid;
+        place-items: center;
+    }
+
+    .modal-card {
+        width: min(640px, 100%);
+        padding: 24px;
+        text-align: center;
+    }
+
+    .modal-card h3 {
+        margin: 0 0 8px;
+    }
+
+    .modal-card p {
+        margin: 0 0 14px;
+        color: var(--muted);
+    }
+
+    .modal-card input[type="date"] {
+        width: min(340px, 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(139, 161, 255, .35);
+        background: rgba(17, 25, 55, .8);
+        color: #eff4ff;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+
+    .error-line {
+        color: #ff9cb9 !important;
+        margin-top: 8px !important;
+    }
+
+    .dashboard {
+        display: grid;
+        gap: 12px;
+    }
+
+    .dashboard-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+    }
+
+    .dash-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .welcome-card {
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 14px;
+        padding: 14px;
+    }
+
+    .welcome-left {
+        display: flex;
+        gap: 12px;
+    }
+
+    .profile-image {
+        width: 86px;
+        height: 86px;
+        border-radius: 20px;
+        object-fit: cover;
+        border: 2px solid rgba(141, 163, 255, .42);
+    }
+
+    .welcome-left h3 {
+        margin: 0 0 8px;
+        font-size: 1.22rem;
+    }
+
+    .welcome-left p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .meta-tags {
+        display: flex;
+        gap: 8px;
+        margin-top: 9px;
+        flex-wrap: wrap;
+    }
+
+    .meta-tags span {
+        border-radius: 999px;
+        border: 1px solid rgba(144, 165, 255, .3);
+        background: rgba(119, 146, 255, .14);
+        padding: 5px 9px;
+        font-size: .78rem;
+    }
+
+    .welcome-right {
+        border-radius: 16px;
+        border: 1px solid rgba(121, 158, 255, .3);
+        background: radial-gradient(circle at 70% 10%, rgba(114, 81, 255, .25), rgba(18, 28, 62, .7));
+        padding: 12px;
+    }
+
+    .tiny-label {
+        margin: 0;
+        letter-spacing: .12em;
+        font-size: .72rem;
+        color: #c5d8ff;
+    }
+
+    .welcome-right h4 {
+        margin: 7px 0 5px;
+        font-size: 1.2rem;
+    }
+
+    .welcome-right p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .mood-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .grid-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .big-visual {
+        padding: 12px;
+    }
+
+    .big-visual h4 {
+        margin: 7px 0 6px;
+    }
+
+    .big-visual p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .big-visual > img {
+        width: 100%;
+        height: 230px;
+        border-radius: 14px;
+        object-fit: cover;
+        margin-top: 9px;
+        border: 1px solid rgba(137, 162, 255, .28);
+    }
+
+    .food-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .food-grid figure {
+        margin: 0;
+    }
+
+    .food-grid img {
+        width: 100%;
+        height: 140px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid rgba(140, 166, 255, .3);
+    }
+
+    .food-grid figcaption {
+        margin-top: 5px;
+        text-align: center;
+        color: var(--muted);
+        font-size: .78rem;
+    }
+
+    .places,
+    .life-flow,
+    .famous,
+    .suggestion,
+    .share-box {
+        padding: 12px;
+    }
+
+    .section-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .section-title-row h3 {
+        margin: 0;
+    }
+
+    .section-title-row p {
+        margin: 0;
+        color: var(--muted);
+        font-size: .85rem;
+    }
+
+    .places-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .place-card {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(140, 166, 255, .3);
+        background: rgba(16, 25, 56, .7);
+    }
+
+    .place-card img {
+        width: 100%;
+        height: 126px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .place-card div {
+        padding: 8px;
+    }
+
+    .place-card h4 {
+        margin: 0 0 5px;
+    }
+
+    .place-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: .8rem;
+    }
+
+    .flow-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .flow-item {
+        border-radius: 12px;
+        border: 1px solid rgba(138, 166, 255, .29);
+        background: rgba(17, 26, 57, .7);
+        padding: 10px;
+    }
+
+    .flow-item span {
+        font-size: 1.2rem;
+    }
+
+    .flow-item h4 {
+        margin: 7px 0 8px;
+        font-size: .95rem;
+    }
+
+    .flow-line {
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
     }
 
     .famous-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .famous h4 {
+        margin: 6px 0 8px;
     }
 
     .famous-card {
-        background: rgba(11, 20, 44, 0.9);
-        border: 1px solid var(--line);
         border-radius: 12px;
+        border: 1px solid rgba(138, 167, 255, .29);
+        background: rgba(17, 27, 58, .72);
         overflow: hidden;
     }
 
     .famous-card img {
         width: 100%;
-        height: 140px;
+        height: 132px;
         object-fit: cover;
         display: block;
     }
 
-    .famous-body {
-        padding: 8px;
+    .famous-card h4 {
+        margin: 8px 8px 4px;
+        font-size: .92rem;
     }
 
-    .famous-body h4 {
-        margin: 0 0 4px;
-        font-size: 0.94rem;
-    }
-
-    .famous-body p {
-        margin: 0;
-        color: var(--text-soft);
-        font-size: 0.8rem;
+    .famous-card p {
+        margin: 0 8px 9px;
+        color: var(--muted);
+        font-size: .8rem;
         line-height: 1.35;
     }
 
-    .famous-body a {
-        display: inline-block;
-        margin-top: 6px;
-        color: #8bddff;
-        text-decoration: none;
-        font-size: 0.78rem;
-        font-weight: 600;
-    }
-
-    .bottom-strip {
-        background: rgba(8, 14, 34, 0.84);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 10px;
+    .suggestion-grid {
         display: grid;
-        grid-template-columns: 1.5fr repeat(3, 1fr) auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
-        align-items: center;
     }
 
-    .strip-card {
-        background: rgba(123, 145, 255, 0.08);
-        border: 1px solid rgba(132, 153, 255, 0.22);
-        border-radius: 10px;
-        padding: 8px;
+    .suggestion-item {
+        border-radius: 12px;
+        border: 1px solid rgba(139, 165, 255, .29);
+        background: rgba(18, 28, 60, .72);
+        padding: 10px;
     }
 
-    .strip-card p {
+    .suggestion-item h4 {
+        margin: 0 0 6px;
+        font-size: .92rem;
+    }
+
+    .suggestion-item p {
         margin: 0;
-        font-size: 0.72rem;
-        color: var(--text-soft);
+        color: var(--muted);
+        font-size: .8rem;
     }
 
-    .strip-card h4 {
-        margin: 3px 0 0;
-        font-size: 0.9rem;
+    .share-box h3 {
+        margin: 0 0 6px;
     }
 
-    .download-btn {
-        border: none;
-        border-radius: 999px;
-        padding: 10px 14px;
-        font-weight: 700;
-        color: #fff;
-        cursor: pointer;
-        background: linear-gradient(135deg, #715fff, #13c8ff);
-        box-shadow: 0 8px 20px rgba(75, 130, 255, 0.36);
+    .share-box p {
+        margin: 0;
+        color: var(--muted);
     }
 
-    @@media (max-width: 1200px) {
-        .hero-grid {
+    @@media (max-width: 1080px) {
+        .hero,
+        .welcome-card,
+        .grid-two {
             grid-template-columns: 1fr;
         }
 
-        .insight-grid {
+        .trust-strip,
+        .places-grid,
+        .flow-grid,
+        .famous-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .suggestion-grid {
+            grid-template-columns: 1fr;
         }
     }
 
-    @@media (max-width: 700px) {
-        .topbar {
+    @@media (max-width: 640px) {
+        .landing-header,
+        .dashboard-top {
             flex-direction: column;
             align-items: flex-start;
             gap: 8px;
         }
 
-        .top-right {
-            margin: 0;
-            width: 100%;
-        }
-
-        .top-actions {
-            width: 100%;
-        }
-
-        .user-pill {
-            width: 100%;
-        }
-
-        .insight-grid {
+        .food-grid,
+        .trust-strip,
+        .places-grid,
+        .flow-grid,
+        .famous-grid {
             grid-template-columns: 1fr;
         }
+    }
 
-        .bottom-strip {
-            grid-template-columns: 1fr;
-        }
+    @@keyframes floaty {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @@keyframes drift {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(8deg); }
+    }
+
+    @@keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>

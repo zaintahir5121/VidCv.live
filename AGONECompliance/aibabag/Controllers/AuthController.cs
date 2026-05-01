@@ -85,7 +85,7 @@ public sealed class AuthController(
                     GoogleId = googleId,
                     Email = email,
                     FullName = fullName,
-                    ProfileImageUrl = profileImageUrl,
+                    ProfileImageUrl = profileImageUrl ?? string.Empty,
                     CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow
                 };
@@ -95,7 +95,7 @@ public sealed class AuthController(
             {
                 existing.Email = email;
                 existing.FullName = fullName;
-                existing.ProfileImageUrl = profileImageUrl;
+                existing.ProfileImageUrl = profileImageUrl ?? string.Empty;
                 existing.UpdatedAtUtc = DateTime.UtcNow;
                 context.Users.Update(existing);
             }

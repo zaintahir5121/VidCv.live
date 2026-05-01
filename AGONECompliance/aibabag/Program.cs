@@ -3,6 +3,8 @@ using aibabag.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,9 @@ builder.Services.AddAuthentication(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
 })
 .AddGoogle(options =>
 {
@@ -48,7 +52,25 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated();
+    var hasPendingMigrations = db.Database.GetPendingMigrations().Any();
+    if (!hasPendingMigrations)
+    {
+        db.Database.EnsureCreated();
+    }
+    else
+    {
+        var relationalCreator = db.Database.GetService<IRelationalDatabaseCreator>();
+        var hasTables = relationalCreator.HasTables();
+        if (!hasTables)
+        {
+            db.Database.Migrate();
+        }
+        else
+        {
+            // Existing SQLite created via EnsureCreated path: avoid migration crash on first upgraded run.
+            db.Database.EnsureCreated();
+        }
+    }
 }
 
 if (!app.Environment.IsDevelopment())
